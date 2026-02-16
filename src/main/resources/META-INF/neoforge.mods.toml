@@ -1,0 +1,38 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+logoFile="zombielogo.png"
+authors="Rique"
+description='''
+A configurable zombie apocalypse gameplay addon for NeoForge 1.21.1.
+
+Core gameplay:
+- Optional sunlight immunity for zombies.
+- Custom day/night spawning near players.
+- Horde events and blood moon nights.
+- Day-based difficulty scaling.
+- Death cooldown safety window.
+- Persistent kill and cooldown statistics.
+
+Admin commands:
+/zhelp, /zburn, /zkill, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn
+'''
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"

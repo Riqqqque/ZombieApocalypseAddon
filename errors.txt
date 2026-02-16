@@ -1,0 +1,1476 @@
+﻿Reusing configuration cache.
+> Task :cacheVersionManifest1.21.1 UP-TO-DATE
+> Task :neoFormListLibraries UP-TO-DATE
+> Task :cacheVersionExecutableServer1.21.1 UP-TO-DATE
+> Task :cacheVersionMappingsClient1.21.1 UP-TO-DATE
+> Task :cacheVersionExecutableClient1.21.1 UP-TO-DATE
+> Task :cacheVersionExtractedServer1.21.1 UP-TO-DATE
+> Task :neoFormStripClient UP-TO-DATE
+> Task :create1.21.1ClientExtraJar UP-TO-DATE
+> Task :neoFormStripServer UP-TO-DATE
+> Task :neoFormMergeMappings UP-TO-DATE
+> Task :selectRawArtifactNg_dummy_ng.net.minecraft_client_1.21.1_client-extra UP-TO-DATE
+> Task :neoFormMerge UP-TO-DATE
+> Task :neoFormListTransformLibraries UP-TO-DATE
+> Task :neoFormRename UP-TO-DATE
+> Task :neoFormDecompile UP-TO-DATE
+> Task :neoFormInject UP-TO-DATE
+> Task :neoFormPatch UP-TO-DATE
+> Task :neoFormPatchUserDev UP-TO-DATE
+> Task :neoFormTransformSource UP-TO-DATE
+> Task :neoFormRecompile UP-TO-DATE
+> Task :supplyRawJarForneoFormJoined1.21.1-20240808.144430 UP-TO-DATE
+> Task :selectRawArtifactNg_dummy_ng.net.neoforged_neoforge_21.1.218 UP-TO-DATE
+
+> Task :compileJava FAILED
+./gradlew : C:\Users\
+Cristian\.gemini\anti
+gravity\scratch\Zombi
+eApocalypseAddon\src\
+main\java\com\rique\z
+ombieapocalypse\Event
+Handler.java:25: 
+warning: [removal] 
+bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+At line:1 char:1
++ ./gradlew 
+compileJava 
+--stacktrace 2>&1 | 
+Out-File -FilePath 
+errors.t ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (C:\User   
+ s\Cristi...ked f    
+or removal:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+               ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:25: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+                     
+                  ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:186: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (!leve
+l.getBlockState(below
+Pos).isSolidRender())
+ {
+                     
+                     
+    ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:190: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (level
+.getBlockState(spawnP
+os).isSolidRender()) 
+{
+                     
+                     
+   ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:194: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (level
+.getBlockState(spawnP
+os.above()).isSolidRe
+nder()) {
+                     
+                     
+           ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\ModCommands.java:
+14: warning: 
+[removal] bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+               ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\ModCommands.java:
+14: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+                     
+                  ^
+3 errors
+4 warnings
+
+[Incubating] Problems report is available at: file:///C:/Users/Cristian/.gemini/antigravity/scratch/ZombieApocalypseAddon/build/reports/problems/problems-report.html
+
+FAILURE: Build 
+failed with an 
+exception.
+
+* What went wrong:
+Execution failed for 
+task ':compileJava'.
+> Compilation 
+failed; see the 
+compiler output 
+below.
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\EventHandler.ja
+va:186: error: 
+method isSolidRender 
+in class 
+BlockStateBase 
+cannot be applied to 
+given types;
+              if (!le
+vel.getBlockState(bel
+owPos).isSolidRender(
+)) {
+                     
+                     
+      ^
+    required: 
+BlockGetter,BlockPos
+    found:    no 
+arguments
+    reason: actual 
+and formal argument 
+lists differ in 
+length
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\EventHandler.ja
+va:190: error: 
+method isSolidRender 
+in class 
+BlockStateBase 
+cannot be applied to 
+given types;
+              if (lev
+el.getBlockState(spaw
+nPos).isSolidRender()
+) {
+                     
+                     
+     ^
+    required: 
+BlockGetter,BlockPos
+    found:    no 
+arguments
+    reason: actual 
+and formal argument 
+lists differ in 
+length
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\EventHandler.ja
+va:194: error: 
+method isSolidRender 
+in class 
+BlockStateBase 
+cannot be applied to 
+given types;
+              if (lev
+el.getBlockState(spaw
+nPos.above()).isSolid
+Render()) {
+                     
+                     
+             ^
+    required: 
+BlockGetter,BlockPos
+    found:    no 
+arguments
+    reason: actual 
+and formal argument 
+lists differ in 
+length
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\EventHandler.ja
+va:25: warning: 
+[removal] bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+  @EventBusSubscriber
+(modid = ZombieApocal
+ypseAddon.MODID, bus 
+= EventBusSubscriber.
+Bus.GAME)
+                     
+                     
+                 ^
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\EventHandler.ja
+va:25: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+  @EventBusSubscriber
+(modid = ZombieApocal
+ypseAddon.MODID, bus 
+= EventBusSubscriber.
+Bus.GAME)
+                     
+                     
+                     
+                    ^
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\ModCommands.jav
+a:14: warning: 
+[removal] bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+  @EventBusSubscriber
+(modid = ZombieApocal
+ypseAddon.MODID, bus 
+= EventBusSubscriber.
+Bus.GAME)
+                     
+                     
+                 ^
+  C:\Users\Cristian\.
+gemini\antigravity\sc
+ratch\ZombieApocalyps
+eAddon\src\main\java\
+com\rique\zombieapoca
+lypse\ModCommands.jav
+a:14: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+  @EventBusSubscriber
+(modid = ZombieApocal
+ypseAddon.MODID, bus 
+= EventBusSubscriber.
+Bus.GAME)
+                     
+                     
+                     
+                    ^
+  3 errors
+  4 warnings
+
+* Try:
+> Check your code 
+and dependencies to 
+fix the compilation 
+error(s)
+> Run with --scan to 
+generate a Build 
+Scan (powered by 
+Develocity).
+
+* Exception is:
+org.gradle.api.tasks.
+TaskExecutionExceptio
+n: Execution failed 
+for task 
+':compileJava'.
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ExecuteActionsTaskE
+xecuter.lambda$execut
+eIfValid$1(ExecuteAct
+ionsTaskExecuter.java
+:135)
+	at org.gradle.intern
+al.Try$Failure.ifSucc
+essfulOrElse(Try.java
+:288)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ExecuteActionsTaskE
+xecuter.executeIfVali
+d(ExecuteActionsTaskE
+xecuter.java:133)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ExecuteActionsTaskE
+xecuter.execute(Execu
+teActionsTaskExecuter
+.java:121)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ProblemsTaskPathTra
+ckingTaskExecuter.exe
+cute(ProblemsTaskPath
+TrackingTaskExecuter.
+java:41)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.FinalizePropertiesT
+askExecuter.execute(F
+inalizePropertiesTask
+Executer.java:46)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ResolveTaskExecutio
+nModeExecuter.execute
+(ResolveTaskExecution
+ModeExecuter.java:51)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.SkipTaskWithNoActio
+nsExecuter.execute(Sk
+ipTaskWithNoActionsEx
+ecuter.java:57)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.SkipOnlyIfTaskExecu
+ter.execute(SkipOnlyI
+fTaskExecuter.java:74
+)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.CatchExceptionTaskE
+xecuter.execute(Catch
+ExceptionTaskExecuter
+.java:36)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.EventFiringTaskExec
+uter$1.executeTask(Ev
+entFiringTaskExecuter
+.java:77)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.EventFiringTaskExec
+uter$1.call(EventFiri
+ngTaskExecuter.java:5
+5)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.EventFiringTaskExec
+uter$1.call(EventFiri
+ngTaskExecuter.java:5
+2)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:209)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:204)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:59)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:1
+66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:5
+9)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+call(DefaultBuildOper
+ationRunner.java:53)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.EventFiringTaskExec
+uter.execute(EventFir
+ingTaskExecuter.java:
+52)
+	at org.gradle.execut
+ion.plan.DefaultNodeE
+xecutor.executeLocalT
+askNode(DefaultNodeEx
+ecutor.java:55)
+	at org.gradle.execut
+ion.plan.DefaultNodeE
+xecutor.execute(Defau
+ltNodeExecutor.java:3
+4)
+	at org.gradle.execut
+ion.taskgraph.Default
+TaskExecutionGraph$In
+vokeNodeExecutorsActi
+on.execute(DefaultTas
+kExecutionGraph.java:
+355)
+	at org.gradle.execut
+ion.taskgraph.Default
+TaskExecutionGraph$In
+vokeNodeExecutorsActi
+on.execute(DefaultTas
+kExecutionGraph.java:
+343)
+	at org.gradle.execut
+ion.taskgraph.Default
+TaskExecutionGraph$Bu
+ildOperationAwareExec
+utionAction.lambda$ex
+ecute$0(DefaultTaskEx
+ecutionGraph.java:339
+)
+	at org.gradle.intern
+al.operations.Current
+BuildOperationRef.wit
+h(CurrentBuildOperati
+onRef.java:84)
+	at org.gradle.execut
+ion.taskgraph.Default
+TaskExecutionGraph$Bu
+ildOperationAwareExec
+utionAction.execute(D
+efaultTaskExecutionGr
+aph.java:339)
+	at org.gradle.execut
+ion.taskgraph.Default
+TaskExecutionGraph$Bu
+ildOperationAwareExec
+utionAction.execute(D
+efaultTaskExecutionGr
+aph.java:328)
+	at org.gradle.execut
+ion.plan.DefaultPlanE
+xecutor$ExecutorWorke
+r.execute(DefaultPlan
+Executor.java:459)
+	at org.gradle.execut
+ion.plan.DefaultPlanE
+xecutor$ExecutorWorke
+r.run(DefaultPlanExec
+utor.java:376)
+	at org.gradle.intern
+al.concurrent.Executo
+rPolicy$CatchAndRecor
+dFailures.onExecute(E
+xecutorPolicy.java:64
+)
+	at org.gradle.intern
+al.concurrent.Abstrac
+tManagedExecutor$1.ru
+n(AbstractManagedExec
+utor.java:47)
+Caused by: org.gradle
+.api.internal.tasks.c
+ompile.CompilationFai
+ledException: 
+Compilation failed; 
+see the compiler 
+output below.
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:186: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (!leve
+l.getBlockState(below
+Pos).isSolidRender())
+ {
+                     
+                     
+    ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:190: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (level
+.getBlockState(spawnP
+os).isSolidRender()) 
+{
+                     
+                     
+   ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:194: error: method 
+isSolidRender in 
+class BlockStateBase 
+cannot be applied to 
+given types;
+            if (level
+.getBlockState(spawnP
+os.above()).isSolidRe
+nder()) {
+                     
+                     
+           ^
+  required: 
+BlockGetter,BlockPos
+  found:    no 
+arguments
+  reason: actual and 
+formal argument 
+lists differ in 
+length
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:25: warning: 
+[removal] bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+               ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\EventHandler.java
+:25: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+                     
+                  ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\ModCommands.java:
+14: warning: 
+[removal] bus() in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+               ^
+C:\Users\Cristian\.ge
+mini\antigravity\scra
+tch\ZombieApocalypseA
+ddon\src\main\java\co
+m\rique\zombieapocaly
+pse\ModCommands.java:
+14: warning: 
+[removal] Bus in 
+EventBusSubscriber 
+has been deprecated 
+and marked for 
+removal
+@EventBusSubscriber(m
+odid = ZombieApocalyp
+seAddon.MODID, bus = 
+EventBusSubscriber.Bu
+s.GAME)
+                     
+                     
+                     
+                  ^
+3 errors
+4 warnings
+	at org.gradle.api.in
+ternal.tasks.compile.
+JdkJavaCompiler.execu
+te(JdkJavaCompiler.ja
+va:89)
+	at org.gradle.api.in
+ternal.tasks.compile.
+JdkJavaCompiler.execu
+te(JdkJavaCompiler.ja
+va:50)
+	at org.gradle.api.in
+ternal.tasks.compile.
+NormalizingJavaCompil
+er.delegateAndHandleE
+rrors(NormalizingJava
+Compiler.java:98)
+	at org.gradle.api.in
+ternal.tasks.compile.
+NormalizingJavaCompil
+er.execute(Normalizin
+gJavaCompiler.java:52
+)
+	at org.gradle.api.in
+ternal.tasks.compile.
+NormalizingJavaCompil
+er.execute(Normalizin
+gJavaCompiler.java:38
+)
+	at org.gradle.api.in
+ternal.tasks.compile.
+AnnotationProcessorDi
+scoveringCompiler.exe
+cute(AnnotationProces
+sorDiscoveringCompile
+r.java:52)
+	at org.gradle.api.in
+ternal.tasks.compile.
+AnnotationProcessorDi
+scoveringCompiler.exe
+cute(AnnotationProces
+sorDiscoveringCompile
+r.java:38)
+	at org.gradle.api.in
+ternal.tasks.compile.
+ModuleApplicationName
+WritingCompiler.execu
+te(ModuleApplicationN
+ameWritingCompiler.ja
+va:46)
+	at org.gradle.api.in
+ternal.tasks.compile.
+ModuleApplicationName
+WritingCompiler.execu
+te(ModuleApplicationN
+ameWritingCompiler.ja
+va:36)
+	at org.gradle.jvm.to
+olchain.internal.Defa
+ultToolchainJavaCompi
+ler.execute(DefaultTo
+olchainJavaCompiler.j
+ava:57)
+	at org.gradle.api.ta
+sks.compile.JavaCompi
+le.lambda$createToolc
+hainCompiler$3(JavaCo
+mpile.java:206)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.Selective
+Compiler.lambda$execu
+te$0(SelectiveCompile
+r.java:101)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.transacti
+on.CompileTransaction
+.execute(CompileTrans
+action.java:108)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.Selective
+Compiler.execute(Sele
+ctiveCompiler.java:95
+)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.Selective
+Compiler.execute(Sele
+ctiveCompiler.java:44
+)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.Increment
+alResultStoringCompil
+er.execute(Incrementa
+lResultStoringCompile
+r.java:66)
+	at org.gradle.api.in
+ternal.tasks.compile.
+incremental.Increment
+alResultStoringCompil
+er.execute(Incrementa
+lResultStoringCompile
+r.java:52)
+	at org.gradle.api.in
+ternal.tasks.compile.
+CompileJavaBuildOpera
+tionReportingCompiler
+$1.call(CompileJavaBu
+ildOperationReporting
+Compiler.java:64)
+	at org.gradle.api.in
+ternal.tasks.compile.
+CompileJavaBuildOpera
+tionReportingCompiler
+$1.call(CompileJavaBu
+ildOperationReporting
+Compiler.java:48)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:209)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:204)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:59)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:1
+66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:5
+9)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+call(DefaultBuildOper
+ationRunner.java:53)
+	at org.gradle.api.in
+ternal.tasks.compile.
+CompileJavaBuildOpera
+tionReportingCompiler
+.execute(CompileJavaB
+uildOperationReportin
+gCompiler.java:48)
+	at org.gradle.api.ta
+sks.compile.JavaCompi
+le.performCompilation
+(JavaCompile.java:224
+)
+	at org.gradle.api.ta
+sks.compile.JavaCompi
+le.performIncremental
+Compilation(JavaCompi
+le.java:165)
+	at org.gradle.api.ta
+sks.compile.JavaCompi
+le.compile(JavaCompil
+e.java:150)
+	at org.gradle.intern
+al.reflect.JavaMethod
+.invoke(JavaMethod.ja
+va:125)
+	at org.gradle.api.in
+ternal.project.taskfa
+ctory.IncrementalTask
+Action.doExecute(Incr
+ementalTaskAction.jav
+a:45)
+	at org.gradle.api.in
+ternal.project.taskfa
+ctory.StandardTaskAct
+ion.execute(StandardT
+askAction.java:51)
+	at org.gradle.api.in
+ternal.project.taskfa
+ctory.IncrementalTask
+Action.execute(Increm
+entalTaskAction.java:
+26)
+	at org.gradle.api.in
+ternal.project.taskfa
+ctory.StandardTaskAct
+ion.execute(StandardT
+askAction.java:29)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution$3.run
+(TaskExecution.java:2
+52)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+1.execute(DefaultBuil
+dOperationRunner.java
+:29)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+1.execute(DefaultBuil
+dOperationRunner.java
+:26)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:59)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:1
+66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:5
+9)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+run(DefaultBuildOpera
+tionRunner.java:47)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution.execu
+teAction(TaskExecutio
+n.java:237)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution.execu
+teActions(TaskExecuti
+on.java:220)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution.execu
+teWithPreviousOutputF
+iles(TaskExecution.ja
+va:203)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution.execu
+te(TaskExecution.java
+:170)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep.executeInte
+rnal(ExecuteStep.java
+:105)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep.access$000(
+ExecuteStep.java:44)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep$1.call(Exec
+uteStep.java:59)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep$1.call(Exec
+uteStep.java:56)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:209)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+CallableBuildOperatio
+nWorker.execute(Defau
+ltBuildOperationRunne
+r.java:204)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner$
+2.execute(DefaultBuil
+dOperationRunner.java
+:59)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:1
+66)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+execute(DefaultBuildO
+perationRunner.java:5
+9)
+	at org.gradle.intern
+al.operations.Default
+BuildOperationRunner.
+call(DefaultBuildOper
+ationRunner.java:53)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep.execute(Exe
+cuteStep.java:56)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteStep.execute(Exe
+cuteStep.java:44)
+	at org.gradle.intern
+al.execution.steps.Ca
+ncelExecutionStep.exe
+cute(CancelExecutionS
+tep.java:42)
+	at org.gradle.intern
+al.execution.steps.Ti
+meoutStep.executeWith
+outTimeout(TimeoutSte
+p.java:75)
+	at org.gradle.intern
+al.execution.steps.Ti
+meoutStep.execute(Tim
+eoutStep.java:55)
+	at org.gradle.intern
+al.execution.steps.Pr
+eCreateOutputParentsS
+tep.execute(PreCreate
+OutputParentsStep.jav
+a:50)
+	at org.gradle.intern
+al.execution.steps.Pr
+eCreateOutputParentsS
+tep.execute(PreCreate
+OutputParentsStep.jav
+a:28)
+	at org.gradle.intern
+al.execution.steps.Re
+movePreviousOutputsSt
+ep.execute(RemovePrev
+iousOutputsStep.java:
+68)
+	at org.gradle.intern
+al.execution.steps.Re
+movePreviousOutputsSt
+ep.execute(RemovePrev
+iousOutputsStep.java:
+38)
+	at org.gradle.intern
+al.execution.steps.Br
+oadcastChangingOutput
+sStep.execute(Broadca
+stChangingOutputsStep
+.java:61)
+	at org.gradle.intern
+al.execution.steps.Br
+oadcastChangingOutput
+sStep.execute(Broadca
+stChangingOutputsStep
+.java:26)
+	at org.gradle.intern
+al.execution.steps.Ca
+ptureOutputsAfterExec
+utionStep.execute(Cap
+tureOutputsAfterExecu
+tionStep.java:69)
+	at org.gradle.intern
+al.execution.steps.Ca
+ptureOutputsAfterExec
+utionStep.execute(Cap
+tureOutputsAfterExecu
+tionStep.java:46)
+	at org.gradle.intern
+al.execution.steps.Re
+solveInputChangesStep
+.execute(ResolveInput
+ChangesStep.java:39)
+	at org.gradle.intern
+al.execution.steps.Re
+solveInputChangesStep
+.execute(ResolveInput
+ChangesStep.java:28)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.executeW
+ithoutCache(BuildCach
+eStep.java:189)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.executeA
+ndStoreInCache(BuildC
+acheStep.java:145)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.lambda$e
+xecuteWithCache$4(Bui
+ldCacheStep.java:101)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.lambda$e
+xecuteWithCache$5(Bui
+ldCacheStep.java:101)
+	at org.gradle.intern
+al.Try$Success.map(Tr
+y.java:170)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.executeW
+ithCache(BuildCacheSt
+ep.java:85)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.lambda$e
+xecute$0(BuildCacheSt
+ep.java:74)
+	at org.gradle.intern
+al.Either$Left.fold(E
+ither.java:116)
+	at org.gradle.intern
+al.execution.caching.
+CachingState.fold(Cac
+hingState.java:62)
+23 actionable tasks: 1 executed, 22 up-to-date
+Configuration cache entry reused.
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.execute(
+BuildCacheStep.java:7
+3)
+	at org.gradle.intern
+al.execution.steps.Bu
+ildCacheStep.execute(
+BuildCacheStep.java:4
+8)
+	at org.gradle.intern
+al.execution.steps.St
+oreExecutionStateStep
+.execute(StoreExecuti
+onStateStep.java:46)
+	at org.gradle.intern
+al.execution.steps.St
+oreExecutionStateStep
+.execute(StoreExecuti
+onStateStep.java:35)
+	at org.gradle.intern
+al.execution.steps.Sk
+ipUpToDateStep.execut
+eBecause(SkipUpToDate
+Step.java:75)
+	at org.gradle.intern
+al.execution.steps.Sk
+ipUpToDateStep.lambda
+$execute$2(SkipUpToDa
+teStep.java:53)
+	at org.gradle.intern
+al.execution.steps.Sk
+ipUpToDateStep.execut
+e(SkipUpToDateStep.ja
+va:53)
+	at org.gradle.intern
+al.execution.steps.Sk
+ipUpToDateStep.execut
+e(SkipUpToDateStep.ja
+va:35)
+	at org.gradle.intern
+al.execution.steps.le
+gacy.MarkSnapshotting
+InputsFinishedStep.ex
+ecute(MarkSnapshottin
+gInputsFinishedStep.j
+ava:37)
+	at org.gradle.intern
+al.execution.steps.le
+gacy.MarkSnapshotting
+InputsFinishedStep.ex
+ecute(MarkSnapshottin
+gInputsFinishedStep.j
+ava:27)
+	at org.gradle.intern
+al.execution.steps.Re
+solveIncrementalCachi
+ngStateStep.executeDe
+legate(ResolveIncreme
+ntalCachingStateStep.
+java:49)
+	at org.gradle.intern
+al.execution.steps.Re
+solveIncrementalCachi
+ngStateStep.executeDe
+legate(ResolveIncreme
+ntalCachingStateStep.
+java:27)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractResolveCachingS
+tateStep.execute(Abst
+ractResolveCachingSta
+teStep.java:71)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractResolveCachingS
+tateStep.execute(Abst
+ractResolveCachingSta
+teStep.java:39)
+	at org.gradle.intern
+al.execution.steps.Re
+solveChangesStep.exec
+ute(ResolveChangesSte
+p.java:64)
+	at org.gradle.intern
+al.execution.steps.Re
+solveChangesStep.exec
+ute(ResolveChangesSte
+p.java:35)
+	at org.gradle.intern
+al.execution.steps.Va
+lidateStep.execute(Va
+lidateStep.java:62)
+	at org.gradle.intern
+al.execution.steps.Va
+lidateStep.execute(Va
+lidateStep.java:40)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractCaptureStateBef
+oreExecutionStep.exec
+ute(AbstractCaptureSt
+ateBeforeExecutionSte
+p.java:76)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractCaptureStateBef
+oreExecutionStep.exec
+ute(AbstractCaptureSt
+ateBeforeExecutionSte
+p.java:45)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractSkipEmptyWorkSt
+ep.executeWithNonEmpt
+ySources(AbstractSkip
+EmptyWorkStep.java:13
+6)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractSkipEmptyWorkSt
+ep.execute(AbstractSk
+ipEmptyWorkStep.java:
+66)
+	at org.gradle.intern
+al.execution.steps.Ab
+stractSkipEmptyWorkSt
+ep.execute(AbstractSk
+ipEmptyWorkStep.java:
+38)
+	at org.gradle.intern
+al.execution.steps.le
+gacy.MarkSnapshotting
+InputsStartedStep.exe
+cute(MarkSnapshotting
+InputsStartedStep.jav
+a:38)
+	at org.gradle.intern
+al.execution.steps.Lo
+adPreviousExecutionSt
+ateStep.execute(LoadP
+reviousExecutionState
+Step.java:36)
+	at org.gradle.intern
+al.execution.steps.Lo
+adPreviousExecutionSt
+ateStep.execute(LoadP
+reviousExecutionState
+Step.java:23)
+	at org.gradle.intern
+al.execution.steps.Ha
+ndleStaleOutputsStep.
+execute(HandleStaleOu
+tputsStep.java:75)
+	at org.gradle.intern
+al.execution.steps.Ha
+ndleStaleOutputsStep.
+execute(HandleStaleOu
+tputsStep.java:41)
+	at org.gradle.intern
+al.execution.steps.As
+signMutableWorkspaceS
+tep.lambda$execute$0(
+AssignMutableWorkspac
+eStep.java:35)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.TaskExecution$4.wit
+hWorkspace(TaskExecut
+ion.java:297)
+	at org.gradle.intern
+al.execution.steps.As
+signMutableWorkspaceS
+tep.execute(AssignMut
+ableWorkspaceStep.jav
+a:31)
+	at org.gradle.intern
+al.execution.steps.As
+signMutableWorkspaceS
+tep.execute(AssignMut
+ableWorkspaceStep.jav
+a:22)
+	at org.gradle.intern
+al.execution.steps.Ch
+oosePipelineStep.exec
+ute(ChoosePipelineSte
+p.java:40)
+	at org.gradle.intern
+al.execution.steps.Ch
+oosePipelineStep.exec
+ute(ChoosePipelineSte
+p.java:23)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteWorkBuildOperati
+onFiringStep.lambda$e
+xecute$2(ExecuteWorkB
+uildOperationFiringSt
+ep.java:67)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteWorkBuildOperati
+onFiringStep.execute(
+ExecuteWorkBuildOpera
+tionFiringStep.java:6
+7)
+	at org.gradle.intern
+al.execution.steps.Ex
+ecuteWorkBuildOperati
+onFiringStep.execute(
+ExecuteWorkBuildOpera
+tionFiringStep.java:3
+9)
+	at org.gradle.intern
+al.execution.steps.Id
+entityCacheStep.execu
+te(IdentityCacheStep.
+java:46)
+	at org.gradle.intern
+al.execution.steps.Id
+entityCacheStep.execu
+te(IdentityCacheStep.
+java:34)
+	at org.gradle.intern
+al.execution.steps.Id
+entifyStep.execute(Id
+entifyStep.java:44)
+	at org.gradle.intern
+al.execution.steps.Id
+entifyStep.execute(Id
+entifyStep.java:31)
+	at org.gradle.intern
+al.execution.impl.Def
+aultExecutionEngine$1
+.execute(DefaultExecu
+tionEngine.java:64)
+	at org.gradle.api.in
+ternal.tasks.executio
+n.ExecuteActionsTaskE
+xecuter.executeIfVali
+d(ExecuteActionsTaskE
+xecuter.java:132)
+	... 30 more
+
+
+BUILD FAILED in 914ms
