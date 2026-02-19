@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -240,7 +239,7 @@ public final class EventHandler {
             }
 
             zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, null);
-            DifficultyManager.applyScaling(zombie, level);
+            DifficultyManager.applyScaling(zombie, level, spawnPos);
             level.addFreshEntity(zombie);
             spawned++;
 
@@ -326,11 +325,8 @@ public final class EventHandler {
         }
 
         Holder<Biome> biomeHolder = level.getBiome(pos);
-        boolean desertBiome = biomeHolder.is(Biomes.DESERT) || biomeHolder.is(BiomeTags.IS_BADLANDS);
-        boolean waterBiome = biomeHolder.is(BiomeTags.IS_OCEAN)
-                || biomeHolder.is(BiomeTags.IS_RIVER)
-                || biomeHolder.is(Biomes.SWAMP)
-                || biomeHolder.is(Biomes.MANGROVE_SWAMP);
+        boolean desertBiome = ConfigValidator.isDesertStyleBiome(biomeHolder);
+        boolean waterBiome = ConfigValidator.isWaterStyleBiome(biomeHolder);
 
         SpawnMath.VariantWeights weights = ConfigValidator.biomeAdjustedVariantWeights(desertBiome, waterBiome);
         double roll = random.nextDouble();

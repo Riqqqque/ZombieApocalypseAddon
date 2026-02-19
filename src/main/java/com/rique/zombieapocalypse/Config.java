@@ -68,6 +68,114 @@ public final class Config {
         public final ModConfigSpec.DoubleValue maxArmorChance;
         public final ModConfigSpec.DoubleValue maxWeaponChance;
 
+        // Attribute tuning for spawned zombie-class mobs
+        public final ModConfigSpec.BooleanValue enableAttributeModifiers;
+        public final ModConfigSpec.DoubleValue baseHealthMultiplier;
+        public final ModConfigSpec.DoubleValue baseHealthBonus;
+        public final ModConfigSpec.DoubleValue baseAttackMultiplier;
+        public final ModConfigSpec.DoubleValue baseAttackBonus;
+        public final ModConfigSpec.DoubleValue baseSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue baseSpeedBonus;
+        public final ModConfigSpec.DoubleValue baseArmorMultiplier;
+        public final ModConfigSpec.DoubleValue baseArmorBonus;
+        public final ModConfigSpec.DoubleValue baseFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue baseFollowRangeBonus;
+        public final ModConfigSpec.DoubleValue baseKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue baseKnockbackResistanceBonus;
+        public final ModConfigSpec.BooleanValue scaleAttributesWithDifficulty;
+        public final ModConfigSpec.DoubleValue maxHealthScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxHealthScaleBonus;
+        public final ModConfigSpec.DoubleValue maxAttackScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxAttackScaleBonus;
+        public final ModConfigSpec.DoubleValue maxSpeedScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxSpeedScaleBonus;
+        public final ModConfigSpec.DoubleValue maxArmorScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxArmorScaleBonus;
+        public final ModConfigSpec.DoubleValue maxFollowRangeScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxFollowRangeScaleBonus;
+        public final ModConfigSpec.DoubleValue maxKnockbackResistanceScaleMultiplier;
+        public final ModConfigSpec.DoubleValue maxKnockbackResistanceScaleBonus;
+        public final ModConfigSpec.BooleanValue enableVariantAttributeProfiles;
+        public final ModConfigSpec.DoubleValue zombieHealthMultiplier;
+        public final ModConfigSpec.DoubleValue zombieHealthBonus;
+        public final ModConfigSpec.DoubleValue zombieAttackMultiplier;
+        public final ModConfigSpec.DoubleValue zombieAttackBonus;
+        public final ModConfigSpec.DoubleValue zombieSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue zombieSpeedBonus;
+        public final ModConfigSpec.DoubleValue zombieArmorMultiplier;
+        public final ModConfigSpec.DoubleValue zombieArmorBonus;
+        public final ModConfigSpec.DoubleValue zombieFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue zombieFollowRangeBonus;
+        public final ModConfigSpec.DoubleValue zombieKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue zombieKnockbackResistanceBonus;
+        public final ModConfigSpec.DoubleValue huskHealthMultiplier;
+        public final ModConfigSpec.DoubleValue huskHealthBonus;
+        public final ModConfigSpec.DoubleValue huskAttackMultiplier;
+        public final ModConfigSpec.DoubleValue huskAttackBonus;
+        public final ModConfigSpec.DoubleValue huskSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue huskSpeedBonus;
+        public final ModConfigSpec.DoubleValue huskArmorMultiplier;
+        public final ModConfigSpec.DoubleValue huskArmorBonus;
+        public final ModConfigSpec.DoubleValue huskFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue huskFollowRangeBonus;
+        public final ModConfigSpec.DoubleValue huskKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue huskKnockbackResistanceBonus;
+        public final ModConfigSpec.DoubleValue drownedHealthMultiplier;
+        public final ModConfigSpec.DoubleValue drownedHealthBonus;
+        public final ModConfigSpec.DoubleValue drownedAttackMultiplier;
+        public final ModConfigSpec.DoubleValue drownedAttackBonus;
+        public final ModConfigSpec.DoubleValue drownedSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue drownedSpeedBonus;
+        public final ModConfigSpec.DoubleValue drownedArmorMultiplier;
+        public final ModConfigSpec.DoubleValue drownedArmorBonus;
+        public final ModConfigSpec.DoubleValue drownedFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue drownedFollowRangeBonus;
+        public final ModConfigSpec.DoubleValue drownedKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue drownedKnockbackResistanceBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerHealthMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerHealthBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerAttackMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerAttackBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerSpeedBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerArmorMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerArmorBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerFollowRangeBonus;
+        public final ModConfigSpec.DoubleValue zombieVillagerKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue zombieVillagerKnockbackResistanceBonus;
+        public final ModConfigSpec.BooleanValue enableBiomeDimensionAttributeMultipliers;
+        public final ModConfigSpec.DoubleValue desertHealthMultiplier;
+        public final ModConfigSpec.DoubleValue desertAttackMultiplier;
+        public final ModConfigSpec.DoubleValue desertSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue desertArmorMultiplier;
+        public final ModConfigSpec.DoubleValue desertFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue desertKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue waterHealthMultiplier;
+        public final ModConfigSpec.DoubleValue waterAttackMultiplier;
+        public final ModConfigSpec.DoubleValue waterSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue waterArmorMultiplier;
+        public final ModConfigSpec.DoubleValue waterFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue waterKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomHealthMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomAttackMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomArmorMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue mushroomKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue netherHealthMultiplier;
+        public final ModConfigSpec.DoubleValue netherAttackMultiplier;
+        public final ModConfigSpec.DoubleValue netherSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue netherArmorMultiplier;
+        public final ModConfigSpec.DoubleValue netherFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue netherKnockbackResistanceMultiplier;
+        public final ModConfigSpec.DoubleValue endHealthMultiplier;
+        public final ModConfigSpec.DoubleValue endAttackMultiplier;
+        public final ModConfigSpec.DoubleValue endSpeedMultiplier;
+        public final ModConfigSpec.DoubleValue endArmorMultiplier;
+        public final ModConfigSpec.DoubleValue endFollowRangeMultiplier;
+        public final ModConfigSpec.DoubleValue endKnockbackResistanceMultiplier;
+
         // Night boost
         public final ModConfigSpec.BooleanValue enableNightBoost;
         public final ModConfigSpec.DoubleValue nightSpawnMultiplier;
@@ -270,6 +378,302 @@ public final class Config {
             maxWeaponChance = builder
                     .comment("Chance for weapon at full scaling.")
                     .defineInRange("maxWeaponChance", 0.2, 0.0, 1.0);
+            builder.pop();
+
+            builder.push("attributes");
+            enableAttributeModifiers = builder
+                    .comment(
+                            "Master switch for spawned zombie-class mob attribute tuning.",
+                            "Applies to zombies, husks, drowned, and zombie villagers spawned by this mod.")
+                    .define("enableAttributeModifiers", true);
+
+            scaleAttributesWithDifficulty = builder
+                    .comment(
+                            "When true, attribute scaling values below are applied using the difficulty factor.",
+                            "Difficulty factor is 0.0 to 1.0 based on scalingStartDay/maxScalingDay.")
+                    .define("scaleAttributesWithDifficulty", true);
+
+            enableVariantAttributeProfiles = builder
+                    .comment(
+                            "When true, per-variant profiles apply on top of base values.",
+                            "Profiles exist for zombie, husk, drowned, and zombie villager.")
+                    .define("enableVariantAttributeProfiles", true);
+
+            enableBiomeDimensionAttributeMultipliers = builder
+                    .comment(
+                            "When true, biome and dimension multipliers apply on top of base/variant values.",
+                            "Biome contexts: desert, water, mushroom.",
+                            "Dimension contexts: nether, end.",
+                            "If multiple contexts match, their multipliers stack multiplicatively.")
+                    .define("enableBiomeDimensionAttributeMultipliers", true);
+
+            builder.push("base");
+            baseHealthMultiplier = builder
+                    .comment(
+                            "Base max health multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: max health = 20.0.")
+                    .defineInRange("baseHealthMultiplier", 1.0, 0.0, 10.0);
+
+            baseHealthBonus = builder
+                    .comment(
+                            "Flat max health bonus applied after baseHealthMultiplier.",
+                            "Typical vanilla zombie baseline: max health = 20.0.")
+                    .defineInRange("baseHealthBonus", 0.0, -200.0, 200.0);
+
+            baseAttackMultiplier = builder
+                    .comment(
+                            "Base attack damage multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: attack damage = 3.0.",
+                            "Final damage can still vary with vanilla difficulty and effects.")
+                    .defineInRange("baseAttackMultiplier", 1.0, 0.0, 10.0);
+
+            baseAttackBonus = builder
+                    .comment(
+                            "Flat attack damage bonus applied after baseAttackMultiplier.",
+                            "Typical vanilla zombie baseline: attack damage = 3.0.")
+                    .defineInRange("baseAttackBonus", 0.0, -50.0, 50.0);
+
+            baseSpeedMultiplier = builder
+                    .comment(
+                            "Base movement speed multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: movement speed = 0.23.")
+                    .defineInRange("baseSpeedMultiplier", 1.0, 0.0, 10.0);
+
+            baseSpeedBonus = builder
+                    .comment(
+                            "Flat movement speed bonus applied after baseSpeedMultiplier.",
+                            "Typical vanilla zombie baseline: movement speed = 0.23.")
+                    .defineInRange("baseSpeedBonus", 0.0, -1.0, 1.0);
+
+            baseArmorMultiplier = builder
+                    .comment(
+                            "Base armor multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: armor = 2.0.")
+                    .defineInRange("baseArmorMultiplier", 1.0, 0.0, 10.0);
+
+            baseArmorBonus = builder
+                    .comment(
+                            "Flat armor bonus applied after baseArmorMultiplier.",
+                            "Typical vanilla zombie baseline: armor = 2.0.")
+                    .defineInRange("baseArmorBonus", 0.0, -30.0, 30.0);
+
+            baseFollowRangeMultiplier = builder
+                    .comment(
+                            "Base follow range multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: follow range = 35.0.")
+                    .defineInRange("baseFollowRangeMultiplier", 1.0, 0.0, 10.0);
+
+            baseFollowRangeBonus = builder
+                    .comment(
+                            "Flat follow range bonus applied after baseFollowRangeMultiplier.",
+                            "Typical vanilla zombie baseline: follow range = 35.0.")
+                    .defineInRange("baseFollowRangeBonus", 0.0, -100.0, 100.0);
+
+            baseKnockbackResistanceMultiplier = builder
+                    .comment(
+                            "Base knockback resistance multiplier for mod-spawned mobs.",
+                            "Typical vanilla zombie baseline: knockback resistance = 0.0.")
+                    .defineInRange("baseKnockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+
+            baseKnockbackResistanceBonus = builder
+                    .comment(
+                            "Flat knockback resistance bonus applied after baseKnockbackResistanceMultiplier.",
+                            "Typical vanilla zombie baseline: knockback resistance = 0.0.",
+                            "Useful range is usually 0.0 to 1.0.")
+                    .defineInRange("baseKnockbackResistanceBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+
+            builder.push("scaling");
+            maxHealthScaleMultiplier = builder
+                    .comment(
+                            "At 100% difficulty factor, additional health multiplier.",
+                            "Formula: value *= (1 + maxHealthScaleMultiplier * factor).")
+                    .defineInRange("maxHealthScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxHealthScaleBonus = builder
+                    .comment(
+                            "At 100% difficulty factor, additional flat health bonus.",
+                            "Formula: value += maxHealthScaleBonus * factor.")
+                    .defineInRange("maxHealthScaleBonus", 0.0, -200.0, 200.0);
+
+            maxAttackScaleMultiplier = builder
+                    .comment("At 100% difficulty factor, additional attack damage multiplier.")
+                    .defineInRange("maxAttackScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxAttackScaleBonus = builder
+                    .comment("At 100% difficulty factor, additional flat attack damage bonus.")
+                    .defineInRange("maxAttackScaleBonus", 0.0, -50.0, 50.0);
+
+            maxSpeedScaleMultiplier = builder
+                    .comment("At 100% difficulty factor, additional movement speed multiplier.")
+                    .defineInRange("maxSpeedScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxSpeedScaleBonus = builder
+                    .comment("At 100% difficulty factor, additional flat movement speed bonus.")
+                    .defineInRange("maxSpeedScaleBonus", 0.0, -1.0, 1.0);
+
+            maxArmorScaleMultiplier = builder
+                    .comment("At 100% difficulty factor, additional armor multiplier.")
+                    .defineInRange("maxArmorScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxArmorScaleBonus = builder
+                    .comment("At 100% difficulty factor, additional flat armor bonus.")
+                    .defineInRange("maxArmorScaleBonus", 0.0, -30.0, 30.0);
+
+            maxFollowRangeScaleMultiplier = builder
+                    .comment("At 100% difficulty factor, additional follow range multiplier.")
+                    .defineInRange("maxFollowRangeScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxFollowRangeScaleBonus = builder
+                    .comment("At 100% difficulty factor, additional flat follow range bonus.")
+                    .defineInRange("maxFollowRangeScaleBonus", 0.0, -100.0, 100.0);
+
+            maxKnockbackResistanceScaleMultiplier = builder
+                    .comment("At 100% difficulty factor, additional knockback resistance multiplier.")
+                    .defineInRange("maxKnockbackResistanceScaleMultiplier", 0.0, 0.0, 10.0);
+
+            maxKnockbackResistanceScaleBonus = builder
+                    .comment(
+                            "At 100% difficulty factor, additional flat knockback resistance bonus.",
+                            "Useful range is usually 0.0 to 1.0.")
+                    .defineInRange("maxKnockbackResistanceScaleBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+
+            builder.push("variants");
+
+            builder.push("zombie");
+            zombieHealthMultiplier = builder
+                    .comment(
+                            "Per-variant profile for normal zombies.",
+                            "Stacks on top of attributes.base.* values.",
+                            "Vanilla baseline reference: health 20.0, attack 3.0, speed 0.23, armor 2.0, follow range 35.0, knockback resistance 0.0.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            zombieHealthBonus = builder.defineInRange("healthBonus", 0.0, -200.0, 200.0);
+            zombieAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            zombieAttackBonus = builder.defineInRange("attackBonus", 0.0, -50.0, 50.0);
+            zombieSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            zombieSpeedBonus = builder.defineInRange("speedBonus", 0.0, -1.0, 1.0);
+            zombieArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            zombieArmorBonus = builder.defineInRange("armorBonus", 0.0, -30.0, 30.0);
+            zombieFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            zombieFollowRangeBonus = builder.defineInRange("followRangeBonus", 0.0, -100.0, 100.0);
+            zombieKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            zombieKnockbackResistanceBonus = builder.defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+
+            builder.push("husk");
+            huskHealthMultiplier = builder
+                    .comment("Per-variant profile for husks. Stacks on top of attributes.base.* values.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            huskHealthBonus = builder.defineInRange("healthBonus", 0.0, -200.0, 200.0);
+            huskAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            huskAttackBonus = builder.defineInRange("attackBonus", 0.0, -50.0, 50.0);
+            huskSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            huskSpeedBonus = builder.defineInRange("speedBonus", 0.0, -1.0, 1.0);
+            huskArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            huskArmorBonus = builder.defineInRange("armorBonus", 0.0, -30.0, 30.0);
+            huskFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            huskFollowRangeBonus = builder.defineInRange("followRangeBonus", 0.0, -100.0, 100.0);
+            huskKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            huskKnockbackResistanceBonus = builder.defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+
+            builder.push("drowned");
+            drownedHealthMultiplier = builder
+                    .comment("Per-variant profile for drowned. Stacks on top of attributes.base.* values.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            drownedHealthBonus = builder.defineInRange("healthBonus", 0.0, -200.0, 200.0);
+            drownedAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            drownedAttackBonus = builder.defineInRange("attackBonus", 0.0, -50.0, 50.0);
+            drownedSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            drownedSpeedBonus = builder.defineInRange("speedBonus", 0.0, -1.0, 1.0);
+            drownedArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            drownedArmorBonus = builder.defineInRange("armorBonus", 0.0, -30.0, 30.0);
+            drownedFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            drownedFollowRangeBonus = builder.defineInRange("followRangeBonus", 0.0, -100.0, 100.0);
+            drownedKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            drownedKnockbackResistanceBonus = builder.defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+
+            builder.push("zombieVillager");
+            zombieVillagerHealthMultiplier = builder
+                    .comment("Per-variant profile for zombie villagers. Stacks on top of attributes.base.* values.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerHealthBonus = builder.defineInRange("healthBonus", 0.0, -200.0, 200.0);
+            zombieVillagerAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerAttackBonus = builder.defineInRange("attackBonus", 0.0, -50.0, 50.0);
+            zombieVillagerSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerSpeedBonus = builder.defineInRange("speedBonus", 0.0, -1.0, 1.0);
+            zombieVillagerArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerArmorBonus = builder.defineInRange("armorBonus", 0.0, -30.0, 30.0);
+            zombieVillagerFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerFollowRangeBonus = builder.defineInRange("followRangeBonus", 0.0, -100.0, 100.0);
+            zombieVillagerKnockbackResistanceMultiplier = builder
+                    .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            zombieVillagerKnockbackResistanceBonus = builder.defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
+            builder.pop();
+            builder.pop();
+
+            builder.push("contexts");
+
+            builder.push("desert");
+            desertHealthMultiplier = builder
+                    .comment("Biome context multiplier in desert/badlands biomes.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            desertAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            desertSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            desertArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            desertFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            desertKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            builder.pop();
+
+            builder.push("water");
+            waterHealthMultiplier = builder
+                    .comment("Biome context multiplier in ocean/river/swamp biomes.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            waterAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            waterSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            waterArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            waterFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            waterKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            builder.pop();
+
+            builder.push("mushroom");
+            mushroomHealthMultiplier = builder
+                    .comment("Biome context multiplier in mushroom fields.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            mushroomAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            mushroomSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            mushroomArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            mushroomFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            mushroomKnockbackResistanceMultiplier = builder
+                    .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            builder.pop();
+
+            builder.push("nether");
+            netherHealthMultiplier = builder
+                    .comment("Dimension context multiplier in the Nether.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            netherAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            netherSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            netherArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            netherFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            netherKnockbackResistanceMultiplier = builder
+                    .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            builder.pop();
+
+            builder.push("end");
+            endHealthMultiplier = builder
+                    .comment("Dimension context multiplier in the End.")
+                    .defineInRange("healthMultiplier", 1.0, 0.0, 10.0);
+            endAttackMultiplier = builder.defineInRange("attackMultiplier", 1.0, 0.0, 10.0);
+            endSpeedMultiplier = builder.defineInRange("speedMultiplier", 1.0, 0.0, 10.0);
+            endArmorMultiplier = builder.defineInRange("armorMultiplier", 1.0, 0.0, 10.0);
+            endFollowRangeMultiplier = builder.defineInRange("followRangeMultiplier", 1.0, 0.0, 10.0);
+            endKnockbackResistanceMultiplier = builder.defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
+            builder.pop();
+
+            builder.pop();
             builder.pop();
 
             builder.push("nightspawning");
