@@ -25,4 +25,8 @@ final class CommandUtil {
     static String multiplier(double value) {
         return String.format(Locale.ROOT, "%.2fx", value);
     }
+
+    static String number(double value) {
+        return String.format(Locale.ROOT, "%.4f", value);
+    }
 }

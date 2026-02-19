@@ -114,6 +114,13 @@ public final class DaySpawnCommands {
                                 })))
                 .then(toggleBoolNode("bloodmoon", Config.COMMON.enableBloodMoon::set, "Blood moon"))
                 .then(toggleBoolNode("scaling", Config.COMMON.enableDifficultyScaling::set, "Difficulty scaling"))
+                .then(toggleBoolNode("attributes", Config.COMMON.enableAttributeModifiers::set, "Attribute modifiers"))
+                .then(toggleBoolNode("attributescaling", Config.COMMON.scaleAttributesWithDifficulty::set,
+                        "Attribute scaling with difficulty"))
+                .then(toggleBoolNode("variantprofiles", Config.COMMON.enableVariantAttributeProfiles::set,
+                        "Variant attribute profiles"))
+                .then(toggleBoolNode("contextprofiles", Config.COMMON.enableBiomeDimensionAttributeMultipliers::set,
+                        "Biome/dimension context profiles"))
                 .then(toggleBoolNode("biomes", Config.COMMON.enableBiomeModifiers::set, "Biome modifiers"))
                 .then(toggleBoolNode("nether", Config.COMMON.netherSpawning::set, "Nether spawning"))
                 .then(toggleBoolNode("end", Config.COMMON.endSpawning::set, "End spawning"))
@@ -156,6 +163,22 @@ public final class DaySpawnCommands {
         status.append("Event interval: ").append(Config.COMMON.eventSpawnInterval.get()).append(" ticks\n");
         status.append("Blood moon: ").append(CommandUtil.onOff(Config.COMMON.enableBloodMoon.get())).append('\n');
         status.append("Scaling: ").append(CommandUtil.onOff(Config.COMMON.enableDifficultyScaling.get())).append('\n');
+        status.append("Attributes: ").append(CommandUtil.onOff(Config.COMMON.enableAttributeModifiers.get())).append('\n');
+        status.append("Attribute scaling: ").append(CommandUtil.onOff(Config.COMMON.scaleAttributesWithDifficulty.get()))
+                .append('\n');
+        status.append("Variant profiles: ").append(CommandUtil.onOff(Config.COMMON.enableVariantAttributeProfiles.get()))
+                .append('\n');
+        status.append("Context profiles: ")
+                .append(CommandUtil.onOff(Config.COMMON.enableBiomeDimensionAttributeMultipliers.get()))
+                .append('\n');
+        status.append("Base multipliers H/ATK/SPD: ")
+                .append(CommandUtil.multiplier(Config.COMMON.baseHealthMultiplier.get()))
+                .append(" / ")
+                .append(CommandUtil.multiplier(Config.COMMON.baseAttackMultiplier.get()))
+                .append(" / ")
+                .append(CommandUtil.multiplier(Config.COMMON.baseSpeedMultiplier.get()))
+                .append('\n');
+        status.append("Use /zattr for live numeric attribute tuning.\n");
         status.append("Biome modifiers: ").append(CommandUtil.onOff(Config.COMMON.enableBiomeModifiers.get())).append('\n');
         status.append("Nether spawning: ").append(CommandUtil.onOff(Config.COMMON.netherSpawning.get())).append('\n');
         status.append("End spawning: ").append(CommandUtil.onOff(Config.COMMON.endSpawning.get())).append('\n');

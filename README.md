@@ -8,6 +8,9 @@ ZombieApocalypseAddon is a NeoForge 1.21.1 mod that turns the world into a confi
 - Horde events with configurable schedule, chance, duration, and spawn intensity.
 - Blood moon nights with random or forced triggers.
 - Difficulty scaling over in-game days (speed, health, armor, weapons).
+- Advanced spawned-mob attribute tuning for health, attack, speed, armor, follow range, and knockback resistance.
+- Per-variant attribute profiles (zombie, husk, drowned, zombie villager).
+- Biome and dimension attribute context multipliers (desert, water, mushroom, nether, end).
 - Biome-aware variant selection (husk and drowned weighting).
 - Death cooldown that temporarily reduces spawn pressure after player death.
 - Persistent kill statistics and cooldown data.
@@ -22,6 +25,15 @@ ZombieApocalypseAddon is a NeoForge 1.21.1 mod that turns the world into a confi
 - `/zstats [player|all|clear]`
 - `/zscaling status`
 - `/zdayspawn status`
+- `/zdayspawn attributes <true|false>`
+- `/zdayspawn attributescaling <true|false>`
+- `/zdayspawn variantprofiles <true|false>`
+- `/zdayspawn contextprofiles <true|false>`
+- `/zattr status`
+- `/zattr keys [all]`
+- `/zattr get <key>`
+- `/zattr set <key> <value>`
+- `/zattr toggle <key> <true|false>`
 - `/zdayspawn <setting> <value>`
 
 ## Configuration
@@ -34,6 +46,7 @@ Main sections:
 - `horde`
 - `bloodmoon`
 - `scaling`
+- `attributes`
 - `nightspawning`
 - `biomes`
 - `deathcooldown`

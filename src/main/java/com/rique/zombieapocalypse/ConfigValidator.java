@@ -1,5 +1,10 @@
 package com.rique.zombieapocalypse;
 
+import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+
 /**
  * Reads config values and applies small safety rules/invariants.
  */
@@ -43,6 +48,17 @@ public final class ConfigValidator {
         }
 
         return SpawnMath.normalizeVariantWeights(base.zombieVillagerChance(), husk, drowned);
+    }
+
+    public static boolean isDesertStyleBiome(Holder<Biome> biomeHolder) {
+        return biomeHolder.is(Biomes.DESERT) || biomeHolder.is(BiomeTags.IS_BADLANDS);
+    }
+
+    public static boolean isWaterStyleBiome(Holder<Biome> biomeHolder) {
+        return biomeHolder.is(BiomeTags.IS_OCEAN)
+                || biomeHolder.is(BiomeTags.IS_RIVER)
+                || biomeHolder.is(Biomes.SWAMP)
+                || biomeHolder.is(Biomes.MANGROVE_SWAMP);
     }
 
     public static int spawnIntervalTicks(boolean eventActive) {

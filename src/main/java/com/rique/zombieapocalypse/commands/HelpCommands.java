@@ -27,6 +27,15 @@ public final class HelpCommands {
                         + "/zstats [player|all|clear] - statistics and cooldown data\n"
                         + "/zscaling status - difficulty scaling status\n"
                         + "/zdayspawn status - view spawn settings\n"
+                        + "/zdayspawn attributes <true|false> - toggle base attribute tuning\n"
+                        + "/zdayspawn attributescaling <true|false> - scale attributes by day factor\n"
+                        + "/zdayspawn variantprofiles <true|false> - toggle per-variant attribute profiles\n"
+                        + "/zdayspawn contextprofiles <true|false> - toggle biome/dimension multipliers\n"
+                        + "/zattr status - attribute tuning status\n"
+                        + "/zattr keys [all] - list attribute tuning keys\n"
+                        + "/zattr get <key> - read a numeric setting\n"
+                        + "/zattr set <key> <value> - live-update numeric attribute setting\n"
+                        + "/zattr toggle <key> <true|false> - live-update toggles (attributes.enabled, attributes.scaling, ...)\n"
                         + "/zdayspawn <option> <value> - update live settings",
                 false);
         return 1;
