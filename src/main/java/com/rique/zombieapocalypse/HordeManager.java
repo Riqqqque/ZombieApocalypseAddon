@@ -21,7 +21,41 @@ public final class HordeManager {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    /**
+     * Snapshot of event state for a single tick, avoiding repeated
+     * {@link ApocalypseWorldData#get} lookups.
+     */
+    public record EventState(boolean hordeActive, boolean bloodMoonActive,
+                              double spawnMultiplier, int zombiesPerSpawn) {
+    }
+
     private HordeManager() {
+    }
+
+    public static EventState getEventState(ServerLevel level) {
+        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+
+        boolean hordeActive = state.isHordeActive();
+        boolean bloodMoonActive = state.isBloodMoonActive();
+
+        double spawnMultiplier = 1.0;
+        if (hordeActive) {
+            spawnMultiplier *= Config.COMMON.hordeSpawnMultiplier.get();
+        }
+        if (bloodMoonActive) {
+            spawnMultiplier *= Config.COMMON.bloodMoonSpawnMultiplier.get();
+        }
+
+        int zombiesPerSpawn;
+        if (hordeActive) {
+            zombiesPerSpawn = Config.COMMON.hordeZombiesPerSpawn.get();
+        } else if (bloodMoonActive) {
+            zombiesPerSpawn = Config.COMMON.bloodMoonZombiesPerSpawn.get();
+        } else {
+            zombiesPerSpawn = Config.COMMON.zombiesPerSpawn.get();
+        }
+
+        return new EventState(hordeActive, bloodMoonActive, spawnMultiplier, zombiesPerSpawn);
     }
 
     public static void tick(ServerLevel overworldLevel) {
@@ -82,10 +116,9 @@ public final class HordeManager {
 
         if (!isNight) {
             if (state.isBloodMoonActive()) {
+                state.setBloodMoonActive(false);
                 notifyAllPlayers(level, "Dawn Breaks", "The blood moon fades.");
             }
-
-            state.setBloodMoonActive(false);
             return;
         }
 

@@ -1,5 +1,8 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 
@@ -41,12 +44,14 @@ public final class UtilityCommands {
                 .executes(context -> {
                     int removed = 0;
                     for (ServerLevel level : context.getSource().getServer().getAllLevels()) {
+                        List<Zombie> toRemove = new ArrayList<>();
                         for (Entity entity : level.getAllEntities()) {
                             if (entity instanceof Zombie zombie) {
-                                zombie.discard();
-                                removed++;
+                                toRemove.add(zombie);
                             }
                         }
+                        toRemove.forEach(Zombie::discard);
+                        removed += toRemove.size();
                     }
 
                     CommandUtil.feedback(context.getSource(),
