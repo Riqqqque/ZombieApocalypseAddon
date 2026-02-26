@@ -55,6 +55,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setHordeActive(boolean hordeActive) {
+        if (this.hordeActive == hordeActive) return;
         this.hordeActive = hordeActive;
         setDirty();
     }
@@ -64,6 +65,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setHordeEndGameTime(long hordeEndGameTime) {
+        if (this.hordeEndGameTime == hordeEndGameTime) return;
         this.hordeEndGameTime = hordeEndGameTime;
         setDirty();
     }
@@ -73,6 +75,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setLastHordeRollDay(long lastHordeRollDay) {
+        if (this.lastHordeRollDay == lastHordeRollDay) return;
         this.lastHordeRollDay = lastHordeRollDay;
         setDirty();
     }
@@ -82,6 +85,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setBloodMoonActive(boolean bloodMoonActive) {
+        if (this.bloodMoonActive == bloodMoonActive) return;
         this.bloodMoonActive = bloodMoonActive;
         setDirty();
     }
@@ -91,6 +95,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setBloodMoonNightDay(long bloodMoonNightDay) {
+        if (this.bloodMoonNightDay == bloodMoonNightDay) return;
         this.bloodMoonNightDay = bloodMoonNightDay;
         setDirty();
     }
@@ -100,6 +105,7 @@ public class ApocalypseWorldData extends SavedData {
     }
 
     public void setForcedBloodMoonPending(boolean forcedBloodMoonPending) {
+        if (this.forcedBloodMoonPending == forcedBloodMoonPending) return;
         this.forcedBloodMoonPending = forcedBloodMoonPending;
         setDirty();
     }
