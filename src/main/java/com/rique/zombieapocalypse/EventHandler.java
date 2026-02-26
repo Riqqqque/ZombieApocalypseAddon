@@ -43,7 +43,7 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
-        if (!(event.getEntity() instanceof Zombie zombie) || !Config.COMMON.preventSunBurn.get()) {
+        if (!Config.COMMON.preventSunBurn.get() || !(event.getEntity() instanceof Zombie zombie)) {
             return;
         }
 
@@ -58,11 +58,15 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onEntityTick(EntityTickEvent.Pre event) {
+        if (!Config.COMMON.preventSunBurn.get()) {
+            return;
+        }
+
         if (!(event.getEntity() instanceof Zombie zombie) || zombie.level().isClientSide) {
             return;
         }
 
-        if (!Config.COMMON.preventSunBurn.get() || !zombie.isOnFire()) {
+        if (!zombie.isOnFire()) {
             return;
         }
 
@@ -130,7 +134,8 @@ public final class EventHandler {
             return;
         }
 
-        boolean eventActive = HordeManager.isHordeActive(level) || HordeManager.isBloodMoonActive(level);
+        HordeManager.EventState eventState = HordeManager.getEventState(level);
+        boolean eventActive = eventState.hordeActive() || eventState.bloodMoonActive();
         int interval = ConfigValidator.spawnIntervalTicks(eventActive);
         if (level.getGameTime() % interval != 0L) {
             return;
@@ -141,7 +146,7 @@ public final class EventHandler {
             effectiveChance *= Config.COMMON.nightSpawnMultiplier.get();
         }
 
-        effectiveChance *= HordeManager.getSpawnMultiplier(level);
+        effectiveChance *= eventState.spawnMultiplier();
         effectiveChance = Math.min(1.0, effectiveChance);
 
         if (effectiveChance <= 0.0) {
@@ -150,7 +155,7 @@ public final class EventHandler {
 
         for (ServerPlayer player : level.players()) {
             if (!player.isSpectator() && !player.isCreative()) {
-                attemptSpawnZombie(level, player, effectiveChance);
+                attemptSpawnZombie(level, player, effectiveChance, eventState);
             }
         }
     }
@@ -165,7 +170,7 @@ public final class EventHandler {
         return true;
     }
 
-    private static void attemptSpawnZombie(ServerLevel level, ServerPlayer player, double baseChance) {
+    private static void attemptSpawnZombie(ServerLevel level, ServerPlayer player, double baseChance, HordeManager.EventState eventState) {
         RandomSource random = level.getRandom();
         double effectiveChance = baseChance;
 
@@ -190,10 +195,19 @@ public final class EventHandler {
             return;
         }
 
-        int countToSpawn = Math.max(1, HordeManager.getZombiesPerSpawn(level));
+        int countToSpawn = Math.max(1, eventState.zombiesPerSpawn());
         int maxAttempts = ConfigValidator.spawnAttemptsForWave(countToSpawn);
         int horizontalRange = Math.max(1, Config.COMMON.spawnRange.get());
         int minDistance = Math.max(0, Config.COMMON.minSpawnDistance.get());
+
+        if (minDistance >= horizontalRange) {
+            if (Config.COMMON.enableDebugLogging.get()) {
+                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) >= spawnRange ({}). No spawns possible!",
+                        minDistance, horizontalRange);
+            }
+            return;
+        }
+
         int minDistanceSq = minDistance * minDistance;
 
         boolean requireSky = level.dimension() == Level.OVERWORLD && Config.COMMON.requireOpenSkyForOverworldSpawns.get();
@@ -270,7 +284,19 @@ public final class EventHandler {
             if (minY >= maxY) {
                 return minY;
             }
-            return Mth.nextInt(random, minY, maxY);
+
+            int startY = Mth.nextInt(random, minY, maxY);
+
+            for (int y = startY; y >= minY; y--) {
+                BlockPos checkPos = new BlockPos(x, y, z);
+                if (level.getBlockState(checkPos).isAir()
+                        && level.getBlockState(checkPos.above()).isAir()
+                        && level.getBlockState(checkPos.below()).isFaceSturdy(level, checkPos.below(), Direction.UP)) {
+                    return y;
+                }
+            }
+
+            return startY;
         }
 
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);

@@ -10,6 +10,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -44,6 +45,10 @@ public final class DifficultyManager {
             boolean mushroomBiome,
             boolean netherDimension,
             boolean endDimension) {
+    }
+
+    private enum ArmorTier {
+        LEATHER, CHAINMAIL, IRON, DIAMOND
     }
 
     private static final SpawnContext NO_CONTEXT = new SpawnContext(false, false, false, false, false);
@@ -522,74 +527,71 @@ public final class DifficultyManager {
     }
 
     private static void applyRandomArmor(Zombie zombie, RandomSource random, double factor) {
-        ItemStack helmet = getRandomArmor(random, factor, "helmet");
-        ItemStack chest = getRandomArmor(random, factor, "chestplate");
-        ItemStack legs = getRandomArmor(random, factor, "leggings");
-        ItemStack boots = getRandomArmor(random, factor, "boots");
-
-        if (helmet != null && random.nextFloat() < 0.4F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.HEAD, helmet);
+        if (random.nextFloat() < 0.4F + (float) factor * 0.4F) {
+            zombie.setItemSlot(EquipmentSlot.HEAD, getRandomArmor(random, factor, EquipmentSlot.HEAD));
         }
-        if (chest != null && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.CHEST, chest);
+        if (random.nextFloat() < 0.3F + (float) factor * 0.4F) {
+            zombie.setItemSlot(EquipmentSlot.CHEST, getRandomArmor(random, factor, EquipmentSlot.CHEST));
         }
-        if (legs != null && random.nextFloat() < 0.2F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.LEGS, legs);
+        if (random.nextFloat() < 0.2F + (float) factor * 0.4F) {
+            zombie.setItemSlot(EquipmentSlot.LEGS, getRandomArmor(random, factor, EquipmentSlot.LEGS));
         }
-        if (boots != null && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.FEET, boots);
+        if (random.nextFloat() < 0.3F + (float) factor * 0.4F) {
+            zombie.setItemSlot(EquipmentSlot.FEET, getRandomArmor(random, factor, EquipmentSlot.FEET));
         }
     }
 
-    private static ItemStack getRandomArmor(RandomSource random, double factor, String type) {
+    private static ItemStack getRandomArmor(RandomSource random, double factor, EquipmentSlot slot) {
         double roll = random.nextDouble();
 
         double leatherMax = 0.5 - factor * 0.3;
         double chainMax = leatherMax + 0.2;
         double ironMax = chainMax + 0.2 + factor * 0.1;
 
-        return switch (type) {
-            case "helmet" -> {
-                if (roll < leatherMax) {
-                    yield new ItemStack(Items.LEATHER_HELMET);
-                } else if (roll < chainMax) {
-                    yield new ItemStack(Items.CHAINMAIL_HELMET);
-                } else if (roll < ironMax) {
-                    yield new ItemStack(Items.IRON_HELMET);
-                }
-                yield new ItemStack(Items.DIAMOND_HELMET);
-            }
-            case "chestplate" -> {
-                if (roll < leatherMax) {
-                    yield new ItemStack(Items.LEATHER_CHESTPLATE);
-                } else if (roll < chainMax) {
-                    yield new ItemStack(Items.CHAINMAIL_CHESTPLATE);
-                } else if (roll < ironMax) {
-                    yield new ItemStack(Items.IRON_CHESTPLATE);
-                }
-                yield new ItemStack(Items.DIAMOND_CHESTPLATE);
-            }
-            case "leggings" -> {
-                if (roll < leatherMax) {
-                    yield new ItemStack(Items.LEATHER_LEGGINGS);
-                } else if (roll < chainMax) {
-                    yield new ItemStack(Items.CHAINMAIL_LEGGINGS);
-                } else if (roll < ironMax) {
-                    yield new ItemStack(Items.IRON_LEGGINGS);
-                }
-                yield new ItemStack(Items.DIAMOND_LEGGINGS);
-            }
-            case "boots" -> {
-                if (roll < leatherMax) {
-                    yield new ItemStack(Items.LEATHER_BOOTS);
-                } else if (roll < chainMax) {
-                    yield new ItemStack(Items.CHAINMAIL_BOOTS);
-                } else if (roll < ironMax) {
-                    yield new ItemStack(Items.IRON_BOOTS);
-                }
-                yield new ItemStack(Items.DIAMOND_BOOTS);
-            }
-            default -> null;
+        ArmorTier tier;
+        if (roll < leatherMax) {
+            tier = ArmorTier.LEATHER;
+        } else if (roll < chainMax) {
+            tier = ArmorTier.CHAINMAIL;
+        } else if (roll < ironMax) {
+            tier = ArmorTier.IRON;
+        } else {
+            tier = ArmorTier.DIAMOND;
+        }
+
+        return new ItemStack(getArmorItem(tier, slot));
+    }
+
+    private static Item getArmorItem(ArmorTier tier, EquipmentSlot slot) {
+        return switch (tier) {
+            case LEATHER -> switch (slot) {
+                case HEAD -> Items.LEATHER_HELMET;
+                case CHEST -> Items.LEATHER_CHESTPLATE;
+                case LEGS -> Items.LEATHER_LEGGINGS;
+                case FEET -> Items.LEATHER_BOOTS;
+                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
+            };
+            case CHAINMAIL -> switch (slot) {
+                case HEAD -> Items.CHAINMAIL_HELMET;
+                case CHEST -> Items.CHAINMAIL_CHESTPLATE;
+                case LEGS -> Items.CHAINMAIL_LEGGINGS;
+                case FEET -> Items.CHAINMAIL_BOOTS;
+                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
+            };
+            case IRON -> switch (slot) {
+                case HEAD -> Items.IRON_HELMET;
+                case CHEST -> Items.IRON_CHESTPLATE;
+                case LEGS -> Items.IRON_LEGGINGS;
+                case FEET -> Items.IRON_BOOTS;
+                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
+            };
+            case DIAMOND -> switch (slot) {
+                case HEAD -> Items.DIAMOND_HELMET;
+                case CHEST -> Items.DIAMOND_CHESTPLATE;
+                case LEGS -> Items.DIAMOND_LEGGINGS;
+                case FEET -> Items.DIAMOND_BOOTS;
+                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
+            };
         };
     }
 
