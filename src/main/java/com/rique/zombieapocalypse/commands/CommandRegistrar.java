@@ -12,6 +12,7 @@ public final class CommandRegistrar {
     public static void registerAll(CommandDispatcher<CommandSourceStack> dispatcher) {
         HelpCommands.register(dispatcher);
         UtilityCommands.register(dispatcher);
+        WorldCommands.register(dispatcher);
         HordeCommands.register(dispatcher);
         StatsCommands.register(dispatcher);
         ScalingCommands.register(dispatcher);

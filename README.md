@@ -15,6 +15,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Horde events can occur naturally or be started manually.
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
+- Early-game daytime spawning can be delayed for a configurable number of days.
 - Advanced attribute modifiers let you tune enemy stats deeply.
 - Biome and dimension context profiles let stats change by location.
 - Most behavior is configurable live with commands.
@@ -74,6 +75,7 @@ After a player death, spawn pressure can be reduced temporarily to prevent repea
 
 ## 7) Stats, Effects, and Drops
 - kill tracking
+- kill milestones with advancements at 250, 1000, and 3000 zombie kills
 - cooldown tracking
 - optional atmospheric spawn particles/sounds
 - optional extra drops
@@ -142,6 +144,7 @@ All commands require OP level 2.
 |---|---|
 | `/zhelp` | Shows built-in command help. |
 | `/zburn <true\|false>` | Controls zombie daylight burning. `true` means they burn in daylight, `false` means they do not. |
+| `/zday [status\|set <day>]` | Shows or sets the world day counter. |
 | `/zkill` | Removes all zombie-class entities from loaded levels. |
 
 ## Events
@@ -158,7 +161,7 @@ All commands require OP level 2.
 | `/zstats` | Shows your own stats if run by player; server summary if run from console. |
 | `/zstats <player>` | Shows stats for a specific player. |
 | `/zstats all` | Shows server totals. |
-| `/zstats clear` | Clears all tracked stats/cooldown state. |
+| `/zstats clear` | Clears tracked stats, milestone progress, and cooldown state. |
 
 ## Scaling
 | Command | What it does |
@@ -178,6 +181,7 @@ All commands require OP level 2.
 | `/zdayspawn max <1-500>` | Max nearby zombie-class mobs per player. |
 | `/zdayspawn range <16-128>` | Horizontal spawn range around player. |
 | `/zdayspawn mindist <8-64>` | Minimum spawn distance from player. |
+| `/zdayspawn daylightstart <0-3650>` | Disable custom daytime spawning until this day counter. |
 | `/zdayspawn sky <true\|false>` | Overworld spawn requires open sky. |
 | `/zdayspawn variants <true\|false>` | Enable variant spawning logic. |
 | `/zdayspawn nightboost <true\|false>` | Enable night spawn chance boost. |

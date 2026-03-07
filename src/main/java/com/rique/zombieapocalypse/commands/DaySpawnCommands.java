@@ -98,6 +98,17 @@ public final class DaySpawnCommands {
                                     CommandUtil.feedback(context.getSource(), "Minimum spawn distance: " + value + " blocks", true);
                                     return 1;
                                 })))
+                .then(Commands.literal("daylightstart")
+                        .then(Commands.argument("day", IntegerArgumentType.integer(0, 3650))
+                                .executes(context -> {
+                                    int value = IntegerArgumentType.getInteger(context, "day");
+                                    Config.COMMON.daylightSpawnStartDay.set(value);
+                                    String message = value <= 0
+                                            ? "Daytime custom spawning starts immediately."
+                                            : "Daytime custom spawning starts on day " + value + '.';
+                                    CommandUtil.feedback(context.getSource(), message, true);
+                                    return 1;
+                                })))
                 .then(toggleBoolNode("sky", Config.COMMON.requireOpenSkyForOverworldSpawns::set,
                         "Require open sky in overworld"))
                 .then(toggleBoolNode("variants", Config.COMMON.enableZombieVariants::set, "Zombie variants"))
@@ -154,6 +165,7 @@ public final class DaySpawnCommands {
         status.append("Attempts per zombie: ").append(Config.COMMON.spawnAttemptsPerZombie.get()).append('\n');
         status.append("Range: ").append(Config.COMMON.spawnRange.get()).append(" blocks\n");
         status.append("Min distance: ").append(Config.COMMON.minSpawnDistance.get()).append(" blocks\n");
+        status.append("Daylight spawn start day: ").append(Config.COMMON.daylightSpawnStartDay.get()).append('\n');
         status.append("Require overworld sky: ").append(CommandUtil.onOff(Config.COMMON.requireOpenSkyForOverworldSpawns.get()))
                 .append('\n');
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get())).append('\n');

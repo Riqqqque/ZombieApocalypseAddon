@@ -100,6 +100,10 @@ public final class HordeManager {
 
         state.setLastHordeRollDay(currentDay);
 
+        if (isScheduledHordeBlockedByGrace(currentDay, Config.COMMON.daylightSpawnStartDay.get())) {
+            return;
+        }
+
         int intervalDays = Math.max(1, Config.COMMON.hordeIntervalDays.get());
         if (!EventSchedule.shouldRollHorde(currentDay, dayTime, lastRollDay, intervalDays)) {
             return;
@@ -255,5 +259,9 @@ public final class HordeManager {
 
     public static int getEventSpawnInterval() {
         return Math.max(1, Config.COMMON.eventSpawnInterval.get());
+    }
+
+    static boolean isScheduledHordeBlockedByGrace(long currentDay, int daylightSpawnStartDay) {
+        return currentDay < Math.max(0, daylightSpawnStartDay);
     }
 }

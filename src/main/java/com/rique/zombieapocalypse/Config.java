@@ -35,6 +35,7 @@ public final class Config {
         public final ModConfigSpec.IntValue minSpawnDistance;
         public final ModConfigSpec.IntValue spawnAttemptsPerZombie;
         public final ModConfigSpec.BooleanValue requireOpenSkyForOverworldSpawns;
+        public final ModConfigSpec.IntValue daylightSpawnStartDay;
 
         // Zombie variants
         public final ModConfigSpec.BooleanValue enableZombieVariants;
@@ -272,6 +273,13 @@ public final class Config {
                             "When true, overworld custom spawns require open sky.",
                             "Nether and End use dimension-specific checks instead.")
                     .define("requireOpenSkyForOverworldSpawns", true);
+
+            daylightSpawnStartDay = builder
+                    .comment(
+                            "Disable custom daytime spawning until this day counter is reached.",
+                            "0 = daytime spawning is allowed immediately.",
+                            "Nighttime spawning is unaffected.")
+                    .defineInRange("daylightSpawnStartDay", 0, 0, 3650);
             builder.pop();
 
             builder.push("variants");
@@ -742,7 +750,7 @@ public final class Config {
 
             builder.push("statistics");
             enableStatistics = builder
-                    .comment("Track zombie kills and show /zstats info.")
+                    .comment("Track zombie kills for /zstats info.")
                     .define("enableStatistics", true);
             builder.pop();
 

@@ -1,6 +1,8 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -8,10 +10,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 import com.rique.zombieapocalypse.StatisticsManager;
+import com.rique.zombieapocalypse.ZombieKillAdvancements;
 
 public final class StatsCommands {
 
@@ -40,13 +44,31 @@ public final class StatsCommands {
                             showServerStats(context.getSource());
                             return 1;
                         }))
-                .then(Commands.literal("clear")
-                        .executes(context -> {
-                            ServerLevel level = context.getSource().getLevel();
-                            StatisticsManager.get(level).clearAll();
-                            CommandUtil.feedback(context.getSource(), "All statistics and cooldowns were cleared.", true);
-                            return 1;
-                        })));
+                        .then(Commands.literal("clear")
+                                .executes(context -> {
+                                    MinecraftServer server = context.getSource().getServer();
+                                    ServerLevel level = context.getSource().getLevel();
+                                    StatisticsManager stats = StatisticsManager.get(level);
+
+                                    Set<UUID> playersToReset = new HashSet<>(stats.getPlayersWithTrackedProgress());
+                                    for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                                        playersToReset.add(player.getUUID());
+                                    }
+
+                                    stats.queueAdvancementResets(playersToReset);
+                                    stats.clearAll();
+
+                                    for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                                        ZombieKillAdvancements.clearMilestones(player);
+                                        stats.consumePendingAdvancementReset(player.getUUID());
+                                    }
+
+                                    CommandUtil.feedback(
+                                            context.getSource(),
+                                            "All statistics, milestone progress, and cooldowns were cleared.",
+                                            true);
+                                    return 1;
+                                })));
     }
 
     private static void showPlayerStats(CommandSourceStack source, ServerPlayer player) {

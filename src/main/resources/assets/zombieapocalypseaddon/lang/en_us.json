@@ -1,4 +1,10 @@
 {
   "itemGroup.zombieapocalypseaddon": "Zombie Apocalypse",
-  "modmenu.descriptionTranslation.zombieapocalypseaddon": "Configurable zombie apocalypse gameplay addon"
+  "modmenu.descriptionTranslation.zombieapocalypseaddon": "Configurable zombie apocalypse gameplay addon",
+  "advancement.zombieapocalypseaddon.kill_250.title": "Crowd Control",
+  "advancement.zombieapocalypseaddon.kill_250.description": "Kill 250 zombies",
+  "advancement.zombieapocalypseaddon.kill_1000.title": "Purge Protocol",
+  "advancement.zombieapocalypseaddon.kill_1000.description": "Kill 1,000 zombies",
+  "advancement.zombieapocalypseaddon.kill_3000.title": "No Rest For The Dead",
+  "advancement.zombieapocalypseaddon.kill_3000.description": "Kill 3,000 zombies"
 }
