@@ -109,4 +109,38 @@ public class ApocalypseWorldData extends SavedData {
         this.forcedBloodMoonPending = forcedBloodMoonPending;
         setDirty();
     }
+
+    public void resetEventScheduleState() {
+        boolean changed = false;
+
+        if (hordeActive) {
+            hordeActive = false;
+            changed = true;
+        }
+        if (hordeEndGameTime != 0L) {
+            hordeEndGameTime = 0L;
+            changed = true;
+        }
+        if (lastHordeRollDay != -1L) {
+            lastHordeRollDay = -1L;
+            changed = true;
+        }
+
+        if (bloodMoonActive) {
+            bloodMoonActive = false;
+            changed = true;
+        }
+        if (bloodMoonNightDay != -1L) {
+            bloodMoonNightDay = -1L;
+            changed = true;
+        }
+        if (forcedBloodMoonPending) {
+            forcedBloodMoonPending = false;
+            changed = true;
+        }
+
+        if (changed) {
+            setDirty();
+        }
+    }
 }

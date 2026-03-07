@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Zombie;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ZombieClassMobs;
 
 public final class UtilityCommands {
 
@@ -46,7 +47,7 @@ public final class UtilityCommands {
                     for (ServerLevel level : context.getSource().getServer().getAllLevels()) {
                         List<Zombie> toRemove = new ArrayList<>();
                         for (Entity entity : level.getAllEntities()) {
-                            if (entity instanceof Zombie zombie) {
+                            if (entity instanceof Zombie zombie && ZombieClassMobs.isZombieClass(zombie)) {
                                 toRemove.add(zombie);
                             }
                         }
