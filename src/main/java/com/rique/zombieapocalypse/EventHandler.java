@@ -1,5 +1,9 @@
 package com.rique.zombieapocalypse;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -12,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -30,6 +35,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
@@ -37,23 +43,31 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public final class EventHandler {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final long EXTERNAL_FIRE_GRACE_TICKS = 30L * 20L;
+    private static final Map<UUID, Long> EXTERNAL_FIRE_UNTIL = new HashMap<>();
 
     private EventHandler() {
     }
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
-        if (!Config.COMMON.preventSunBurn.get() || !(event.getEntity() instanceof Zombie zombie)) {
+        if (!Config.COMMON.preventSunBurn.get()
+                || !(event.getEntity() instanceof Zombie zombie)
+                || !ZombieClassMobs.isZombieClass(zombie)) {
             return;
         }
 
-        if (event.getSource().is(DamageTypes.ON_FIRE)
-                && event.getSource().getEntity() == null
-                && event.getSource().getDirectEntity() == null
-                && isLikelySunBurnContext(zombie)) {
+        if (!event.getSource().is(DamageTypeTags.IS_FIRE) || !(zombie.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        if (isNaturalSunFireDamage(zombie)) {
             event.setCanceled(true);
             zombie.clearFire();
+            return;
         }
+
+        rememberExternalFire(zombie, level.getGameTime());
     }
 
     @SubscribeEvent
@@ -62,22 +76,26 @@ public final class EventHandler {
             return;
         }
 
-        if (!(event.getEntity() instanceof Zombie zombie) || zombie.level().isClientSide) {
+        if (!(event.getEntity() instanceof Zombie zombie)
+                || zombie.level().isClientSide
+                || !ZombieClassMobs.isZombieClass(zombie)) {
             return;
         }
+
+        clearExpiredExternalFire(zombie, zombie.level().getGameTime());
 
         if (!zombie.isOnFire()) {
             return;
         }
 
-        if (isLikelySunBurnContext(zombie)) {
+        if (isLikelySunBurnContext(zombie) && !hasRecentExternalFire(zombie, zombie.level().getGameTime())) {
             zombie.clearFire();
         }
     }
 
     @SubscribeEvent
     public static void onLivingDrops(LivingDropsEvent event) {
-        if (!(event.getEntity() instanceof Zombie) || !Config.COMMON.enableExtraDrops.get()) {
+        if (!ZombieClassMobs.isZombieClass(event.getEntity()) || !Config.COMMON.enableExtraDrops.get()) {
             return;
         }
 
@@ -105,9 +123,12 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (event.getEntity() instanceof Zombie && event.getEntity().level() instanceof ServerLevel serverLevel) {
+        if (ZombieClassMobs.isZombieClass(event.getEntity()) && event.getEntity().level() instanceof ServerLevel serverLevel) {
+            EXTERNAL_FIRE_UNTIL.remove(event.getEntity().getUUID());
             if (event.getSource().getEntity() instanceof ServerPlayer player) {
-                StatisticsManager.get(serverLevel).addKill(player.getUUID());
+                StatisticsManager.KillUpdate killUpdate = StatisticsManager.get(serverLevel)
+                        .recordZombieClassKill(player.getUUID());
+                ZombieKillAdvancements.awardForKillCount(player, killUpdate.milestoneKills());
             }
         }
 
@@ -121,12 +142,26 @@ public final class EventHandler {
     }
 
     @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)
+                || !(player.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        StatisticsManager stats = StatisticsManager.get(serverLevel);
+        if (stats.consumePendingAdvancementReset(player.getUUID())) {
+            ZombieKillAdvancements.clearMilestones(player);
+        }
+    }
+
+    @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Pre event) {
         if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
 
         if (level.dimension() == Level.OVERWORLD) {
+            pruneExpiredExternalFire(level.getGameTime());
             HordeManager.tick(level);
         }
 
@@ -135,6 +170,10 @@ public final class EventHandler {
         }
 
         HordeManager.EventState eventState = HordeManager.getEventState(level);
+        if (isDaylightSpawnBlocked(level, eventState.hordeActive())) {
+            return;
+        }
+
         boolean eventActive = eventState.hordeActive() || eventState.bloodMoonActive();
         int interval = ConfigValidator.spawnIntervalTicks(eventActive);
         if (level.getGameTime() % interval != 0L) {
@@ -195,7 +234,11 @@ public final class EventHandler {
             return;
         }
 
-        int countToSpawn = Math.max(1, eventState.zombiesPerSpawn());
+        int countToSpawn = computeSpawnQuota(nearbyZombies, maxZombies, eventState.zombiesPerSpawn());
+        if (countToSpawn <= 0) {
+            return;
+        }
+
         int maxAttempts = ConfigValidator.spawnAttemptsForWave(countToSpawn);
         int horizontalRange = Math.max(1, Config.COMMON.spawnRange.get());
         int minDistance = Math.max(0, Config.COMMON.minSpawnDistance.get());
@@ -329,7 +372,7 @@ public final class EventHandler {
         return level.getEntitiesOfClass(
                 Zombie.class,
                 player.getBoundingBox().inflate(range),
-                Zombie::isAlive).size();
+                zombie -> zombie.isAlive() && ZombieClassMobs.isZombieClass(zombie)).size();
     }
 
     private static boolean canSpawnInBiome(ServerLevel level, BlockPos pos) {
@@ -343,6 +386,23 @@ public final class EventHandler {
         }
 
         return true;
+    }
+
+    static int computeSpawnQuota(int nearbyZombies, int maxZombies, int requestedSpawns) {
+        int availableCapacity = Math.max(0, maxZombies - nearbyZombies);
+        return Math.min(Math.max(1, requestedSpawns), availableCapacity);
+    }
+
+    static boolean isDaylightSpawnBlocked(boolean isDay, long currentDay, int daylightSpawnStartDay, boolean hordeActive) {
+        return isDay && !hordeActive && currentDay < Math.max(0, daylightSpawnStartDay);
+    }
+
+    private static boolean isDaylightSpawnBlocked(ServerLevel level, boolean hordeActive) {
+        return isDaylightSpawnBlocked(
+                level.isDay(),
+                DifficultyManager.getCurrentDay(level),
+                Config.COMMON.daylightSpawnStartDay.get(),
+                hordeActive);
     }
 
     private static Zombie createZombie(ServerLevel level, BlockPos pos, RandomSource random) {
@@ -407,5 +467,40 @@ public final class EventHandler {
         }
 
         return zombie.getLightLevelDependentMagicValue() > 0.5F;
+    }
+
+    private static boolean isNaturalSunFireDamage(Zombie zombie) {
+        return isLikelySunBurnContext(zombie) && !hasRecentExternalFire(zombie, zombie.level().getGameTime());
+    }
+
+    private static void rememberExternalFire(Zombie zombie, long gameTime) {
+        EXTERNAL_FIRE_UNTIL.put(zombie.getUUID(), gameTime + EXTERNAL_FIRE_GRACE_TICKS);
+    }
+
+    private static boolean hasRecentExternalFire(Zombie zombie, long gameTime) {
+        Long until = EXTERNAL_FIRE_UNTIL.get(zombie.getUUID());
+        if (until == null) {
+            return false;
+        }
+
+        if (gameTime >= until) {
+            EXTERNAL_FIRE_UNTIL.remove(zombie.getUUID());
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void clearExpiredExternalFire(Zombie zombie, long gameTime) {
+        if (!zombie.isOnFire()) {
+            EXTERNAL_FIRE_UNTIL.remove(zombie.getUUID());
+            return;
+        }
+
+        hasRecentExternalFire(zombie, gameTime);
+    }
+
+    static void pruneExpiredExternalFire(long gameTime) {
+        EXTERNAL_FIRE_UNTIL.entrySet().removeIf(entry -> gameTime >= entry.getValue());
     }
 }
