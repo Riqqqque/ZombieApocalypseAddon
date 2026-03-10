@@ -114,6 +114,8 @@ public final class DaySpawnCommands {
                 .then(toggleBoolNode("variants", Config.COMMON.enableZombieVariants::set, "Zombie variants"))
                 .then(toggleBoolNode("nightboost", Config.COMMON.enableNightBoost::set, "Night boost"))
                 .then(toggleBoolNode("horde", Config.COMMON.enableHordeEvents::set, "Horde events"))
+                .then(toggleBoolNode("daycounter", Config.COMMON.enableDayCounterAnnouncements::set,
+                        "Morning day counter"))
                 .then(Commands.literal("hordechance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
                                 .executes(context -> {
@@ -171,6 +173,8 @@ public final class DaySpawnCommands {
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get())).append('\n');
         status.append("Night boost: ").append(CommandUtil.onOff(Config.COMMON.enableNightBoost.get())).append('\n');
         status.append("Horde events: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get())).append('\n');
+        status.append("Morning day counter: ").append(CommandUtil.onOff(Config.COMMON.enableDayCounterAnnouncements.get()))
+                .append('\n');
         status.append("Horde start chance: ").append(CommandUtil.percent(Config.COMMON.hordeStartChance.get())).append('\n');
         status.append("Event interval: ").append(Config.COMMON.eventSpawnInterval.get()).append(" ticks\n");
         status.append("Blood moon: ").append(CommandUtil.onOff(Config.COMMON.enableBloodMoon.get())).append('\n');

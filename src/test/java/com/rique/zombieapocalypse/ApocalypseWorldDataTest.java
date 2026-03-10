@@ -17,6 +17,7 @@ class ApocalypseWorldDataTest {
         data.setBloodMoonActive(true);
         data.setBloodMoonNightDay(12L);
         data.setForcedBloodMoonPending(true);
+        data.setLastDayAnnouncementDay(12L);
 
         data.resetEventScheduleState();
 
@@ -26,5 +27,6 @@ class ApocalypseWorldDataTest {
         assertFalse(data.isBloodMoonActive());
         assertEquals(-1L, data.getBloodMoonNightDay());
         assertFalse(data.isForcedBloodMoonPending());
+        assertEquals(-1L, data.getLastDayAnnouncementDay());
     }
 }

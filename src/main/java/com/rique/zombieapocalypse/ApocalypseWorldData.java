@@ -19,6 +19,7 @@ public class ApocalypseWorldData extends SavedData {
     private boolean bloodMoonActive;
     private long bloodMoonNightDay = -1L;
     private boolean forcedBloodMoonPending;
+    private long lastDayAnnouncementDay = -1L;
 
     public static ApocalypseWorldData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(
@@ -35,6 +36,7 @@ public class ApocalypseWorldData extends SavedData {
         data.bloodMoonActive = tag.getBoolean("bloodMoonActive");
         data.bloodMoonNightDay = tag.contains("bloodMoonNightDay") ? tag.getLong("bloodMoonNightDay") : -1L;
         data.forcedBloodMoonPending = tag.getBoolean("forcedBloodMoonPending");
+        data.lastDayAnnouncementDay = tag.contains("lastDayAnnouncementDay") ? tag.getLong("lastDayAnnouncementDay") : -1L;
         return data;
     }
 
@@ -47,6 +49,7 @@ public class ApocalypseWorldData extends SavedData {
         tag.putBoolean("bloodMoonActive", bloodMoonActive);
         tag.putLong("bloodMoonNightDay", bloodMoonNightDay);
         tag.putBoolean("forcedBloodMoonPending", forcedBloodMoonPending);
+        tag.putLong("lastDayAnnouncementDay", lastDayAnnouncementDay);
         return tag;
     }
 
@@ -110,6 +113,16 @@ public class ApocalypseWorldData extends SavedData {
         setDirty();
     }
 
+    public long getLastDayAnnouncementDay() {
+        return lastDayAnnouncementDay;
+    }
+
+    public void setLastDayAnnouncementDay(long lastDayAnnouncementDay) {
+        if (this.lastDayAnnouncementDay == lastDayAnnouncementDay) return;
+        this.lastDayAnnouncementDay = lastDayAnnouncementDay;
+        setDirty();
+    }
+
     public void resetEventScheduleState() {
         boolean changed = false;
 
@@ -136,6 +149,10 @@ public class ApocalypseWorldData extends SavedData {
         }
         if (forcedBloodMoonPending) {
             forcedBloodMoonPending = false;
+            changed = true;
+        }
+        if (lastDayAnnouncementDay != -1L) {
+            lastDayAnnouncementDay = -1L;
             changed = true;
         }
 
