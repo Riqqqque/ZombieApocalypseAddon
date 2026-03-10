@@ -29,6 +29,7 @@ public final class HelpCommands {
                         + "/zscaling status - difficulty scaling status\n"
                         + "/zdayspawn status - view spawn settings\n"
                         + "/zdayspawn daylightstart <day> - delay daytime custom spawning until that day counter\n"
+                        + "/zdayspawn daycounter <true|false> - toggle morning day counter titles\n"
                         + "/zdayspawn attributes <true|false> - toggle base attribute tuning\n"
                         + "/zdayspawn attributescaling <true|false> - scale attributes by day factor\n"
                         + "/zdayspawn variantprofiles <true|false> - toggle per-variant attribute profiles\n"

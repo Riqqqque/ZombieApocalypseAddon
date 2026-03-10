@@ -53,6 +53,7 @@ public final class Config {
         public final ModConfigSpec.IntValue hordeZombiesPerSpawn;
         public final ModConfigSpec.IntValue eventSpawnInterval;
         public final ModConfigSpec.BooleanValue enableEventNotifications;
+        public final ModConfigSpec.BooleanValue enableDayCounterAnnouncements;
 
         // Blood moon
         public final ModConfigSpec.BooleanValue enableBloodMoon;
@@ -338,6 +339,12 @@ public final class Config {
             enableEventNotifications = builder
                     .comment("Show title notifications for horde/blood moon transitions.")
                     .define("enableEventNotifications", true);
+
+            enableDayCounterAnnouncements = builder
+                    .comment(
+                            "Show the current day on screen each morning.",
+                            "Uses the same title-style pop-up as apocalypse events.")
+                    .define("enableDayCounterAnnouncements", true);
             builder.pop();
 
             builder.push("bloodmoon");
