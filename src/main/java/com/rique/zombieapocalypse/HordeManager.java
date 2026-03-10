@@ -20,6 +20,13 @@ import net.minecraft.server.level.ServerPlayer;
 public final class HordeManager {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final String MORNING_DAY_SUBTITLE = "A new day begins.";
+
+    private enum BloodMoonTransition {
+        NONE,
+        STARTED,
+        ENDED
+    }
 
     /**
      * Snapshot of event state for a single tick, avoiding repeated
@@ -66,8 +73,9 @@ public final class HordeManager {
         long currentDay = overworldLevel.getDayTime() / 24000L;
 
         expireHordeIfNeeded(overworldLevel, state, gameTime);
-        tryStartScheduledHorde(overworldLevel, state, currentDay, dayTime);
-        updateBloodMoon(overworldLevel, state, currentDay, dayTime);
+        boolean hordeStarted = tryStartScheduledHorde(overworldLevel, state, currentDay, dayTime);
+        BloodMoonTransition bloodMoonTransition = updateBloodMoon(overworldLevel, state, currentDay, dayTime);
+        notifyDayTransitions(overworldLevel, state, currentDay, dayTime, hordeStarted, bloodMoonTransition);
     }
 
     private static void expireHordeIfNeeded(ServerLevel level, ApocalypseWorldData state, long gameTime) {
@@ -84,50 +92,53 @@ public final class HordeManager {
         }
     }
 
-    private static void tryStartScheduledHorde(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
+    private static boolean tryStartScheduledHorde(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
         if (!Config.COMMON.enableHordeEvents.get() || state.isHordeActive()) {
-            return;
+            return false;
         }
 
         if (!EventSchedule.isHordeRollWindow(dayTime)) {
-            return;
+            return false;
         }
 
         long lastRollDay = state.getLastHordeRollDay();
         if (lastRollDay == currentDay) {
-            return;
+            return false;
         }
 
         state.setLastHordeRollDay(currentDay);
 
         if (isScheduledHordeBlockedByGrace(currentDay, Config.COMMON.daylightSpawnStartDay.get())) {
-            return;
+            return false;
         }
 
         int intervalDays = Math.max(1, Config.COMMON.hordeIntervalDays.get());
         if (!EventSchedule.shouldRollHorde(currentDay, dayTime, lastRollDay, intervalDays)) {
-            return;
+            return false;
         }
 
         double chance = ConfigValidator.probability(Config.COMMON.hordeStartChance.get());
         if (level.getRandom().nextDouble() < chance) {
-            startHorde(level);
+            activateHorde(level, state);
+            return true;
         }
+
+        return false;
     }
 
-    private static void updateBloodMoon(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
+    private static BloodMoonTransition updateBloodMoon(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
         boolean isNight = EventSchedule.isNight(dayTime);
 
         if (!isNight) {
             if (state.isBloodMoonActive()) {
                 state.setBloodMoonActive(false);
-                notifyAllPlayers(level, "Dawn Breaks", "The blood moon fades.");
+                return BloodMoonTransition.ENDED;
             }
-            return;
+            return BloodMoonTransition.NONE;
         }
 
         if (state.getBloodMoonNightDay() == currentDay) {
-            return;
+            return BloodMoonTransition.NONE;
         }
 
         state.setBloodMoonNightDay(currentDay);
@@ -142,12 +153,21 @@ public final class HordeManager {
         }
 
         state.setBloodMoonActive(activateBloodMoon);
+        if (!activateBloodMoon) {
+            return BloodMoonTransition.NONE;
+        }
 
-        if (activateBloodMoon) {
-            notifyAllPlayers(level, "BLOOD MOON", "Zombies are swarming tonight.");
-            if (Config.COMMON.enableDebugLogging.get()) {
-                LOGGER.info("[ZombieApocalypse] Blood moon started for night {}", currentDay);
-            }
+        if (Config.COMMON.enableDebugLogging.get()) {
+            LOGGER.info("[ZombieApocalypse] Blood moon started for night {}", currentDay);
+        }
+        return BloodMoonTransition.STARTED;
+    }
+
+    private static void sendTitleToAllPlayers(ServerLevel level, String title, String subtitle) {
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
+            player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title)));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(subtitle)));
         }
     }
 
@@ -156,20 +176,70 @@ public final class HordeManager {
             return;
         }
 
-        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
-            player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title)));
-            player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(subtitle)));
+        sendTitleToAllPlayers(level, title, subtitle);
+    }
+
+    private static void notifyDayTransitions(
+            ServerLevel level,
+            ApocalypseWorldData state,
+            long currentDay,
+            long dayTime,
+            boolean hordeStarted,
+            BloodMoonTransition bloodMoonTransition) {
+        if (bloodMoonTransition == BloodMoonTransition.STARTED) {
+            notifyAllPlayers(level, "BLOOD MOON", "Zombies are swarming tonight.");
+            return;
         }
+
+        if (!isDayAnnouncementWindow(dayTime)) {
+            return;
+        }
+
+        boolean dayCounterEnabled = Config.COMMON.enableDayCounterAnnouncements.get();
+        boolean eventNotificationsEnabled = Config.COMMON.enableEventNotifications.get();
+        boolean shouldAnnounceDay = shouldAnnounceDay(currentDay, dayTime, state.getLastDayAnnouncementDay(), dayCounterEnabled);
+
+        if (eventNotificationsEnabled && (hordeStarted || bloodMoonTransition == BloodMoonTransition.ENDED)) {
+            String title = hordeStarted ? "HORDE INCOMING" : "Dawn Breaks";
+            String subtitle = hordeStarted
+                    ? "Zombie waves for " + Math.max(1, Config.COMMON.hordeDurationMinutes.get()) + " minutes."
+                    : "The blood moon fades.";
+            if (dayCounterEnabled) {
+                subtitle = "Day " + currentDay + " | " + subtitle;
+                state.setLastDayAnnouncementDay(currentDay);
+            }
+            sendTitleToAllPlayers(level, title, subtitle);
+            return;
+        }
+
+        if (shouldAnnounceDay) {
+            sendTitleToAllPlayers(level, "Day " + currentDay, MORNING_DAY_SUBTITLE);
+            state.setLastDayAnnouncementDay(currentDay);
+        }
+    }
+
+    private static boolean isDayAnnouncementWindow(long dayTime) {
+        return EventSchedule.isHordeRollWindow(dayTime);
+    }
+
+    static boolean shouldAnnounceDay(long currentDay, long dayTime, long lastAnnouncedDay, boolean enabled) {
+        return enabled
+                && currentDay >= 0L
+                && isDayAnnouncementWindow(dayTime)
+                && lastAnnouncedDay != currentDay;
+    }
+
+    private static void activateHorde(ServerLevel level, ApocalypseWorldData state) {
+        int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
+        state.setHordeActive(true);
+        state.setHordeEndGameTime(level.getGameTime() + (durationMinutes * 60L * 20L));
     }
 
     public static void startHorde(ServerLevel level) {
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
 
-        state.setHordeActive(true);
-        state.setHordeEndGameTime(level.getGameTime() + (durationMinutes * 60L * 20L));
-
+        activateHorde(level, state);
         notifyAllPlayers(level, "HORDE INCOMING", "Zombie waves for " + durationMinutes + " minutes.");
 
         if (Config.COMMON.enableDebugLogging.get()) {

@@ -16,6 +16,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
 - Early-game daytime spawning can be delayed for a configurable number of days.
+- Optional morning day-counter titles can show the current day at dawn.
 - Advanced attribute modifiers let you tune enemy stats deeply.
 - Biome and dimension context profiles let stats change by location.
 - Most behavior is configurable live with commands.
@@ -182,6 +183,7 @@ All commands require OP level 2.
 | `/zdayspawn range <16-128>` | Horizontal spawn range around player. |
 | `/zdayspawn mindist <8-64>` | Minimum spawn distance from player. |
 | `/zdayspawn daylightstart <0-3650>` | Disable custom daytime spawning until this day counter. |
+| `/zdayspawn daycounter <true\|false>` | Toggle the morning on-screen day counter. |
 | `/zdayspawn sky <true\|false>` | Overworld spawn requires open sky. |
 | `/zdayspawn variants <true\|false>` | Enable variant spawning logic. |
 | `/zdayspawn nightboost <true\|false>` | Enable night spawn chance boost. |
