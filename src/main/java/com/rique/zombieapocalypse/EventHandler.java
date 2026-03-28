@@ -46,6 +46,78 @@ public final class EventHandler {
     private static final long EXTERNAL_FIRE_GRACE_TICKS = 30L * 20L;
     private static final Map<UUID, Long> EXTERNAL_FIRE_UNTIL = new HashMap<>();
 
+    private record SpawnRuntimeSettings(
+            boolean deathCooldownEnabled,
+            boolean debugLogging,
+            boolean spawnEffectsEnabled,
+            boolean spawnSoundEnabled,
+            boolean spawnParticlesEnabled,
+            boolean requireOpenSky,
+            boolean variantsEnabled,
+            boolean biomeModifiersEnabled,
+            boolean mushroomSafeZone,
+            int maxZombiesPerPlayer,
+            int horizontalRange,
+            int minDistance,
+            int attemptsPerZombie,
+            double babyZombieChance,
+            double desertHuskBonus,
+            double waterDrownedBonus,
+            SpawnMath.VariantWeights baseVariantWeights) {
+
+        static SpawnRuntimeSettings capture(ServerLevel level) {
+            boolean variantsEnabled = Config.COMMON.enableZombieVariants.get();
+            SpawnMath.VariantWeights baseVariantWeights = variantsEnabled
+                    ? SpawnMath.normalizeVariantWeights(
+                            ConfigValidator.probability(Config.COMMON.zombieVillagerChance.get()),
+                            ConfigValidator.probability(Config.COMMON.huskChance.get()),
+                            ConfigValidator.probability(Config.COMMON.drownedChance.get()))
+                    : SpawnMath.normalizeVariantWeights(0.0, 0.0, 0.0);
+
+            return new SpawnRuntimeSettings(
+                    Config.COMMON.enableDeathCooldown.get(),
+                    Config.COMMON.enableDebugLogging.get(),
+                    Config.COMMON.enableSpawnEffects.get(),
+                    Config.COMMON.spawnSound.get(),
+                    Config.COMMON.spawnParticles.get(),
+                    level.dimension() == Level.OVERWORLD && Config.COMMON.requireOpenSkyForOverworldSpawns.get(),
+                    variantsEnabled,
+                    Config.COMMON.enableBiomeModifiers.get(),
+                    Config.COMMON.mushroomSafeZone.get(),
+                    Config.COMMON.maxDayZombiesPerPlayer.get(),
+                    Math.max(1, Config.COMMON.spawnRange.get()),
+                    Math.max(0, Config.COMMON.minSpawnDistance.get()),
+                    Math.max(1, Config.COMMON.spawnAttemptsPerZombie.get()),
+                    ConfigValidator.probability(Config.COMMON.babyZombieChance.get()),
+                    Config.COMMON.desertHuskBonus.get(),
+                    Config.COMMON.waterDrownedBonus.get(),
+                    baseVariantWeights);
+        }
+
+        boolean hasInvalidDistanceConfig() {
+            return minDistance >= horizontalRange;
+        }
+
+        int minDistanceSquared() {
+            return minDistance * minDistance;
+        }
+
+        int maxAttemptsForWave(int requestedSpawns) {
+            return Math.max(requestedSpawns, requestedSpawns * attemptsPerZombie);
+        }
+
+        SpawnMath.VariantWeights variantWeights(boolean desertBiome, boolean waterBiome) {
+            return ConfigValidator.biomeAdjustedVariantWeights(
+                    baseVariantWeights,
+                    variantsEnabled,
+                    biomeModifiersEnabled,
+                    desertHuskBonus,
+                    waterDrownedBonus,
+                    desertBiome,
+                    waterBiome);
+        }
+    }
+
     private EventHandler() {
     }
 
@@ -160,8 +232,9 @@ public final class EventHandler {
             return;
         }
 
+        long gameTime = level.getGameTime();
         if (level.dimension() == Level.OVERWORLD) {
-            pruneExpiredExternalFire(level.getGameTime());
+            pruneExpiredExternalFire(gameTime);
             HordeManager.tick(level);
         }
 
@@ -176,7 +249,7 @@ public final class EventHandler {
 
         boolean eventActive = eventState.hordeActive() || eventState.bloodMoonActive();
         int interval = ConfigValidator.spawnIntervalTicks(eventActive);
-        if (level.getGameTime() % interval != 0L) {
+        if (gameTime % interval != 0L) {
             return;
         }
 
@@ -192,9 +265,19 @@ public final class EventHandler {
             return;
         }
 
+        SpawnRuntimeSettings settings = SpawnRuntimeSettings.capture(level);
+        if (settings.hasInvalidDistanceConfig()) {
+            if (settings.debugLogging()) {
+                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) >= spawnRange ({}). No spawns possible!",
+                        settings.minDistance(), settings.horizontalRange());
+            }
+            return;
+        }
+
+        StatisticsManager stats = settings.deathCooldownEnabled() ? StatisticsManager.get(level) : null;
         for (ServerPlayer player : level.players()) {
             if (!player.isSpectator() && !player.isCreative()) {
-                attemptSpawnZombie(level, player, effectiveChance, eventState);
+                attemptSpawnZombie(level, player, effectiveChance, eventState, stats, settings, gameTime);
             }
         }
     }
@@ -209,25 +292,30 @@ public final class EventHandler {
         return true;
     }
 
-    private static void attemptSpawnZombie(ServerLevel level, ServerPlayer player, double baseChance, HordeManager.EventState eventState) {
+    private static void attemptSpawnZombie(
+            ServerLevel level,
+            ServerPlayer player,
+            double baseChance,
+            HordeManager.EventState eventState,
+            StatisticsManager stats,
+            SpawnRuntimeSettings settings,
+            long gameTime) {
         RandomSource random = level.getRandom();
         double effectiveChance = baseChance;
 
-        if (Config.COMMON.enableDeathCooldown.get()) {
-            StatisticsManager stats = StatisticsManager.get(level);
-            effectiveChance *= stats.getSpawnFactor(player.getUUID(), level.getGameTime());
+        if (stats != null) {
+            effectiveChance *= stats.getSpawnFactor(player.getUUID(), gameTime);
         }
 
         if (effectiveChance <= 0.0 || random.nextDouble() >= effectiveChance) {
             return;
         }
 
-        int detectionRange = Config.COMMON.spawnRange.get();
-        int nearbyZombies = countNearbyZombies(level, player, detectionRange);
-        int maxZombies = Config.COMMON.maxDayZombiesPerPlayer.get();
+        int nearbyZombies = countNearbyZombies(level, player, settings.horizontalRange());
+        int maxZombies = settings.maxZombiesPerPlayer();
 
         if (nearbyZombies >= maxZombies) {
-            if (Config.COMMON.enableDebugLogging.get()) {
+            if (settings.debugLogging()) {
                 LOGGER.debug("[ZombieApocalypse] Skip spawn near {} because nearby={}/{}",
                         player.getGameProfile().getName(), nearbyZombies, maxZombies);
             }
@@ -239,47 +327,40 @@ public final class EventHandler {
             return;
         }
 
-        int maxAttempts = ConfigValidator.spawnAttemptsForWave(countToSpawn);
-        int horizontalRange = Math.max(1, Config.COMMON.spawnRange.get());
-        int minDistance = Math.max(0, Config.COMMON.minSpawnDistance.get());
-
-        if (minDistance >= horizontalRange) {
-            if (Config.COMMON.enableDebugLogging.get()) {
-                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) >= spawnRange ({}). No spawns possible!",
-                        minDistance, horizontalRange);
-            }
-            return;
-        }
-
-        int minDistanceSq = minDistance * minDistance;
-
-        boolean requireSky = level.dimension() == Level.OVERWORLD && Config.COMMON.requireOpenSkyForOverworldSpawns.get();
+        int maxAttempts = settings.maxAttemptsForWave(countToSpawn);
+        int horizontalRange = settings.horizontalRange();
+        int minDistanceSq = settings.minDistanceSquared();
+        BlockPos playerPos = player.blockPosition();
+        int playerX = playerPos.getX();
+        int playerY = playerPos.getY();
+        int playerZ = playerPos.getZ();
+        BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
 
         int spawned = 0;
         for (int i = 0; i < maxAttempts && spawned < countToSpawn; i++) {
-            int x = Mth.floor(player.getX()) + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
-            int z = Mth.floor(player.getZ()) + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
-            int y = chooseSpawnY(level, player, random, x, z);
+            int x = playerX + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
+            int z = playerZ + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
+            int y = chooseSpawnY(level, playerY, random, x, z, scratchPos);
+            spawnPos.set(x, y, z);
 
-            BlockPos spawnPos = new BlockPos(x, y, z);
-
-            if (spawnPos.distSqr(player.blockPosition()) < minDistanceSq) {
+            if (spawnPos.distSqr(playerPos) < minDistanceSq) {
                 continue;
             }
 
-            if (requireSky && !level.canSeeSky(spawnPos)) {
+            if (settings.requireOpenSky() && !level.canSeeSky(spawnPos)) {
                 continue;
             }
 
-            if (!canSpawnInBiome(level, spawnPos)) {
+            if (!canSpawnInBiome(level, spawnPos, settings)) {
                 continue;
             }
 
-            if (!isValidSpawnSpace(level, spawnPos)) {
+            if (!isValidSpawnSpace(level, spawnPos, scratchPos)) {
                 continue;
             }
 
-            Zombie zombie = createZombie(level, spawnPos, random);
+            Zombie zombie = createZombie(level, spawnPos, random, settings);
             if (zombie == null) {
                 continue;
             }
@@ -287,7 +368,7 @@ public final class EventHandler {
             zombie.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D,
                     random.nextFloat() * 360.0F, 0.0F);
 
-            if (random.nextDouble() < ConfigValidator.probability(Config.COMMON.babyZombieChance.get())) {
+            if (random.nextDouble() < settings.babyZombieChance()) {
                 zombie.setBaby(true);
             }
 
@@ -300,11 +381,11 @@ public final class EventHandler {
             level.addFreshEntity(zombie);
             spawned++;
 
-            if (Config.COMMON.enableSpawnEffects.get()) {
-                playSpawnEffects(level, spawnPos);
+            if (settings.spawnEffectsEnabled()) {
+                playSpawnEffects(level, spawnPos, settings);
             }
 
-            if (Config.COMMON.enableDebugLogging.get()) {
+            if (settings.debugLogging()) {
                 LOGGER.debug("[ZombieApocalypse] Spawned {} at {} for {}",
                         zombie.getType().getDescriptionId(),
                         spawnPos,
@@ -312,7 +393,7 @@ public final class EventHandler {
             }
         }
 
-        if (Config.COMMON.enableDebugLogging.get() && spawned > 0) {
+        if (settings.debugLogging() && spawned > 0) {
             LOGGER.info("[ZombieApocalypse] Spawned {}/{} near {}",
                     spawned,
                     countToSpawn,
@@ -320,10 +401,16 @@ public final class EventHandler {
         }
     }
 
-    private static int chooseSpawnY(ServerLevel level, ServerPlayer player, RandomSource random, int x, int z) {
+    private static int chooseSpawnY(
+            ServerLevel level,
+            int playerY,
+            RandomSource random,
+            int x,
+            int z,
+            BlockPos.MutableBlockPos scratchPos) {
         if (level.dimension() == Level.NETHER) {
-            int minY = Math.max(level.getMinBuildHeight() + 1, Mth.floor(player.getY()) - 16);
-            int maxY = Math.min(level.getMaxBuildHeight() - 2, Mth.floor(player.getY()) + 16);
+            int minY = Math.max(level.getMinBuildHeight() + 1, playerY - 16);
+            int maxY = Math.min(level.getMaxBuildHeight() - 2, playerY + 16);
             if (minY >= maxY) {
                 return minY;
             }
@@ -331,11 +418,17 @@ public final class EventHandler {
             int startY = Mth.nextInt(random, minY, maxY);
 
             for (int y = startY; y >= minY; y--) {
-                BlockPos checkPos = new BlockPos(x, y, z);
-                if (level.getBlockState(checkPos).isAir()
-                        && level.getBlockState(checkPos.above()).isAir()
-                        && level.getBlockState(checkPos.below()).isFaceSturdy(level, checkPos.below(), Direction.UP)) {
-                    return y;
+                scratchPos.set(x, y, z);
+                if (level.getBlockState(scratchPos).isAir()) {
+                    scratchPos.set(x, y + 1, z);
+                    if (!level.getBlockState(scratchPos).isAir()) {
+                        continue;
+                    }
+
+                    scratchPos.set(x, y - 1, z);
+                    if (level.getBlockState(scratchPos).isFaceSturdy(level, scratchPos, Direction.UP)) {
+                        return y;
+                    }
                 }
             }
 
@@ -345,23 +438,26 @@ public final class EventHandler {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
     }
 
-    private static boolean isValidSpawnSpace(ServerLevel level, BlockPos spawnPos) {
+    private static boolean isValidSpawnSpace(ServerLevel level, BlockPos spawnPos, BlockPos.MutableBlockPos scratchPos) {
         if (!level.getWorldBorder().isWithinBounds(spawnPos)) {
             return false;
         }
 
-        BlockPos belowPos = spawnPos.below();
-        BlockPos abovePos = spawnPos.above();
-
-        if (!level.getBlockState(belowPos).isFaceSturdy(level, belowPos, Direction.UP)) {
+        scratchPos.set(spawnPos.getX(), spawnPos.getY() - 1, spawnPos.getZ());
+        if (!level.getBlockState(scratchPos).isFaceSturdy(level, scratchPos, Direction.UP)) {
             return false;
         }
 
-        if (!level.getBlockState(spawnPos).isAir() || !level.getBlockState(abovePos).isAir()) {
+        if (!level.getBlockState(spawnPos).isAir()) {
             return false;
         }
 
-        if (!level.getFluidState(spawnPos).isEmpty() || !level.getFluidState(abovePos).isEmpty()) {
+        scratchPos.set(spawnPos.getX(), spawnPos.getY() + 1, spawnPos.getZ());
+        if (!level.getBlockState(scratchPos).isAir()) {
+            return false;
+        }
+
+        if (!level.getFluidState(spawnPos).isEmpty() || !level.getFluidState(scratchPos).isEmpty()) {
             return false;
         }
 
@@ -375,13 +471,13 @@ public final class EventHandler {
                 zombie -> zombie.isAlive() && ZombieClassMobs.isZombieClass(zombie)).size();
     }
 
-    private static boolean canSpawnInBiome(ServerLevel level, BlockPos pos) {
-        if (!Config.COMMON.enableBiomeModifiers.get()) {
+    private static boolean canSpawnInBiome(ServerLevel level, BlockPos pos, SpawnRuntimeSettings settings) {
+        if (!settings.biomeModifiersEnabled()) {
             return true;
         }
 
         Holder<Biome> biomeHolder = level.getBiome(pos);
-        if (Config.COMMON.mushroomSafeZone.get() && biomeHolder.is(Biomes.MUSHROOM_FIELDS)) {
+        if (settings.mushroomSafeZone() && biomeHolder.is(Biomes.MUSHROOM_FIELDS)) {
             return false;
         }
 
@@ -405,8 +501,8 @@ public final class EventHandler {
                 hordeActive);
     }
 
-    private static Zombie createZombie(ServerLevel level, BlockPos pos, RandomSource random) {
-        if (!Config.COMMON.enableZombieVariants.get()) {
+    private static Zombie createZombie(ServerLevel level, BlockPos pos, RandomSource random, SpawnRuntimeSettings settings) {
+        if (!settings.variantsEnabled()) {
             return net.minecraft.world.entity.EntityType.ZOMBIE.create(level);
         }
 
@@ -414,7 +510,7 @@ public final class EventHandler {
         boolean desertBiome = ConfigValidator.isDesertStyleBiome(biomeHolder);
         boolean waterBiome = ConfigValidator.isWaterStyleBiome(biomeHolder);
 
-        SpawnMath.VariantWeights weights = ConfigValidator.biomeAdjustedVariantWeights(desertBiome, waterBiome);
+        SpawnMath.VariantWeights weights = settings.variantWeights(desertBiome, waterBiome);
         double roll = random.nextDouble();
 
         if (roll < weights.zombieVillagerChance()) {
@@ -434,12 +530,12 @@ public final class EventHandler {
         return net.minecraft.world.entity.EntityType.ZOMBIE.create(level);
     }
 
-    private static void playSpawnEffects(ServerLevel level, BlockPos pos) {
-        if (Config.COMMON.spawnSound.get()) {
+    private static void playSpawnEffects(ServerLevel level, BlockPos pos, SpawnRuntimeSettings settings) {
+        if (settings.spawnSoundEnabled()) {
             level.playSound(null, pos, SoundEvents.ZOMBIE_AMBIENT, SoundSource.HOSTILE, 1.0F, 1.0F);
         }
 
-        if (Config.COMMON.spawnParticles.get()) {
+        if (settings.spawnParticlesEnabled()) {
             level.sendParticles(ParticleTypes.SMOKE,
                     pos.getX() + 0.5D,
                     pos.getY() + 0.5D,
@@ -501,6 +597,9 @@ public final class EventHandler {
     }
 
     static void pruneExpiredExternalFire(long gameTime) {
+        if (EXTERNAL_FIRE_UNTIL.isEmpty()) {
+            return;
+        }
         EXTERNAL_FIRE_UNTIL.entrySet().removeIf(entry -> gameTime >= entry.getValue());
     }
 }
