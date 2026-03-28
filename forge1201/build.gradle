@@ -1,0 +1,179 @@
+import java.util.Properties
+
+plugins {
+    id 'idea'
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.91'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+def sharedProperties = new Properties()
+file('../gradle.properties').withInputStream(sharedProperties.&load)
+def shared = { String key -> sharedProperties.getProperty(key) }
+
+version = shared('mod_version')
+group = shared('mod_group_id')
+
+repositories {
+    mavenLocal()
+}
+
+base {
+    archivesName = "${shared('mod_id')}-forge-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+legacyForge {
+    version = project.minecraft_version + '-' + project.forge_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'forge.enabledGameTestNamespaces', shared('mod_id')
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'forge.enabledGameTestNamespaces', shared('mod_id')
+        }
+
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'forge.enabledGameTestNamespaces', shared('mod_id')
+        }
+
+        data {
+            data()
+            programArguments.addAll '--mod', shared('mod_id'), '--all',
+                    '--output', file('../src/generated/resources/').getAbsolutePath(),
+                    '--existing', file('../src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${shared('mod_id')}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDirs = ['../src/main/resources', '../src/generated/resources', 'src/main/resources']
+            exclude 'META-INF/neoforge.mods.toml'
+            exclude 'pack.mcmeta'
+        }
+    }
+    test {
+        java {
+            setSrcDirs([])
+        }
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+obfuscation {
+    createRemappingConfiguration(configurations.localRuntime)
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            forge_version          : forge_version,
+            forge_version_range    : forge_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : shared('mod_id'),
+            mod_name               : shared('mod_name'),
+            mod_license            : shared('mod_license'),
+            mod_version            : shared('mod_version'),
+            mod_authors            : 'Rique',
+            mod_description        : 'A configurable zombie apocalypse gameplay addon for Forge 1.20.1.'
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
+
+tasks.named('processResources', ProcessResources).configure {
+    from('src/main/resources/pack.mcmeta')
+}
+
+tasks.named('compileJava', JavaCompile).configure {
+    source fileTree('../src/main/java') {
+        exclude 'com/rique/zombieapocalypse/ApocalypseWorldData.java'
+        exclude 'com/rique/zombieapocalypse/Config.java'
+        exclude 'com/rique/zombieapocalypse/DifficultyManager.java'
+        exclude 'com/rique/zombieapocalypse/EventHandler.java'
+        exclude 'com/rique/zombieapocalypse/ModCommands.java'
+        exclude 'com/rique/zombieapocalypse/StatisticsManager.java'
+        exclude 'com/rique/zombieapocalypse/ZombieApocalypseAddon.java'
+        exclude 'com/rique/zombieapocalypse/ZombieKillAdvancements.java'
+        exclude 'com/rique/zombieapocalypse/commands/AttributeCommands.java'
+    }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('test', Test).configure {
+    enabled = false
+}
+
+tasks.named('compileTestJava', JavaCompile).configure {
+    enabled = false
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
