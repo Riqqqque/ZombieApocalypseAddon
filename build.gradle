@@ -36,7 +36,7 @@ def syncModrinthArtifacts = tasks.register('syncModrinthArtifacts', Sync) {
     dependsOn tasks.named('jar')
     dependsOn forge1201Build
     from(tasks.named('jar').flatMap { it.archiveFile })
-    from(file("forge1201/build/libs/${mod_id}-forge-1.20.1-${forge1201_mod_version}.jar"))
+    from(file("forge1201/build/libs/${mod_id}-forge-1.20.1-${forge1201_release_version}.jar"))
     into(modrinthOutputDir)
 }
 

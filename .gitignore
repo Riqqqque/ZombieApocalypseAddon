@@ -4,6 +4,8 @@
 .gradle/
 build/
 logs/
+build_output.txt
+errors.txt
 !gradle/wrapper/gradle-wrapper.jar
 
 # -----------------------------------------------
