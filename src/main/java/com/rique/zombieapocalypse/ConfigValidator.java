@@ -29,21 +29,37 @@ public final class ConfigValidator {
     }
 
     public static SpawnMath.VariantWeights biomeAdjustedVariantWeights(boolean desertBiome, boolean waterBiome) {
-        SpawnMath.VariantWeights base = baseVariantWeights();
+        return biomeAdjustedVariantWeights(
+                baseVariantWeights(),
+                Config.COMMON.enableZombieVariants.get(),
+                Config.COMMON.enableBiomeModifiers.get(),
+                Config.COMMON.desertHuskBonus.get(),
+                Config.COMMON.waterDrownedBonus.get(),
+                desertBiome,
+                waterBiome);
+    }
 
-        if (!Config.COMMON.enableZombieVariants.get()) {
+    static SpawnMath.VariantWeights biomeAdjustedVariantWeights(
+            SpawnMath.VariantWeights base,
+            boolean variantsEnabled,
+            boolean biomeModifiersEnabled,
+            double desertHuskBonus,
+            double waterDrownedBonus,
+            boolean desertBiome,
+            boolean waterBiome) {
+        if (!variantsEnabled) {
             return base;
         }
 
         double husk = base.huskChance();
         double drowned = base.drownedChance();
 
-        if (Config.COMMON.enableBiomeModifiers.get()) {
+        if (biomeModifiersEnabled) {
             if (desertBiome) {
-                husk += probability(Config.COMMON.desertHuskBonus.get());
+                husk += probability(desertHuskBonus);
             }
             if (waterBiome) {
-                drowned += probability(Config.COMMON.waterDrownedBonus.get());
+                drowned += probability(waterDrownedBonus);
             }
         }
 
