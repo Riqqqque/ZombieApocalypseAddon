@@ -202,10 +202,13 @@ public final class HordeManager {
         if (eventNotificationsEnabled && (hordeStarted || bloodMoonTransition == BloodMoonTransition.ENDED)) {
             String title = hordeStarted ? "HORDE INCOMING" : "Dawn Breaks";
             String subtitle = hordeStarted
-                    ? "Zombie waves for " + Math.max(1, Config.COMMON.hordeDurationMinutes.get()) + " minutes."
+                    ? buildHordeIncomingSubtitle(Math.max(1, Config.COMMON.hordeDurationMinutes.get()), currentDay,
+                            shouldAnnounceDay)
                     : "The blood moon fades.";
-            if (dayCounterEnabled) {
-                subtitle = "Day " + currentDay + " | " + subtitle;
+            if (shouldAnnounceDay) {
+                if (!hordeStarted) {
+                    subtitle = "Day " + currentDay + " | " + subtitle;
+                }
                 state.setLastDayAnnouncementDay(currentDay);
             }
             sendTitleToAllPlayers(level, title, subtitle);
@@ -229,6 +232,14 @@ public final class HordeManager {
                 && lastAnnouncedDay != currentDay;
     }
 
+    static String buildHordeIncomingSubtitle(int durationMinutes, long currentDay, boolean includeDayAnnouncement) {
+        String subtitle = "Zombie waves for " + Math.max(1, durationMinutes) + " minutes.";
+        if (includeDayAnnouncement) {
+            return "Day " + currentDay + " | " + subtitle;
+        }
+        return subtitle;
+    }
+
     private static void activateHorde(ServerLevel level, ApocalypseWorldData state) {
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
         state.setHordeActive(true);
@@ -238,9 +249,21 @@ public final class HordeManager {
     public static void startHorde(ServerLevel level) {
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
+        long currentDay = level.getDayTime() / 24000L;
+        long dayTime = level.getDayTime() % 24000L;
+        boolean includeDayAnnouncement = shouldAnnounceDay(
+                currentDay,
+                dayTime,
+                state.getLastDayAnnouncementDay(),
+                Config.COMMON.enableDayCounterAnnouncements.get());
 
         activateHorde(level, state);
-        notifyAllPlayers(level, "HORDE INCOMING", "Zombie waves for " + durationMinutes + " minutes.");
+        if (includeDayAnnouncement) {
+            state.setLastDayAnnouncementDay(currentDay);
+        }
+
+        notifyAllPlayers(level, "HORDE INCOMING",
+                buildHordeIncomingSubtitle(durationMinutes, currentDay, includeDayAnnouncement));
 
         if (Config.COMMON.enableDebugLogging.get()) {
             LOGGER.info("[ZombieApocalypse] Horde started; duration={} minutes", durationMinutes);
