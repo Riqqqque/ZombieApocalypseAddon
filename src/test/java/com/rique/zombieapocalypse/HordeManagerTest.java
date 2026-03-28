@@ -1,5 +1,6 @@
 package com.rique.zombieapocalypse;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,5 +23,15 @@ class HordeManagerTest {
         assertFalse(HordeManager.shouldAnnounceDay(10, 100, -1, true));
         assertFalse(HordeManager.shouldAnnounceDay(10, 50, 10, true));
         assertFalse(HordeManager.shouldAnnounceDay(10, 50, -1, false));
+    }
+
+    @Test
+    void hordeIncomingSubtitleOnlyIncludesDayWhenItConsumesMorningAnnouncement() {
+        assertEquals(
+                "Day 10 | Zombie waves for 5 minutes.",
+                HordeManager.buildHordeIncomingSubtitle(5, 10, true));
+        assertEquals(
+                "Zombie waves for 5 minutes.",
+                HordeManager.buildHordeIncomingSubtitle(5, 10, false));
     }
 }

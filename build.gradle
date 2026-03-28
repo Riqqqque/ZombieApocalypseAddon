@@ -24,6 +24,19 @@ base {
     archivesName = mod_id
 }
 
+def forge1201Build = tasks.register('buildForge1201', GradleBuild) {
+    dir = file('forge1201')
+    tasks = ['build']
+    notCompatibleWithConfigurationCache('Runs the standalone Forge 1.20.1 compatibility build.')
+}
+
+def copyForge1201Artifacts = tasks.register('copyForge1201Artifacts', Copy) {
+    dependsOn forge1201Build
+    from(file('forge1201/build/libs'))
+    include('*.jar')
+    into(layout.buildDirectory.dir('libs'))
+}
+
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -165,6 +178,14 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named('test', Test).configure {
     useJUnitPlatform()
+}
+
+tasks.named('build').configure {
+    dependsOn copyForge1201Artifacts
+}
+
+tasks.named('clean').configure {
+    delete file('forge1201/build')
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
