@@ -15,7 +15,7 @@ def sharedProperties = new Properties()
 file('../gradle.properties').withInputStream(sharedProperties.&load)
 def shared = { String key -> sharedProperties.getProperty(key) }
 
-version = shared('mod_version')
+version = shared('forge1201_mod_version') ?: shared('mod_version')
 group = shared('mod_group_id')
 
 repositories {
@@ -115,7 +115,7 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
             mod_id                 : shared('mod_id'),
             mod_name               : shared('mod_name'),
             mod_license            : shared('mod_license'),
-            mod_version            : shared('mod_version'),
+            mod_version            : version,
             mod_authors            : 'Rique',
             mod_description        : 'A configurable zombie apocalypse gameplay addon for Forge 1.20.1.'
     ]
