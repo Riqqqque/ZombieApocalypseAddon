@@ -84,8 +84,4 @@ public final class ConfigValidator {
         return Math.max(1, configured);
     }
 
-    public static int spawnAttemptsForWave(int zombiesPerSpawn) {
-        int attemptsPerZombie = Math.max(1, Config.COMMON.spawnAttemptsPerZombie.get());
-        return Math.max(zombiesPerSpawn, zombiesPerSpawn * attemptsPerZombie);
-    }
 }

@@ -23,4 +23,12 @@ class EventHandlerTest {
         assertEquals(false, EventHandler.isDaylightSpawnBlocked(true, 0, 0, false));
         assertEquals(false, EventHandler.isDaylightSpawnBlocked(true, 5, 10, true));
     }
+
+    @Test
+    void spawnDistanceIsOnlyImpossibleOutsideTheSpawnSquare() {
+        assertEquals(false, EventHandler.isSpawnDistanceImpossible(12, 30));
+        assertEquals(false, EventHandler.isSpawnDistanceImpossible(30, 30));
+        assertEquals(false, EventHandler.isSpawnDistanceImpossible(42, 30));
+        assertEquals(true, EventHandler.isSpawnDistanceImpossible(43, 30));
+    }
 }
