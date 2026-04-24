@@ -69,8 +69,9 @@ public final class HordeManager {
         ApocalypseWorldData state = ApocalypseWorldData.get(overworldLevel.getServer());
 
         long gameTime = overworldLevel.getGameTime();
-        long dayTime = overworldLevel.getDayTime() % 24000L;
-        long currentDay = overworldLevel.getDayTime() / 24000L;
+        long absoluteDayTime = overworldLevel.getDayTime();
+        long dayTime = absoluteDayTime % 24000L;
+        long currentDay = absoluteDayTime / 24000L;
 
         expireHordeIfNeeded(overworldLevel, state, gameTime);
         boolean hordeStarted = tryStartScheduledHorde(overworldLevel, state, currentDay, dayTime);
@@ -247,22 +248,24 @@ public final class HordeManager {
     }
 
     public static void startHorde(ServerLevel level) {
-        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
-        long currentDay = level.getDayTime() / 24000L;
-        long dayTime = level.getDayTime() % 24000L;
+        long absoluteDayTime = eventLevel.getDayTime();
+        long currentDay = absoluteDayTime / 24000L;
+        long dayTime = absoluteDayTime % 24000L;
         boolean includeDayAnnouncement = shouldAnnounceDay(
                 currentDay,
                 dayTime,
                 state.getLastDayAnnouncementDay(),
                 Config.COMMON.enableDayCounterAnnouncements.get());
 
-        activateHorde(level, state);
+        activateHorde(eventLevel, state);
         if (includeDayAnnouncement) {
             state.setLastDayAnnouncementDay(currentDay);
         }
 
-        notifyAllPlayers(level, "HORDE INCOMING",
+        notifyAllPlayers(eventLevel, "HORDE INCOMING",
                 buildHordeIncomingSubtitle(durationMinutes, currentDay, includeDayAnnouncement));
 
         if (Config.COMMON.enableDebugLogging.get()) {
@@ -271,7 +274,8 @@ public final class HordeManager {
     }
 
     public static void stopHorde(ServerLevel level) {
-        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         state.setHordeActive(false);
         state.setHordeEndGameTime(0L);
 
@@ -281,9 +285,11 @@ public final class HordeManager {
     }
 
     public static void triggerBloodMoon(ServerLevel level) {
-        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
-        long dayTime = level.getDayTime() % 24000L;
-        long currentDay = level.getDayTime() / 24000L;
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
+        long absoluteDayTime = eventLevel.getDayTime();
+        long dayTime = absoluteDayTime % 24000L;
+        long currentDay = absoluteDayTime / 24000L;
 
         if (EventSchedule.isNight(dayTime)) {
             boolean alreadyActive = state.isBloodMoonActive();
@@ -291,7 +297,7 @@ public final class HordeManager {
             state.setForcedBloodMoonPending(false);
             state.setBloodMoonActive(true);
             if (!alreadyActive) {
-                notifyAllPlayers(level, "BLOOD MOON", "Zombies are swarming tonight.");
+                notifyAllPlayers(eventLevel, "BLOOD MOON", "Zombies are swarming tonight.");
             }
             return;
         }
@@ -312,12 +318,13 @@ public final class HordeManager {
     }
 
     public static long getHordeRemainingSeconds(ServerLevel level) {
-        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         if (!state.isHordeActive()) {
             return 0L;
         }
 
-        long remaining = (state.getHordeEndGameTime() - level.getGameTime()) / 20L;
+        long remaining = (state.getHordeEndGameTime() - eventLevel.getGameTime()) / 20L;
         return Math.max(0L, remaining);
     }
 
@@ -356,5 +363,9 @@ public final class HordeManager {
 
     static boolean isScheduledHordeBlockedByGrace(long currentDay, int daylightSpawnStartDay) {
         return currentDay < Math.max(0, daylightSpawnStartDay);
+    }
+
+    private static ServerLevel eventLevel(ServerLevel level) {
+        return level.getServer().overworld();
     }
 }
