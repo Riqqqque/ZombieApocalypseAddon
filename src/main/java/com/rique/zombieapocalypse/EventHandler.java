@@ -19,7 +19,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -94,8 +93,8 @@ public final class EventHandler {
                     baseVariantWeights);
         }
 
-        boolean hasInvalidDistanceConfig() {
-            return minDistance >= horizontalRange;
+        boolean hasImpossibleDistanceConfig() {
+            return isSpawnDistanceImpossible(minDistance, horizontalRange);
         }
 
         int minDistanceSquared() {
@@ -154,13 +153,13 @@ public final class EventHandler {
             return;
         }
 
-        clearExpiredExternalFire(zombie, zombie.level().getGameTime());
-
         if (!zombie.isOnFire()) {
+            clearExpiredExternalFire(zombie);
             return;
         }
 
-        if (isLikelySunBurnContext(zombie) && !hasRecentExternalFire(zombie, zombie.level().getGameTime())) {
+        long gameTime = zombie.level().getGameTime();
+        if (isLikelySunBurnContext(zombie) && !hasRecentExternalFire(zombie, gameTime)) {
             zombie.clearFire();
         }
     }
@@ -265,10 +264,14 @@ public final class EventHandler {
             return;
         }
 
+        if (level.players().isEmpty()) {
+            return;
+        }
+
         SpawnRuntimeSettings settings = SpawnRuntimeSettings.capture(level);
-        if (settings.hasInvalidDistanceConfig()) {
+        if (settings.hasImpossibleDistanceConfig()) {
             if (settings.debugLogging()) {
-                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) >= spawnRange ({}). No spawns possible!",
+                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) is too large for spawnRange ({}). No spawns possible!",
                         settings.minDistance(), settings.horizontalRange());
             }
             return;
@@ -493,6 +496,12 @@ public final class EventHandler {
         return isDay && !hordeActive && currentDay < Math.max(0, daylightSpawnStartDay);
     }
 
+    static boolean isSpawnDistanceImpossible(int minDistance, int horizontalRange) {
+        long safeRange = Math.max(1, horizontalRange);
+        long safeMinDistance = Math.max(0, minDistance);
+        return safeMinDistance * safeMinDistance > 2L * safeRange * safeRange;
+    }
+
     private static boolean isDaylightSpawnBlocked(ServerLevel level, boolean hordeActive) {
         return isDaylightSpawnBlocked(
                 level.isDay(),
@@ -587,13 +596,10 @@ public final class EventHandler {
         return true;
     }
 
-    private static void clearExpiredExternalFire(Zombie zombie, long gameTime) {
-        if (!zombie.isOnFire()) {
+    private static void clearExpiredExternalFire(Zombie zombie) {
+        if (!EXTERNAL_FIRE_UNTIL.isEmpty()) {
             EXTERNAL_FIRE_UNTIL.remove(zombie.getUUID());
-            return;
         }
-
-        hasRecentExternalFire(zombie, gameTime);
     }
 
     static void pruneExpiredExternalFire(long gameTime) {
