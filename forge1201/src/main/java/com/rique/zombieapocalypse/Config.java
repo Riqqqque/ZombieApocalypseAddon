@@ -206,6 +206,7 @@ public final class Config {
         // Extra drops
         public final ForgeConfigSpec.DoubleValue boneChance;
         public final ForgeConfigSpec.DoubleValue stringChance;
+        public final ForgeConfigSpec.DoubleValue gunpowderChance;
         public final ForgeConfigSpec.DoubleValue enderPearlChance;
         public final ForgeConfigSpec.DoubleValue phantomMembraneChance;
 
@@ -1040,6 +1041,12 @@ public final class Config {
                             "Chance for an extra string to drop from a zombie-class mob.",
                             "0.15 = 15% chance.")
                     .defineInRange("stringChance", 0.15, 0.0, 1.0);
+
+            gunpowderChance = builder
+                    .comment(
+                            "Chance for an extra gunpowder to drop from a zombie-class mob.",
+                            "0.10 = 10% chance.")
+                    .defineInRange("gunpowderChance", 0.10, 0.0, 1.0);
 
             enderPearlChance = builder
                     .comment(

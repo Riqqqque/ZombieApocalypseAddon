@@ -173,6 +173,7 @@ public final class EventHandler {
         RandomSource random = event.getEntity().getRandom();
         addDrop(event, Items.BONE, ConfigValidator.probability(Config.COMMON.boneChance.get()), random);
         addDrop(event, Items.STRING, ConfigValidator.probability(Config.COMMON.stringChance.get()), random);
+        addDrop(event, Items.GUNPOWDER, ConfigValidator.probability(Config.COMMON.gunpowderChance.get()), random);
         addDrop(event, Items.ENDER_PEARL, ConfigValidator.probability(Config.COMMON.enderPearlChance.get()), random);
         addDrop(event, Items.PHANTOM_MEMBRANE, ConfigValidator.probability(Config.COMMON.phantomMembraneChance.get()),
                 random);
