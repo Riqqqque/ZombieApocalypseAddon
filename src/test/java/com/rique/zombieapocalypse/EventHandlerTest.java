@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import net.minecraft.core.BlockPos;
+
 class EventHandlerTest {
 
     @Test
@@ -30,5 +32,10 @@ class EventHandlerTest {
         assertEquals(false, EventHandler.isSpawnDistanceImpossible(30, 30));
         assertEquals(false, EventHandler.isSpawnDistanceImpossible(42, 30));
         assertEquals(true, EventHandler.isSpawnDistanceImpossible(43, 30));
+    }
+
+    @Test
+    void minimumSpawnDistanceUsesHorizontalDistanceOnly() {
+        assertEquals(25L, EventHandler.horizontalDistanceSquared(new BlockPos(3, 90, 4), new BlockPos(0, 20, 0)));
     }
 }

@@ -361,7 +361,7 @@ public final class EventHandler {
             int y = chooseSpawnY(level, playerY, random, x, z, scratchPos);
             spawnPos.set(x, y, z);
 
-            if (spawnPos.distSqr(playerPos) < minDistanceSq) {
+            if (horizontalDistanceSquared(spawnPos, playerPos) < minDistanceSq) {
                 continue;
             }
 
@@ -514,6 +514,12 @@ public final class EventHandler {
         long safeRange = Math.max(1, horizontalRange);
         long safeMinDistance = Math.max(0, minDistance);
         return safeMinDistance * safeMinDistance > 2L * safeRange * safeRange;
+    }
+
+    static long horizontalDistanceSquared(BlockPos first, BlockPos second) {
+        long dx = (long) first.getX() - second.getX();
+        long dz = (long) first.getZ() - second.getZ();
+        return dx * dx + dz * dz;
     }
 
     private static boolean isDaylightSpawnBlocked(ServerLevel level, boolean hordeActive) {

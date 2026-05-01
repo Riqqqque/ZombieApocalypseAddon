@@ -1,0 +1,23 @@
+{
+  "parent": "zombieapocalypseaddon:zombie_kills/kill_1000",
+  "display": {
+    "icon": {
+      "item": "minecraft:zombie_head"
+    },
+    "title": {
+      "translate": "advancement.zombieapocalypseaddon.kill_3000.title"
+    },
+    "description": {
+      "translate": "advancement.zombieapocalypseaddon.kill_3000.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "manual": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
