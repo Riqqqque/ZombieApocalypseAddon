@@ -28,6 +28,7 @@ public final class HelpCommands {
                         + "/zstats [player|all|clear] - statistics and cooldown data\n"
                         + "/zscaling status - difficulty scaling status\n"
                         + "/zdayspawn status - view spawn settings\n"
+                        + "/zdayspawn babychance <0.0-1.0> - set baby zombie chance; 0 disables baby zombies\n"
                         + "/zdayspawn daylightstart <day> - delay daytime custom spawning until that day counter\n"
                         + "/zdayspawn daycounter <true|false> - toggle morning day counter titles\n"
                         + "/zdayspawn attributes <true|false> - toggle base attribute tuning\n"

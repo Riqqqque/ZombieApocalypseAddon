@@ -1,6 +1,8 @@
 package com.rique.zombieapocalypse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,5 +39,13 @@ class EventHandlerTest {
     @Test
     void minimumSpawnDistanceUsesHorizontalDistanceOnly() {
         assertEquals(25L, EventHandler.horizontalDistanceSquared(new BlockPos(3, 90, 4), new BlockPos(0, 20, 0)));
+    }
+
+    @Test
+    void babyZombieChanceZeroForcesAdultsOnly() {
+        assertTrue(EventHandler.shouldForceAdultZombie(true, 0.0));
+        assertTrue(EventHandler.shouldForceAdultZombie(true, -1.0));
+        assertFalse(EventHandler.shouldForceAdultZombie(true, 0.01));
+        assertFalse(EventHandler.shouldForceAdultZombie(false, 0.0));
     }
 }
