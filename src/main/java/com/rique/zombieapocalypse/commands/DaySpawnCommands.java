@@ -41,6 +41,17 @@ public final class DaySpawnCommands {
                                             true);
                                     return 1;
                                 })))
+                .then(Commands.literal("babychance")
+                        .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
+                                .executes(context -> {
+                                    double value = DoubleArgumentType.getDouble(context, "value");
+                                    Config.COMMON.babyZombieChance.set(value);
+                                    String message = value <= 0.0
+                                            ? "Baby zombie spawns disabled."
+                                            : "Baby zombie chance: " + CommandUtil.percent(value);
+                                    CommandUtil.feedback(context.getSource(), message, true);
+                                    return 1;
+                                })))
                 .then(Commands.literal("interval")
                         .then(Commands.argument("ticks", IntegerArgumentType.integer(1, 72000))
                                 .executes(context -> {
@@ -171,6 +182,7 @@ public final class DaySpawnCommands {
         status.append("Require overworld sky: ").append(CommandUtil.onOff(Config.COMMON.requireOpenSkyForOverworldSpawns.get()))
                 .append('\n');
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get())).append('\n');
+        status.append("Baby zombie chance: ").append(CommandUtil.percent(Config.COMMON.babyZombieChance.get())).append('\n');
         status.append("Night boost: ").append(CommandUtil.onOff(Config.COMMON.enableNightBoost.get())).append('\n');
         status.append("Horde events: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get())).append('\n');
         status.append("Morning day counter: ").append(CommandUtil.onOff(Config.COMMON.enableDayCounterAnnouncements.get()))

@@ -203,6 +203,10 @@ public final class EventHandler {
             return;
         }
 
+        if (shouldForceAdultZombie(zombie.isBaby(), Config.COMMON.babyZombieChance.get())) {
+            forceAdultZombie(zombie);
+        }
+
         DifficultyManager.applyScaling(zombie, level, zombie.blockPosition());
     }
 
@@ -385,15 +389,16 @@ public final class EventHandler {
             zombie.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D,
                     random.nextFloat() * 360.0F, 0.0F);
 
-            if (random.nextDouble() < settings.babyZombieChance()) {
-                zombie.setBaby(true);
-            }
+            boolean spawnAsBaby = random.nextDouble() < settings.babyZombieChance();
+            zombie.setBaby(spawnAsBaby);
 
             if (!level.noCollision(zombie)) {
                 continue;
             }
 
-            zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, null, null);
+            Zombie.ZombieGroupData spawnGroupData = new Zombie.ZombieGroupData(spawnAsBaby, spawnAsBaby);
+            zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, spawnGroupData, null);
+            zombie.setBaby(spawnAsBaby);
             DifficultyManager.applyScaling(zombie, level, spawnPos);
             level.addFreshEntity(zombie);
             spawned++;
@@ -520,6 +525,17 @@ public final class EventHandler {
         long dx = (long) first.getX() - second.getX();
         long dz = (long) first.getZ() - second.getZ();
         return dx * dx + dz * dz;
+    }
+
+    static boolean shouldForceAdultZombie(boolean isBaby, double babyZombieChance) {
+        return isBaby && ConfigValidator.probability(babyZombieChance) <= 0.0;
+    }
+
+    private static void forceAdultZombie(Zombie zombie) {
+        zombie.setBaby(false);
+        if (zombie.isPassenger()) {
+            zombie.stopRiding();
+        }
     }
 
     private static boolean isDaylightSpawnBlocked(ServerLevel level, boolean hordeActive) {
