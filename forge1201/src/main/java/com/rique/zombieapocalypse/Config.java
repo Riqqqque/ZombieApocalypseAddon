@@ -211,7 +211,11 @@ public final class Config {
         public final ForgeConfigSpec.DoubleValue phantomMembraneChance;
 
         public Common(ForgeConfigSpec.Builder builder) {
-            builder.push("general");
+            builder.comment(
+                    "GENERAL SETTINGS",
+                    "Safe beginner setup: leave these defaults alone unless you know exactly what behavior you want.",
+                    "These switches affect all zombie-class mobs handled by the mod.")
+                    .push("general");
             preventSunBurn = builder
                     .comment(
                             "Controls whether zombie-class mobs can burn in daylight.",
@@ -232,7 +236,13 @@ public final class Config {
                     .define("enableDebugLogging", false);
             builder.pop();
 
-            builder.push("dayspawning");
+            builder.comment(
+                    "CUSTOM DAY/NIGHT SPAWNING",
+                    "This is the main pressure system. It creates extra zombie waves around survival players.",
+                    "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
+                    "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
+                    "Hardcore setup: increase chance/amount slowly, then test with multiple players before publishing a pack.")
+                    .push("dayspawning");
             enableDaySpawning = builder
                     .comment(
                             "Main on/off switch for the mod's custom zombie spawning.",
@@ -243,31 +253,36 @@ public final class Config {
                     .comment(
                             "How often the mod checks whether to spawn a custom wave.",
                             "20 ticks = 1 second.",
-                            "Default 120 = one check every 6 seconds.")
+                            "Default 120 = one check every 6 seconds.",
+                            "Lower numbers mean more checks and more CPU use. 20 or lower is very aggressive.")
                     .defineInRange("daySpawnInterval", 120, 1, 72000);
 
             daySpawnChance = builder
                     .comment(
                             "Chance that each spawn check turns into a real wave.",
-                            "0.0 = never spawn, 1.0 = every check spawns a wave.")
+                            "0.0 = never spawn, 1.0 = every check spawns a wave.",
+                            "High chance plus a low interval can flood an area quickly.")
                     .defineInRange("daySpawnChance", 0.5, 0.0, 1.0);
 
             maxDayZombiesPerPlayer = builder
                     .comment(
                             "Maximum nearby zombie-class mobs allowed around each player before new custom spawns are skipped.",
-                            "This helps stop overcrowding and keeps performance under control.")
+                            "This helps stop overcrowding and keeps performance under control.",
+                            "Beginner: 30-60 is usually sane. Raising this above 100 is for stronger servers.")
                     .defineInRange("maxDayZombiesPerPlayer", 50, 1, 500);
 
             zombiesPerSpawn = builder
                     .comment(
                             "How many mobs the mod tries to place in each successful wave.",
-                            "The real number can be lower if it cannot find enough valid spawn spots.")
+                            "The real number can be lower if it cannot find enough valid spawn spots.",
+                            "High values feel like mini-hordes and can spike lag if many players are online.")
                     .defineInRange("zombiesPerSpawn", 2, 1, 50);
 
             spawnRange = builder
                     .comment(
                             "How far from each player custom spawns are allowed to appear horizontally.",
-                            "Higher values spread mobs farther out and can make them feel less concentrated.")
+                            "Higher values spread mobs farther out and can make them feel less concentrated.",
+                            "Very high values make the mod check a wider area around every player.")
                     .defineInRange("spawnRange", 30, 16, 128);
 
             minSpawnDistance = builder
@@ -279,7 +294,8 @@ public final class Config {
             spawnAttemptsPerZombie = builder
                     .comment(
                             "How many location tries the mod makes for each mob in a wave.",
-                            "Higher values help waves fill more reliably, but they also use more CPU time.")
+                            "Higher values help waves fill more reliably, but they also use more CPU time.",
+                            "Beginner: 5-15 is normal. Do not max this out unless spawn placement is failing badly.")
                     .defineInRange("spawnAttemptsPerZombie", 10, 1, 40);
 
             requireOpenSkyForOverworldSpawns = builder
@@ -296,7 +312,12 @@ public final class Config {
                     .defineInRange("daylightSpawnStartDay", 0, 0, 3650);
             builder.pop();
 
-            builder.push("variants");
+            builder.comment(
+                    "ZOMBIE VARIANTS",
+                    "Controls which zombie-type mobs can appear in custom waves.",
+                    "Safe beginner setup: defaults add variety without making every spawn a special mob.",
+                    "If the numbers add up high, the mod normalizes them so the total chance stays safe.")
+                    .push("variants");
             enableZombieVariants = builder
                     .comment(
                             "Allows the mod to spawn special zombie variants instead of only normal zombies.",
@@ -328,7 +349,13 @@ public final class Config {
                     .defineInRange("zombieVillagerChance", 0.05, 0.0, 1.0);
             builder.pop();
 
-            builder.push("horde");
+            builder.comment(
+                    "HORDE EVENTS",
+                    "Scheduled high-pressure events that temporarily increase custom spawning.",
+                    "Safe beginner setup: keep interval and duration at defaults until you know your server can handle more.",
+                    "Performance warning: hordeZombiesPerSpawn, hordeSpawnMultiplier, and eventSpawnInterval are the big lag knobs.",
+                    "Hardcore setup: increase one setting at a time, not all at once.")
+                    .push("horde");
             enableHordeEvents = builder
                     .comment(
                             "Enables scheduled horde days that can trigger large pressure spikes.",
@@ -356,19 +383,22 @@ public final class Config {
             hordeSpawnMultiplier = builder
                     .comment(
                             "Extra spawn chance multiplier used while a horde is active.",
-                            "1.0 = no extra boost, 3.0 = three times the normal chance.")
+                            "1.0 = no extra boost, 3.0 = three times the normal chance.",
+                            "High values can overwhelm players and servers very fast.")
                     .defineInRange("hordeSpawnMultiplier", 3.0, 1.0, 20.0);
 
             hordeZombiesPerSpawn = builder
                     .comment(
                             "How many mobs each custom wave tries to spawn during a horde.",
-                            "This overrides the normal wave size while the event is active.")
+                            "This overrides the normal wave size while the event is active.",
+                            "Do not raise this too high unless the server is strong and the pack is meant to be brutal.")
                     .defineInRange("hordeZombiesPerSpawn", 5, 1, 100);
 
             eventSpawnInterval = builder
                     .comment(
                             "Spawn check interval used during hordes and blood moons.",
-                            "Lower values mean more frequent checks. 20 ticks = 1 second.")
+                            "Lower values mean more frequent checks. 20 ticks = 1 second.",
+                            "Performance warning: this runs for every eligible player during events.")
                     .defineInRange("eventSpawnInterval", 20, 1, 200);
 
             enableEventNotifications = builder
@@ -384,7 +414,12 @@ public final class Config {
                     .define("enableDayCounterAnnouncements", true);
             builder.pop();
 
-            builder.push("bloodmoon");
+            builder.comment(
+                    "BLOOD MOON EVENTS",
+                    "Random night events that raise zombie pressure until dawn.",
+                    "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
+                    "Safe beginner setup: keep chance low and avoid huge multipliers.")
+                    .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
                             "Enables random blood moon nights.",
@@ -400,17 +435,24 @@ public final class Config {
             bloodMoonSpawnMultiplier = builder
                     .comment(
                             "Extra spawn chance multiplier used during a blood moon.",
-                            "1.0 = no extra boost, 5.0 = five times the normal chance.")
+                            "1.0 = no extra boost, 5.0 = five times the normal chance.",
+                            "High values can turn one night into a server-wide stress test.")
                     .defineInRange("bloodMoonSpawnMultiplier", 5.0, 1.0, 50.0);
 
             bloodMoonZombiesPerSpawn = builder
                     .comment(
                             "How many mobs each custom wave tries to spawn during a blood moon.",
-                            "This overrides the normal wave size while the blood moon is active.")
+                            "This overrides the normal wave size while the blood moon is active.",
+                            "Raise slowly if you want harder nights without runaway mob counts.")
                     .defineInRange("bloodMoonZombiesPerSpawn", 4, 1, 100);
             builder.pop();
 
-            builder.push("scaling");
+            builder.comment(
+                    "DAY-BASED DIFFICULTY SCALING",
+                    "Makes the apocalypse get harder as the world day counter rises.",
+                    "Safe beginner setup: keep scalingStartDay above 0 so new worlds get a short grace period.",
+                    "Hardcore setup: lower scalingStartDay or maxScalingDay, but test before combining with strong hordes.")
+                    .push("scaling");
             enableDifficultyScaling = builder
                     .comment(
                             "Enables day-based scaling so zombies get tougher as the world gets older.",
@@ -432,7 +474,8 @@ public final class Config {
             maxSpeedBoost = builder
                     .comment(
                             "Maximum extra movement speed from the legacy scaling system at 100% scaling.",
-                            "0.2 means up to 20% more movement speed.")
+                            "0.2 means up to 20% more movement speed.",
+                            "Be careful: speed changes are very noticeable in combat.")
                     .defineInRange("maxSpeedBoost", 0.2, 0.0, 1.0);
 
             maxHealthBoost = builder
@@ -454,7 +497,13 @@ public final class Config {
                     .defineInRange("maxWeaponChance", 0.2, 0.0, 1.0);
             builder.pop();
 
-            builder.push("attributes");
+            builder.comment(
+                    "ADVANCED ATTRIBUTE SYSTEM",
+                    "Deep stat tuning for zombie-class mobs when they enter the world.",
+                    "Beginner advice: leave this on with default numbers unless you are building a custom difficulty profile.",
+                    "Hardcore setup: use small multiplier changes first. 1.20 is already 20% stronger.",
+                    "Warning: extreme health, speed, follow range, or knockback values can feel broken or hurt performance.")
+                    .push("attributes");
             enableAttributeModifiers = builder
                     .comment(
                             "Main switch for the advanced attribute system.",
@@ -480,7 +529,12 @@ public final class Config {
                             "If more than one context matches, their multipliers stack together.")
                     .define("enableBiomeDimensionAttributeMultipliers", true);
 
-            builder.push("base");
+            builder.comment(
+                    "BASE ATTRIBUTE PROFILE",
+                    "Global stat layer applied to all zombie-class mobs.",
+                    "This is the easiest place to make every zombie a little stronger or weaker.",
+                    "Safe beginner setup: keep multipliers at 1.0 and bonuses at 0.0.")
+                    .push("base");
             baseHealthMultiplier = builder
                     .comment(
                             "Base max health multiplier for zombie-class mobs.",
@@ -567,7 +621,12 @@ public final class Config {
                     .defineInRange("baseKnockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.push("scaling");
+            builder.comment(
+                    "ATTRIBUTE SCALING PROFILE",
+                    "Extra stat growth added over time when scaleAttributesWithDifficulty is enabled.",
+                    "These values are multiplied by the day-based difficulty factor.",
+                    "Beginner advice: start with health or attack only. Avoid stacking speed boosts everywhere.")
+                    .push("scaling");
             maxHealthScaleMultiplier = builder
                     .comment(
                             "Extra health multiplier added by the advanced attribute system at 100% difficulty.",
@@ -641,9 +700,16 @@ public final class Config {
                     .defineInRange("maxKnockbackResistanceScaleBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.push("variants");
+            builder.comment(
+                    "VARIANT ATTRIBUTE PROFILES",
+                    "Per-mob stat layers for zombies, husks, drowned, and zombie villagers.",
+                    "Use this when you want one variant to feel different from the others.")
+                    .push("variants");
 
-            builder.push("zombie");
+            builder.comment(
+                    "Normal zombie stat overrides.",
+                    "Good beginner use: keep normal zombies close to vanilla and make special variants scarier.")
+                    .push("zombie");
             zombieHealthMultiplier = builder
                     .comment(
                             "Normal zombie health multiplier.",
@@ -685,7 +751,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.push("husk");
+            builder.comment(
+                    "Husk stat overrides.",
+                    "Good hardcore use: make husks hit harder in deserts without changing all zombies.")
+                    .push("husk");
             huskHealthMultiplier = builder
                     .comment(
                             "Husk health multiplier.",
@@ -726,7 +795,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.push("drowned");
+            builder.comment(
+                    "Drowned stat overrides.",
+                    "Good hardcore use: make drowned tankier or faster in water-heavy worlds.")
+                    .push("drowned");
             drownedHealthMultiplier = builder
                     .comment(
                             "Drowned health multiplier.",
@@ -767,7 +839,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.push("zombieVillager");
+            builder.comment(
+                    "Zombie villager stat overrides.",
+                    "Good beginner use: keep these near normal zombies unless you want them to be rare threats.")
+                    .push("zombieVillager");
             zombieVillagerHealthMultiplier = builder
                     .comment(
                             "Zombie villager health multiplier.",
@@ -809,9 +884,17 @@ public final class Config {
             builder.pop();
             builder.pop();
 
-            builder.push("contexts");
+            builder.comment(
+                    "BIOME AND DIMENSION ATTRIBUTE CONTEXTS",
+                    "Context multipliers apply based on where the mob enters the world.",
+                    "Multiple contexts can stack, so avoid huge values here.",
+                    "Beginner advice: use small changes like 1.10 or 0.90 first.")
+                    .push("contexts");
 
-            builder.push("desert");
+            builder.comment(
+                    "Desert and badlands context multipliers.",
+                    "Useful for dry-biome husk pressure.")
+                    .push("desert");
             desertHealthMultiplier = builder
                     .comment(
                             "Health multiplier applied when the mob spawns in desert or badlands biomes.",
@@ -834,7 +917,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.push("water");
+            builder.comment(
+                    "Ocean, river, swamp, and mangrove swamp context multipliers.",
+                    "Useful for making drowned or wet-biome zombies feel different.")
+                    .push("water");
             waterHealthMultiplier = builder
                     .comment(
                             "Health multiplier applied when the mob spawns in ocean, river, or swamp biomes.",
@@ -857,7 +943,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.push("mushroom");
+            builder.comment(
+                    "Mushroom fields context multipliers.",
+                    "If mushroomSafeZone is true, custom spawns are blocked there, but natural zombies can still use these stats.")
+                    .push("mushroom");
             mushroomHealthMultiplier = builder
                     .comment(
                             "Health multiplier applied when the mob spawns in mushroom fields.",
@@ -880,7 +969,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.push("nether");
+            builder.comment(
+                    "Nether context multipliers.",
+                    "Only affects zombie-class mobs in the Nether. Keep values modest because Nether combat is already risky.")
+                    .push("nether");
             netherHealthMultiplier = builder
                     .comment(
                             "Health multiplier applied when the mob spawns in the Nether.",
@@ -903,7 +995,10 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.push("end");
+            builder.comment(
+                    "End context multipliers.",
+                    "Only affects zombie-class mobs in the End. Useful for custom packs that add zombie pressure there.")
+                    .push("end");
             endHealthMultiplier = builder
                     .comment(
                             "Health multiplier applied when the mob spawns in the End.",
@@ -929,7 +1024,11 @@ public final class Config {
             builder.pop();
             builder.pop();
 
-            builder.push("nightspawning");
+            builder.comment(
+                    "NIGHT SPAWN BOOST",
+                    "Raises custom spawn chance at night. This does not directly change zombie speed or health.",
+                    "Safe beginner setup: 1.5 keeps nights scarier without making every check guaranteed.")
+                    .push("nightspawning");
             enableNightBoost = builder
                     .comment(
                             "Adds an extra spawn chance boost at night.",
@@ -943,7 +1042,12 @@ public final class Config {
                     .defineInRange("nightSpawnMultiplier", 1.5, 1.0, 10.0);
             builder.pop();
 
-            builder.push("biomes");
+            builder.comment(
+                    "BIOME SPAWN RULES",
+                    "Controls biome-based variant chances and dimension custom spawning.",
+                    "Safe beginner setup: leave Nether and End spawning off unless the pack is designed around it.",
+                    "Performance warning: enabling extra dimensions means more places can run custom spawn checks.")
+                    .push("biomes");
             enableBiomeModifiers = builder
                     .comment(
                             "Lets biome type influence which zombie variants spawn more often.",
@@ -981,7 +1085,11 @@ public final class Config {
                     .define("endSpawning", false);
             builder.pop();
 
-            builder.push("deathcooldown");
+            builder.comment(
+                    "DEATH COOLDOWN",
+                    "A mercy system that reduces custom spawn pressure after a player dies.",
+                    "Recommended for public servers so players do not get spawn-camped by fresh waves.")
+                    .push("deathcooldown");
             enableDeathCooldown = builder
                     .comment(
                             "Temporarily lowers custom spawn pressure around players after they die.",
@@ -1001,7 +1109,11 @@ public final class Config {
                     .defineInRange("cooldownSpawnReduction", 0.5, 0.0, 1.0);
             builder.pop();
 
-            builder.push("effects");
+            builder.comment(
+                    "SPAWN FEEDBACK EFFECTS",
+                    "Cosmetic sound and particle feedback when custom waves spawn.",
+                    "Safe to disable if players find it noisy or if you want slightly less client-side clutter.")
+                    .push("effects");
             enableSpawnEffects = builder
                     .comment(
                             "Enables extra sound and particle feedback when custom spawns happen.",
@@ -1021,7 +1133,11 @@ public final class Config {
                     .define("spawnParticles", true);
             builder.pop();
 
-            builder.push("statistics");
+            builder.comment(
+                    "STATISTICS",
+                    "Controls kill totals shown by /zstats.",
+                    "Milestone advancements use their own progress so achievements can still work if this is disabled.")
+                    .push("statistics");
             enableStatistics = builder
                     .comment(
                             "Tracks zombie kill totals shown by /zstats.",
@@ -1029,7 +1145,12 @@ public final class Config {
                     .define("enableStatistics", true);
             builder.pop();
 
-            builder.push("drops");
+            builder.comment(
+                    "EXTRA DROPS",
+                    "Bonus loot chances for zombie-class mobs.",
+                    "Safe beginner setup: keep rare items low so zombies do not replace normal farming.",
+                    "0.10 means 10% chance per killed zombie-class mob.")
+                    .push("drops");
             boneChance = builder
                     .comment(
                             "Chance for an extra bone to drop from a zombie-class mob.",
