@@ -31,6 +31,7 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -191,6 +192,18 @@ public final class EventHandler {
                 event.getEntity().getZ(),
                 new ItemStack(item));
         event.getDrops().add(itemEntity);
+    }
+
+    @SubscribeEvent
+    public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (event.loadedFromDisk()
+                || !(event.getLevel() instanceof ServerLevel level)
+                || !(event.getEntity() instanceof Zombie zombie)
+                || !ZombieClassMobs.isZombieClass(zombie)) {
+            return;
+        }
+
+        DifficultyManager.applyScaling(zombie, level, zombie.blockPosition());
     }
 
     @SubscribeEvent
