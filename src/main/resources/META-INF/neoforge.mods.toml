@@ -9,7 +9,9 @@ displayName="${mod_name}"
 logoFile="zombielogo.png"
 authors="Rique"
 description='''
-A configurable zombie apocalypse gameplay addon for NeoForge 1.21.1.
+A server-side configurable zombie apocalypse gameplay addon for NeoForge 1.21.1.
+
+Install this on the server. Clients do not need the mod to join.
 
 Core gameplay:
 - Optional sunlight immunity for zombies.

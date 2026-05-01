@@ -5,10 +5,10 @@
       "id": "minecraft:zombie_head"
     },
     "title": {
-      "translate": "advancement.zombieapocalypseaddon.kill_3000.title"
+      "text": "No Rest For The Dead"
     },
     "description": {
-      "translate": "advancement.zombieapocalypseaddon.kill_3000.description"
+      "text": "Kill 3,000 zombies"
     },
     "frame": "challenge",
     "show_toast": true,
