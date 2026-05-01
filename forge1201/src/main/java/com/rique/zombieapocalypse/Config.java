@@ -70,7 +70,7 @@ public final class Config {
         public final ForgeConfigSpec.DoubleValue maxArmorChance;
         public final ForgeConfigSpec.DoubleValue maxWeaponChance;
 
-        // Attribute tuning for spawned zombie-class mobs
+        // Attribute tuning for zombie-class mobs
         public final ForgeConfigSpec.BooleanValue enableAttributeModifiers;
         public final ForgeConfigSpec.DoubleValue baseHealthMultiplier;
         public final ForgeConfigSpec.DoubleValue baseHealthBonus;
@@ -458,7 +458,7 @@ public final class Config {
             enableAttributeModifiers = builder
                     .comment(
                             "Main switch for the advanced attribute system.",
-                            "Applies only to zombie-class mobs spawned by this mod: zombies, husks, drowned, and zombie villagers.")
+                            "Applies to zombie-class mobs when they enter the world: zombies, husks, drowned, and zombie villagers.")
                     .define("enableAttributeModifiers", true);
 
             scaleAttributesWithDifficulty = builder
@@ -483,7 +483,7 @@ public final class Config {
             builder.push("base");
             baseHealthMultiplier = builder
                     .comment(
-                            "Base max health multiplier for mod-spawned zombie-class mobs.",
+                            "Base max health multiplier for zombie-class mobs.",
                             "1.0 = vanilla-style value, 1.5 = 50% more health.",
                             "Typical vanilla zombie max health is 20.0.")
                     .defineInRange("baseHealthMultiplier", 1.0, 0.0, 10.0);
@@ -497,7 +497,7 @@ public final class Config {
 
             baseAttackMultiplier = builder
                     .comment(
-                            "Base attack damage multiplier for mod-spawned zombie-class mobs.",
+                            "Base attack damage multiplier for zombie-class mobs.",
                             "1.0 = vanilla-style value, 1.25 = 25% more damage.",
                             "Typical vanilla zombie attack damage is 3.0.",
                             "Final damage can still vary with vanilla difficulty and effects.")
@@ -512,7 +512,7 @@ public final class Config {
 
             baseSpeedMultiplier = builder
                     .comment(
-                            "Base movement speed multiplier for mod-spawned zombie-class mobs.",
+                            "Base movement speed multiplier for zombie-class mobs.",
                             "1.0 = vanilla-style value, 1.2 = 20% faster.",
                             "Typical vanilla zombie movement speed is about 0.23.")
                     .defineInRange("baseSpeedMultiplier", 1.0, 0.0, 10.0);
@@ -526,7 +526,7 @@ public final class Config {
 
             baseArmorMultiplier = builder
                     .comment(
-                            "Base armor multiplier for mod-spawned zombie-class mobs.",
+                            "Base armor multiplier for zombie-class mobs.",
                             "1.0 = vanilla-style value, 2.0 = double armor.",
                             "Typical vanilla zombie armor is 2.0.")
                     .defineInRange("baseArmorMultiplier", 1.0, 0.0, 10.0);
@@ -540,7 +540,7 @@ public final class Config {
 
             baseFollowRangeMultiplier = builder
                     .comment(
-                            "Base follow range multiplier for mod-spawned zombie-class mobs.",
+                            "Base follow range multiplier for zombie-class mobs.",
                             "Higher values let mobs notice players from farther away.",
                             "Typical vanilla zombie follow range is 35.0.")
                     .defineInRange("baseFollowRangeMultiplier", 1.0, 0.0, 10.0);
@@ -554,7 +554,7 @@ public final class Config {
 
             baseKnockbackResistanceMultiplier = builder
                     .comment(
-                            "Base knockback resistance multiplier for mod-spawned zombie-class mobs.",
+                            "Base knockback resistance multiplier for zombie-class mobs.",
                             "Higher values make mobs harder to knock back.",
                             "Typical vanilla zombie knockback resistance is 0.0.")
                     .defineInRange("baseKnockbackResistanceMultiplier", 1.0, 0.0, 10.0);
