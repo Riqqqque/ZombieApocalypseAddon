@@ -214,7 +214,7 @@ public final class Config {
             builder.push("general");
             preventSunBurn = builder
                     .comment(
-                            "Controls whether zombie-class mobs from this mod can burn in daylight.",
+                            "Controls whether zombie-class mobs can burn in daylight.",
                             "true = they ignore sunlight burning, false = they burn like normal vanilla zombies.",
                             "Only sunlight burning is blocked here; other fire damage still works normally.")
                     .define("preventSunBurn", true);
@@ -1024,8 +1024,8 @@ public final class Config {
             builder.push("statistics");
             enableStatistics = builder
                     .comment(
-                            "Tracks zombie kill stats for /zstats and milestone progress.",
-                            "Turn this off only if you do not want the mod storing those numbers.")
+                            "Tracks zombie kill totals shown by /zstats.",
+                            "Milestone advancements keep their own progress so achievements can still work if this is off.")
                     .define("enableStatistics", true);
             builder.pop();
 

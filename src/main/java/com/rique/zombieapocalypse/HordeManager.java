@@ -259,14 +259,18 @@ public final class HordeManager {
                 dayTime,
                 state.getLastDayAnnouncementDay(),
                 Config.COMMON.enableDayCounterAnnouncements.get());
+        boolean includeDayInHordeTitle = includeDayAnnouncement && Config.COMMON.enableEventNotifications.get();
 
         activateHorde(eventLevel, state);
-        if (includeDayAnnouncement) {
+        if (EventSchedule.isHordeRollWindow(dayTime)) {
+            state.setLastHordeRollDay(currentDay);
+        }
+        if (includeDayInHordeTitle) {
             state.setLastDayAnnouncementDay(currentDay);
         }
 
         notifyAllPlayers(eventLevel, "HORDE INCOMING",
-                buildHordeIncomingSubtitle(durationMinutes, currentDay, includeDayAnnouncement));
+                buildHordeIncomingSubtitle(durationMinutes, currentDay, includeDayInHordeTitle));
 
         if (Config.COMMON.enableDebugLogging.get()) {
             LOGGER.info("[ZombieApocalypse] Horde started; duration={} minutes", durationMinutes);
