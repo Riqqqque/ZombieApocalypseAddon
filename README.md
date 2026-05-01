@@ -175,6 +175,7 @@ All commands require OP level 2.
 | `/zdayspawn status` | Prints full spawn/settings summary. |
 | `/zdayspawn enabled <true\|false>` | Master toggle for custom spawning. |
 | `/zdayspawn chance <0.0-1.0>` | Spawn-wave chance per spawn interval. |
+| `/zdayspawn babychance <0.0-1.0>` | Chance for baby zombie spawns. `0.0` disables new baby zombie-class spawns. |
 | `/zdayspawn interval <ticks>` | Normal spawn interval. |
 | `/zdayspawn eventinterval <ticks>` | Spawn interval during horde/blood moon. |
 | `/zdayspawn amount <1-50>` | Zombies attempted per wave. |

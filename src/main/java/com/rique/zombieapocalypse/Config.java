@@ -338,8 +338,9 @@ public final class Config {
 
             babyZombieChance = builder
                     .comment(
-                            "Chance for a spawned zombie-type mob to be a baby when that mob type supports it.",
-                            "0.0 = never, 1.0 = always.")
+                            "Chance for a custom spawned zombie-type mob to be a baby when that mob type supports it.",
+                            "Set this to 0.0 to force new zombie-class spawns to stay adults.",
+                            "0.0 = no baby zombies, 1.0 = every supported custom spawn is a baby.")
                     .defineInRange("babyZombieChance", 0.05, 0.0, 1.0);
 
             zombieVillagerChance = builder

@@ -207,6 +207,7 @@ All commands require OP level 2.
 - `/zdayspawn status`
 - `/zdayspawn enabled <true|false>`
 - `/zdayspawn chance <0.0-1.0>`
+- `/zdayspawn babychance <0.0-1.0>` - set to `0.0` to disable new baby zombie-class spawns
 - `/zdayspawn interval <ticks>`
 - `/zdayspawn eventinterval <ticks>`
 - `/zdayspawn amount <1-50>`
