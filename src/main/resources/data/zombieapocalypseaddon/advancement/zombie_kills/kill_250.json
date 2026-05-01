@@ -4,10 +4,10 @@
       "id": "minecraft:rotten_flesh"
     },
     "title": {
-      "translate": "advancement.zombieapocalypseaddon.kill_250.title"
+      "text": "Crowd Control"
     },
     "description": {
-      "translate": "advancement.zombieapocalypseaddon.kill_250.description"
+      "text": "Kill 250 zombies"
     },
     "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png",
     "frame": "task",

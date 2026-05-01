@@ -2,6 +2,8 @@
 
 Turn your world into a long-term survival scenario where daytime is no longer safe.
 
+Server-side only: install it on the server. Players do not need the mod installed on their clients to join.
+
 Zombie Apocalypse Addon replaces the normal "sleep through the night and relax during the day" loop with constant pressure, escalating danger, and fully configurable zombie systems. Zombies can keep spawning around players during the day, special events can spike pressure even higher, and enemy strength can evolve over time through layered scaling and attribute profiles.
 
 This is not a lightweight spawn tweak. It is a full zombie survival framework built for servers, challenge worlds, and configurable apocalypse-style gameplay.
@@ -18,6 +20,7 @@ This is not a lightweight spawn tweak. It is a full zombie survival framework bu
 - Temporary spawn pressure relief after player death
 - Persistent kill tracking and milestone advancements
 - Live in-game admin controls for most major systems
+- Server-only multiplayer install support
 
 Zombie-class mobs include:
 
@@ -288,5 +291,7 @@ Current release layout:
 
 - NeoForge `1.21.1`
 - Forge `1.20.1`
+- Multiplayer install: server required, client optional
+- Singleplayer install: client required because the integrated server runs from the client
 
 If you want a configurable zombie apocalypse system with constant pressure, scaling danger, live admin controls, and deep stat tuning, this mod is built for exactly that.

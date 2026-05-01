@@ -2,6 +2,8 @@
 
 Turn your Minecraft world into a nonstop survival scenario.
 
+Server-side only: install it on the server. Players do not need the mod installed on their clients to join.
+
 This mod removes the "safe daytime" feeling by spawning zombie-type mobs around players all day and night. As in-game days pass, those mobs get more dangerous through scaling and configurable attribute systems.
 
 If you want tension at all times instead of a peaceful daytime loop, this mod is built for that.
@@ -21,6 +23,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Biome and dimension context profiles let stats change by location.
 - Most behavior is configurable live with commands.
 - Config file includes extensive comments and safe ranges.
+- Server-only install support for multiplayer servers.
 
 This is not "just more zombies." It is a complete configurable zombie-pressure system.
 
@@ -132,7 +135,7 @@ If multiple contexts apply, multipliers stack multiplicatively.
 Example:
 - Desert speed multiplier = `1.10`
 - Nether speed multiplier = `1.20`
-- Spawn in Nether desert-like context => combined speed multiplier ≈ `1.32`
+- Spawn in Nether desert-like context => combined speed multiplier is about `1.32`
 
 ---
 
@@ -435,8 +438,10 @@ Main sections:
 
 ## Installation Notes
 
-- Intended for NeoForge servers/worlds matching this release branch.
-- Keep server and player mod setups aligned for best compatibility.
+- Install on the server for multiplayer worlds.
+- Client install is optional. Players can join without the mod.
+- Install on the client only if you also want it active in singleplayer.
+- Intended for NeoForge or Forge servers matching the release file you download.
 - For troubleshooting, enable debug logs with:
 `/zdayspawn debug true`
 
