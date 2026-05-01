@@ -8,8 +8,11 @@ version="${mod_version}"
 displayName="${mod_name}"
 logoFile="zombielogo.png"
 authors="${mod_authors}"
+displayTest="IGNORE_SERVER_VERSION"
 description='''
-A configurable zombie apocalypse gameplay addon for Forge 1.20.1.
+A server-side configurable zombie apocalypse gameplay addon for Forge 1.20.1.
+
+Install this on the server. Clients do not need the mod to join.
 
 Core gameplay:
 - Optional sunlight immunity for zombies.
