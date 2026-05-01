@@ -13,7 +13,7 @@ This is not a lightweight spawn tweak. It is a full zombie survival framework bu
 - Natural and manual horde events
 - Random and forced blood moon nights
 - Day-based difficulty progression
-- Advanced attribute tuning for spawned zombie-class mobs
+- Advanced attribute tuning for zombie-class mobs
 - Biome and dimension-based spawn and stat behavior
 - Temporary spawn pressure relief after player death
 - Persistent kill tracking and milestone advancements
@@ -137,7 +137,7 @@ The mod also includes support systems around the main apocalypse gameplay:
 
 ## Advanced Attribute System
 
-One of the biggest systems in the mod is the attribute pipeline for mod-spawned zombie-class mobs.
+One of the biggest systems in the mod is the attribute pipeline for zombie-class mobs when they enter the world.
 
 Supported attributes:
 

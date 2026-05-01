@@ -86,7 +86,7 @@ After a player death, spawn pressure can be reduced temporarily to prevent repea
 
 ## Advanced Attribute System (Deep Explanation)
 
-This mod now includes a layered attribute pipeline for mod-spawned zombie-class mobs:
+This mod now includes a layered attribute pipeline for zombie-class mobs when they enter the world:
 
 - Health
 - Attack damage
@@ -99,7 +99,7 @@ This mod now includes a layered attribute pipeline for mod-spawned zombie-class 
 For each spawned mob, attribute value flow is:
 
 1. start from vanilla base value
-2. apply `base` profile (global for all spawned zombie-class mobs)
+2. apply `base` profile (global for all zombie-class mobs)
 3. apply `variant` profile (zombie/husk/drowned/zombie villager) if enabled
 4. apply `context` multipliers (biome/dimension) if enabled
 5. apply attribute day-scaling (if enabled)

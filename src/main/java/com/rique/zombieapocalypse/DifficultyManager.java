@@ -23,6 +23,8 @@ import net.minecraft.world.level.biome.Biomes;
  */
 public final class DifficultyManager {
 
+    private static final String SCALING_APPLIED_TAG = ZombieApocalypseAddon.MODID + "_scaled";
+
     private enum AttributeKey {
         HEALTH,
         ATTACK,
@@ -76,6 +78,12 @@ public final class DifficultyManager {
     }
 
     public static void applyScaling(Zombie zombie, ServerLevel level, BlockPos spawnPos) {
+        if (!shouldApplyScaling(zombie)) {
+            return;
+        }
+
+        zombie.addTag(SCALING_APPLIED_TAG);
+
         double factor = getScalingFactor(level);
         applyConfiguredAttributes(zombie, level, spawnPos, factor);
 
@@ -91,6 +99,20 @@ public final class DifficultyManager {
         if (random.nextDouble() < Config.COMMON.maxWeaponChance.get() * factor) {
             applyRandomWeapon(zombie, random, factor);
         }
+    }
+
+    static boolean shouldApplyScaling(Zombie zombie) {
+        return shouldApplyScaling(
+                zombie.getTags().contains(SCALING_APPLIED_TAG),
+                Config.COMMON.enableAttributeModifiers.get(),
+                Config.COMMON.enableDifficultyScaling.get());
+    }
+
+    static boolean shouldApplyScaling(
+            boolean alreadyApplied,
+            boolean attributeModifiersEnabled,
+            boolean difficultyScalingEnabled) {
+        return !alreadyApplied && (attributeModifiersEnabled || difficultyScalingEnabled);
     }
 
     private static void applyConfiguredAttributes(Zombie zombie, ServerLevel level, BlockPos spawnPos, double difficultyFactor) {
