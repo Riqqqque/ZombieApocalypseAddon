@@ -53,6 +53,13 @@ class EventHandlerTest {
     }
 
     @Test
+    void maxBlockLightDebugTextShowsIgnoredOrClampedValue() {
+        assertEquals("ignored", EventHandler.formatMaxBlockLight(-1));
+        assertEquals("0", EventHandler.formatMaxBlockLight(0));
+        assertEquals("15", EventHandler.formatMaxBlockLight(20));
+    }
+
+    @Test
     void babyZombieChanceZeroForcesAdultsOnly() {
         assertTrue(EventHandler.shouldForceAdultZombie(true, 0.0));
         assertTrue(EventHandler.shouldForceAdultZombie(true, -1.0));
