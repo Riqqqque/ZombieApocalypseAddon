@@ -241,6 +241,7 @@ public final class Config {
                     "CUSTOM DAY/NIGHT SPAWNING",
                     "This is the main pressure system. It creates extra zombie waves around survival players.",
                     "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
+                    "Use maxBlockLightForSpawning if you want player-placed lights to protect bases from custom waves.",
                     "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
                     "Hardcore setup: increase chance/amount slowly, then test with multiple players before publishing a pack."))
                     .push("dayspawning");
@@ -308,10 +309,13 @@ public final class Config {
             maxBlockLightForSpawning = builder
                     .comment(
                             "Maximum block light level that still allows custom zombie spawning.",
-                            "-1 = ignore block light and keep the old behavior.",
-                            "0 = only spawn in complete block darkness.",
-                            "7 = classic hostile-mob style limit.",
-                            "This checks block light from torches, lanterns, glowstone, etc. Sunlight is ignored so daytime spawning still works.")
+                            "This only affects the mod's custom spawn waves. It does not change vanilla natural spawning.",
+                            "Block light means light from blocks like torches, lanterns, glowstone, campfires, and similar sources.",
+                            "-1 = ignore block light and keep the old behavior, so lit bases are not protected from custom waves.",
+                            "0 = custom waves only spawn in complete block darkness.",
+                            "7 = classic hostile-mob style limit and a good choice if players expect torches to protect bases.",
+                            "15 = any block light is allowed, which is almost the same as ignoring this check.",
+                            "Sunlight is ignored on purpose so daytime apocalypse spawning still works.")
                     .defineInRange("maxBlockLightForSpawning", -1, -1, 15);
 
             daylightSpawnStartDay = builder
