@@ -19,6 +19,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -136,13 +137,17 @@ public final class EventHandler {
             return;
         }
 
-        if (isNaturalSunFireDamage(zombie)) {
+        long gameTime = level.getGameTime();
+        if (shouldCancelSunFireDamage(
+                event.getSource().is(DamageTypes.ON_FIRE),
+                isLikelySunBurnContext(zombie),
+                hasRecentExternalFire(zombie, gameTime))) {
             event.setCanceled(true);
             zombie.clearFire();
             return;
         }
 
-        rememberExternalFire(zombie, level.getGameTime());
+        rememberExternalFire(zombie, gameTime);
     }
 
     @SubscribeEvent
@@ -633,8 +638,11 @@ public final class EventHandler {
         return zombie.getLightLevelDependentMagicValue() > 0.5F;
     }
 
-    private static boolean isNaturalSunFireDamage(Zombie zombie) {
-        return isLikelySunBurnContext(zombie) && !hasRecentExternalFire(zombie, zombie.level().getGameTime());
+    static boolean shouldCancelSunFireDamage(
+            boolean onFireDamage,
+            boolean likelySunBurnContext,
+            boolean recentExternalFire) {
+        return onFireDamage && likelySunBurnContext && !recentExternalFire;
     }
 
     private static void rememberExternalFire(Zombie zombie, long gameTime) {

@@ -81,6 +81,7 @@ sourceSets {
         resources {
             srcDirs = ['../src/main/resources', '../src/generated/resources', 'src/main/resources']
             exclude 'META-INF/neoforge.mods.toml'
+            exclude 'data/**/advancement/**'
             exclude 'pack.mcmeta'
         }
     }
