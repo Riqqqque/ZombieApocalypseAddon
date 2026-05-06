@@ -26,6 +26,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -60,6 +61,7 @@ public final class EventHandler {
             int horizontalRange,
             int minDistance,
             int attemptsPerZombie,
+            int maxBlockLightForSpawning,
             double babyZombieChance,
             double desertHuskBonus,
             double waterDrownedBonus,
@@ -88,6 +90,7 @@ public final class EventHandler {
                     Math.max(1, Config.COMMON.spawnRange.get()),
                     Math.max(0, Config.COMMON.minSpawnDistance.get()),
                     Math.max(1, Config.COMMON.spawnAttemptsPerZombie.get()),
+                    Config.COMMON.maxBlockLightForSpawning.get(),
                     ConfigValidator.probability(Config.COMMON.babyZombieChance.get()),
                     Config.COMMON.desertHuskBonus.get(),
                     Config.COMMON.waterDrownedBonus.get(),
@@ -381,6 +384,10 @@ public final class EventHandler {
                 continue;
             }
 
+            if (!isAllowedByBlockLight(level, spawnPos, settings.maxBlockLightForSpawning())) {
+                continue;
+            }
+
             Zombie zombie = createZombie(level, spawnPos, random, settings);
             if (zombie == null) {
                 continue;
@@ -486,6 +493,12 @@ public final class EventHandler {
         return true;
     }
 
+    private static boolean isAllowedByBlockLight(ServerLevel level, BlockPos spawnPos, int maxBlockLightForSpawning) {
+        return isBlockLightSpawnAllowed(
+                level.getBrightness(LightLayer.BLOCK, spawnPos),
+                maxBlockLightForSpawning);
+    }
+
     private static int countNearbyZombies(ServerLevel level, ServerPlayer player, int range) {
         return level.getEntitiesOfClass(
                 Zombie.class,
@@ -519,6 +532,16 @@ public final class EventHandler {
         long safeRange = Math.max(1, horizontalRange);
         long safeMinDistance = Math.max(0, minDistance);
         return safeMinDistance * safeMinDistance > 2L * safeRange * safeRange;
+    }
+
+    static boolean isBlockLightSpawnAllowed(int blockLight, int maxBlockLightForSpawning) {
+        if (maxBlockLightForSpawning < 0) {
+            return true;
+        }
+
+        int cappedBlockLight = Mth.clamp(blockLight, 0, 15);
+        int cappedMaxLight = Mth.clamp(maxBlockLightForSpawning, 0, 15);
+        return cappedBlockLight <= cappedMaxLight;
     }
 
     static long horizontalDistanceSquared(BlockPos first, BlockPos second) {

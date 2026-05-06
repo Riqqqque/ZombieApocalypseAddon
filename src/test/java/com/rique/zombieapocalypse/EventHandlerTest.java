@@ -42,6 +42,17 @@ class EventHandlerTest {
     }
 
     @Test
+    void blockLightLimitCanDisableOrCapCustomSpawns() {
+        assertTrue(EventHandler.isBlockLightSpawnAllowed(15, -1));
+        assertTrue(EventHandler.isBlockLightSpawnAllowed(0, 0));
+        assertFalse(EventHandler.isBlockLightSpawnAllowed(1, 0));
+        assertTrue(EventHandler.isBlockLightSpawnAllowed(7, 7));
+        assertFalse(EventHandler.isBlockLightSpawnAllowed(8, 7));
+        assertTrue(EventHandler.isBlockLightSpawnAllowed(20, 15));
+        assertTrue(EventHandler.isBlockLightSpawnAllowed(-5, 0));
+    }
+
+    @Test
     void babyZombieChanceZeroForcesAdultsOnly() {
         assertTrue(EventHandler.shouldForceAdultZombie(true, 0.0));
         assertTrue(EventHandler.shouldForceAdultZombie(true, -1.0));

@@ -35,6 +35,7 @@ public final class Config {
         public final ModConfigSpec.IntValue minSpawnDistance;
         public final ModConfigSpec.IntValue spawnAttemptsPerZombie;
         public final ModConfigSpec.BooleanValue requireOpenSkyForOverworldSpawns;
+        public final ModConfigSpec.IntValue maxBlockLightForSpawning;
         public final ModConfigSpec.IntValue daylightSpawnStartDay;
 
         // Zombie variants
@@ -303,6 +304,15 @@ public final class Config {
                             "If true, overworld custom spawns only happen where the sky is open.",
                             "Turn this off if you also want custom spawns under trees, roofs, or in more covered areas.")
                     .define("requireOpenSkyForOverworldSpawns", true);
+
+            maxBlockLightForSpawning = builder
+                    .comment(
+                            "Maximum block light level that still allows custom zombie spawning.",
+                            "-1 = ignore block light and keep the old behavior.",
+                            "0 = only spawn in complete block darkness.",
+                            "7 = classic hostile-mob style limit.",
+                            "This checks block light from torches, lanterns, glowstone, etc. Sunlight is ignored so daytime spawning still works.")
+                    .defineInRange("maxBlockLightForSpawning", -1, -1, 15);
 
             daylightSpawnStartDay = builder
                     .comment(
