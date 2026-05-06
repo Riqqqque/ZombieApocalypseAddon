@@ -19,6 +19,7 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 
 - Custom zombie-class spawning around players during both day and night
 - Optional zombie sunlight immunity
+- Optional block-light spawn protection for torches, lanterns, glowstone, and similar light sources
 - Optional baby zombie spawn control
 - Natural and manual horde events
 - Random and forced blood moon nights
@@ -57,6 +58,7 @@ You can control:
 - minimum spawn distance
 - spawn-position attempts per mob
 - whether overworld spawns require open sky
+- whether block light should stop custom spawns
 - whether baby zombie spawns are allowed
 
 This lets you tune the mod for anything from a tense vanilla-style survival world to a full hardcore apocalypse server.
@@ -109,6 +111,18 @@ Examples:
 - `15` = daytime spawning only starts on day 15
 
 This can be changed in the config or live with command.
+
+### Light-Based Spawn Protection
+
+You can optionally make custom spawns respect block light from torches, lanterns, glowstone, and similar light sources.
+
+Examples:
+
+- `-1` = ignore block light and keep the default apocalypse behavior
+- `0` = only spawn in complete block darkness
+- `7` = classic hostile-mob-style limit
+
+This checks block light only. Sunlight is ignored so daytime spawning can still work.
 
 ### Difficulty Scaling
 
@@ -236,6 +250,7 @@ All commands require OP level 2.
 - `/zdayspawn range <16-128>` - Set spawn range around players
 - `/zdayspawn mindist <8-64>` - Set minimum spawn distance from players
 - `/zdayspawn daylightstart <day>` - Delay daytime custom spawning until a chosen day
+- `/zdayspawn maxlight <-1-15>` - Set maximum block light for custom spawns, use `-1` to ignore block light
 - `/zdayspawn sky <true|false>` - Require open sky for overworld custom spawns
 - `/zdayspawn variants <true|false>` - Toggle zombie variant spawning
 - `/zdayspawn nightboost <true|false>` - Toggle night spawn boost

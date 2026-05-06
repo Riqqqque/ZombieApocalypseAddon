@@ -120,6 +120,17 @@ public final class DaySpawnCommands {
                                     CommandUtil.feedback(context.getSource(), message, true);
                                     return 1;
                                 })))
+                .then(Commands.literal("maxlight")
+                        .then(Commands.argument("level", IntegerArgumentType.integer(-1, 15))
+                                .executes(context -> {
+                                    int value = IntegerArgumentType.getInteger(context, "level");
+                                    Config.COMMON.maxBlockLightForSpawning.set(value);
+                                    String message = value < 0
+                                            ? "Custom spawning ignores block light."
+                                            : "Custom spawning max block light: " + value;
+                                    CommandUtil.feedback(context.getSource(), message, true);
+                                    return 1;
+                                })))
                 .then(toggleBoolNode("sky", Config.COMMON.requireOpenSkyForOverworldSpawns::set,
                         "Require open sky in overworld"))
                 .then(toggleBoolNode("variants", Config.COMMON.enableZombieVariants::set, "Zombie variants"))
@@ -179,6 +190,8 @@ public final class DaySpawnCommands {
         status.append("Range: ").append(Config.COMMON.spawnRange.get()).append(" blocks\n");
         status.append("Min distance: ").append(Config.COMMON.minSpawnDistance.get()).append(" blocks\n");
         status.append("Daylight spawn start day: ").append(Config.COMMON.daylightSpawnStartDay.get()).append('\n');
+        status.append("Max block light: ").append(formatMaxBlockLight(Config.COMMON.maxBlockLightForSpawning.get()))
+                .append('\n');
         status.append("Require overworld sky: ").append(CommandUtil.onOff(Config.COMMON.requireOpenSkyForOverworldSpawns.get()))
                 .append('\n');
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get())).append('\n');
@@ -214,5 +227,9 @@ public final class DaySpawnCommands {
         status.append("Spawn effects: ").append(CommandUtil.onOff(Config.COMMON.enableSpawnEffects.get())).append('\n');
         status.append("Debug logging: ").append(CommandUtil.onOff(Config.COMMON.enableDebugLogging.get()));
         return status.toString();
+    }
+
+    private static String formatMaxBlockLight(int value) {
+        return value < 0 ? "ignored" : Integer.toString(value);
     }
 }
