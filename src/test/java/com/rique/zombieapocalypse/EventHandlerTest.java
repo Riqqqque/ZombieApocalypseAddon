@@ -59,4 +59,12 @@ class EventHandlerTest {
         assertFalse(EventHandler.shouldForceAdultZombie(true, 0.01));
         assertFalse(EventHandler.shouldForceAdultZombie(false, 0.0));
     }
+
+    @Test
+    void sunFireCancelOnlyAppliesToVanillaOnFireTicks() {
+        assertTrue(EventHandler.shouldCancelSunFireDamage(true, true, false));
+        assertFalse(EventHandler.shouldCancelSunFireDamage(false, true, false));
+        assertFalse(EventHandler.shouldCancelSunFireDamage(true, false, false));
+        assertFalse(EventHandler.shouldCancelSunFireDamage(true, true, true));
+    }
 }
