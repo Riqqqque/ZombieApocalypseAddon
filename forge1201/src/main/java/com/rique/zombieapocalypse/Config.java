@@ -311,6 +311,7 @@ public final class Config {
                             "Maximum block light level that still allows custom zombie spawning.",
                             "This only affects the mod's custom spawn waves. It does not change vanilla natural spawning.",
                             "Block light means light from blocks like torches, lanterns, glowstone, campfires, and similar sources.",
+                            "Light never makes custom spawns more likely. This setting can only block spawns when the area is too bright.",
                             "-1 = ignore block light and keep the old behavior, so lit bases are not protected from custom waves.",
                             "0 = custom waves only spawn in complete block darkness.",
                             "7 = classic hostile-mob style limit and a good choice if players expect torches to protect bases.",

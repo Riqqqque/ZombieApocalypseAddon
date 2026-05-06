@@ -20,6 +20,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -28,8 +29,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -385,7 +388,7 @@ public final class EventHandler {
                 continue;
             }
 
-            if (!isValidSpawnSpace(level, spawnPos, scratchPos)) {
+            if (!isValidSpawnSpace(level, spawnPos, scratchPos, EntityType.ZOMBIE)) {
                 continue;
             }
 
@@ -420,10 +423,12 @@ public final class EventHandler {
             }
 
             if (settings.debugLogging()) {
-                LOGGER.debug("[ZombieApocalypse] Spawned {} at {} for {}",
+                LOGGER.debug("[ZombieApocalypse] Spawned {} at {} for {} (blockLight={}, maxBlockLight={})",
                         zombie.getType().getDescriptionId(),
                         spawnPos,
-                        player.getGameProfile().getName());
+                        player.getGameProfile().getName(),
+                        level.getBrightness(LightLayer.BLOCK, spawnPos),
+                        formatMaxBlockLight(settings.maxBlockLightForSpawning()));
             }
         }
 
@@ -472,30 +477,31 @@ public final class EventHandler {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
     }
 
-    private static boolean isValidSpawnSpace(ServerLevel level, BlockPos spawnPos, BlockPos.MutableBlockPos scratchPos) {
+    private static boolean isValidSpawnSpace(
+            ServerLevel level,
+            BlockPos spawnPos,
+            BlockPos.MutableBlockPos scratchPos,
+            EntityType<?> entityType) {
         if (!level.getWorldBorder().isWithinBounds(spawnPos)) {
             return false;
         }
 
         scratchPos.set(spawnPos.getX(), spawnPos.getY() - 1, spawnPos.getZ());
-        if (!level.getBlockState(scratchPos).isFaceSturdy(level, scratchPos, Direction.UP)) {
+        if (!level.getBlockState(scratchPos).isValidSpawn(level, scratchPos, entityType)) {
             return false;
         }
 
-        if (!level.getBlockState(spawnPos).isAir()) {
+        if (!isValidEmptySpawnBlock(level, spawnPos, entityType)) {
             return false;
         }
 
         scratchPos.set(spawnPos.getX(), spawnPos.getY() + 1, spawnPos.getZ());
-        if (!level.getBlockState(scratchPos).isAir()) {
-            return false;
-        }
+        return isValidEmptySpawnBlock(level, scratchPos, entityType);
+    }
 
-        if (!level.getFluidState(spawnPos).isEmpty() || !level.getFluidState(scratchPos).isEmpty()) {
-            return false;
-        }
-
-        return true;
+    private static boolean isValidEmptySpawnBlock(ServerLevel level, BlockPos pos, EntityType<?> entityType) {
+        BlockState state = level.getBlockState(pos);
+        return NaturalSpawner.isValidEmptySpawnBlock(level, pos, state, state.getFluidState(), entityType);
     }
 
     private static boolean isAllowedByBlockLight(ServerLevel level, BlockPos spawnPos, int maxBlockLightForSpawning) {
@@ -547,6 +553,10 @@ public final class EventHandler {
         int cappedBlockLight = Mth.clamp(blockLight, 0, 15);
         int cappedMaxLight = Mth.clamp(maxBlockLightForSpawning, 0, 15);
         return cappedBlockLight <= cappedMaxLight;
+    }
+
+    static String formatMaxBlockLight(int maxBlockLightForSpawning) {
+        return maxBlockLightForSpawning < 0 ? "ignored" : Integer.toString(Mth.clamp(maxBlockLightForSpawning, 0, 15));
     }
 
     static long horizontalDistanceSquared(BlockPos first, BlockPos second) {
