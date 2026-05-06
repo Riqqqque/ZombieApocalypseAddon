@@ -30,6 +30,7 @@ public final class HelpCommands {
                         + "/zdayspawn status - view spawn settings\n"
                         + "/zdayspawn babychance <0.0-1.0> - set baby zombie chance; 0 disables baby zombies\n"
                         + "/zdayspawn daylightstart <day> - delay daytime custom spawning until that day counter\n"
+                        + "/zdayspawn maxlight <-1-15> - max block light for custom spawns; -1 ignores light\n"
                         + "/zdayspawn daycounter <true|false> - toggle morning day counter titles\n"
                         + "/zdayspawn attributes <true|false> - toggle base attribute tuning\n"
                         + "/zdayspawn attributescaling <true|false> - scale attributes by day factor\n"

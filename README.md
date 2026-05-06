@@ -14,6 +14,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 
 - Zombies can be configured to ignore sunlight burning (enabled by default).
 - Zombie-class mobs spawn around survival players day and night.
+- Torch/lantern/glowstone-style light can optionally block custom spawns.
 - Horde events can occur naturally or be started manually.
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
@@ -187,6 +188,7 @@ All commands require OP level 2.
 | `/zdayspawn range <16-128>` | Horizontal spawn range around player. |
 | `/zdayspawn mindist <8-64>` | Minimum spawn distance from player. |
 | `/zdayspawn daylightstart <0-3650>` | Disable custom daytime spawning until this day counter. |
+| `/zdayspawn maxlight <-1-15>` | Maximum block light for custom spawns. `-1` ignores light. |
 | `/zdayspawn daycounter <true\|false>` | Toggle the morning on-screen day counter. |
 | `/zdayspawn sky <true\|false>` | Overworld spawn requires open sky. |
 | `/zdayspawn variants <true\|false>` | Enable variant spawning logic. |
