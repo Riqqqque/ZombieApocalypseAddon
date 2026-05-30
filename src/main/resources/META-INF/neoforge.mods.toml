@@ -8,6 +8,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 logoFile="zombielogo.png"
 authors="Rique"
+displayTest="IGNORE_SERVER_VERSION"
 description='''
 A server-side configurable zombie apocalypse gameplay addon for NeoForge 1.21.1.
 
