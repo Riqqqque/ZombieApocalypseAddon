@@ -151,6 +151,7 @@ All commands require OP level 2.
 | `/zburn <true\|false>` | Controls zombie daylight burning. `true` means they burn in daylight, `false` means they do not. |
 | `/zday [status\|set <day>]` | Shows or sets the world day counter. |
 | `/zkill` | Removes all zombie-class entities from loaded levels. |
+| `/zcleanup [uninstall]` | Removes loaded zombie leftovers, resets apocalypse event state, and can pause core systems for safe temporary removal. |
 
 ## Events
 | Command | What it does |

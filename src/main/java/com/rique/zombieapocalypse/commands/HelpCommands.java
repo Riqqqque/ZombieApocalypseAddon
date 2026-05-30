@@ -22,6 +22,7 @@ public final class HelpCommands {
                         + "/zhelp - show this help\n"
                         + "/zburn <true|false> - allow zombie daylight burning\n"
                         + "/zkill - remove all zombie-class mobs\n"
+                        + "/zcleanup [uninstall] - clear loaded zombie leftovers and reset apocalypse event state\n"
                         + "/zday [status|set <day>] - view or set the world day counter\n"
                         + "/zhorde <start|stop|status> - manage horde events\n"
                         + "/zbloodmoon - force a blood moon (now or tonight)\n"
