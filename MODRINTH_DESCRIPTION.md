@@ -215,6 +215,8 @@ All commands require OP level 2.
 - `/zhelp` - Show built-in help
 - `/zburn <true|false>` - Control whether zombies burn in daylight
 - `/zkill` - Remove zombie-class entities from loaded levels
+- `/zcleanup` - Remove loaded zombie leftovers and reset apocalypse event state
+- `/zcleanup uninstall` - Cleanup plus disable custom spawning, hordes, blood moons, scaling, and attributes for the current server session
 
 ### Day Control
 

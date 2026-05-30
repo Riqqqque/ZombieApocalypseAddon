@@ -128,6 +128,10 @@ public final class EventHandler {
     private EventHandler() {
     }
 
+    public static void clearRuntimeState() {
+        EXTERNAL_FIRE_UNTIL.clear();
+    }
+
     @SubscribeEvent
     public static void onLivingAttack(LivingAttackEvent event) {
         if (!Config.COMMON.preventSunBurn.get()
