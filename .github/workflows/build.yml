@@ -24,5 +24,9 @@ jobs:
       - name: Fix Gradle wrapper permissions
         run: chmod +x gradlew
 
+      - name: Check Markdown tables
+        shell: pwsh
+        run: ./scripts/check-markdown-tables.ps1
+
       - name: Build with Gradle
         run: ./gradlew build
