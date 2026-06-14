@@ -22,6 +22,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Optional morning day-counter titles can show the current day at dawn.
 - Advanced attribute modifiers let you tune enemy stats deeply.
 - Biome and dimension context profiles let stats change by location.
+- Custom spawn placement avoids unloaded chunks to reduce server stalls.
 - Most behavior is configurable live with commands.
 - Config file includes extensive comments and safe ranges.
 - Server-only install support for multiplayer servers.

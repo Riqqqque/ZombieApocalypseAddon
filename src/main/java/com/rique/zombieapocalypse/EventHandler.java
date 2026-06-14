@@ -11,6 +11,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -377,6 +378,10 @@ public final class EventHandler {
         for (int i = 0; i < maxAttempts && spawned < countToSpawn; i++) {
             int x = playerX + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
             int z = playerZ + random.nextInt(horizontalRange * 2 + 1) - horizontalRange;
+            if (!isSpawnColumnLoaded(level, x, z)) {
+                continue;
+            }
+
             int y = chooseSpawnY(level, playerY, random, x, z, scratchPos);
             spawnPos.set(x, y, z);
 
@@ -479,6 +484,10 @@ public final class EventHandler {
         }
 
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    }
+
+    static boolean isSpawnColumnLoaded(ServerLevel level, int x, int z) {
+        return level.hasChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z));
     }
 
     private static boolean isValidSpawnSpace(
