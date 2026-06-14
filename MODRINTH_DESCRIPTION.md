@@ -29,6 +29,7 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Day-based difficulty progression
 - Advanced attribute tuning for spawned zombie-class mobs
 - Biome and dimension-based spawn and stat behavior
+- Loaded-chunk-aware custom spawn placement to reduce server stalls
 - Temporary spawn pressure relief after player death
 - Persistent kill tracking and milestone advancements
 - Optional bonus zombie drops, including configurable gunpowder drops

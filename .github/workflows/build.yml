@@ -1,6 +1,11 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 9 * * *'
 
 jobs:
   build:
@@ -27,6 +32,13 @@ jobs:
       - name: Check Markdown tables
         shell: pwsh
         run: ./scripts/check-markdown-tables.ps1
+
+      - name: Check live wiki Markdown tables
+        shell: pwsh
+        run: |
+          $wikiDir = Join-Path $env:RUNNER_TEMP 'ZombieApocalypseAddon.wiki'
+          git clone --depth 1 "https://github.com/${{ github.repository }}.wiki.git" $wikiDir
+          ./scripts/check-markdown-tables.ps1 -Path $wikiDir
 
       - name: Build with Gradle
         run: ./gradlew build
