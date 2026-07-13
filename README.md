@@ -4,6 +4,8 @@ Turn your Minecraft world into a nonstop survival scenario.
 
 Server-side only: install it on the server. Players do not need the mod installed on their clients to join.
 
+Current build targets: NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1.
+
 This mod removes the "safe daytime" feeling by spawning zombie-type mobs around players all day and night. As in-game days pass, those mobs get more dangerous through scaling and configurable attribute systems.
 
 If you want tension at all times instead of a peaceful daytime loop, this mod is built for that.
@@ -15,6 +17,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Zombies can be configured to ignore sunlight burning (enabled by default).
 - Zombie-class mobs spawn around survival players day and night.
 - Torch/lantern/glowstone-style light can optionally block custom spawns.
+- Optional zombie block breaking can add configurable base pressure after a chosen day.
 - Horde events can occur naturally or be started manually.
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
@@ -79,7 +82,25 @@ Optional custom spawning in Nether and End is supported.
 ## 6) Death Cooldown
 After a player death, spawn pressure can be reduced temporarily to prevent repeated instant deaths and frustration loops.
 
-## 7) Stats, Effects, and Drops
+## 7) Optional Zombie Block Breaking
+Zombies can be allowed to break blocks after a configured day.
+
+This is off by default because it can damage bases. If enabled, you control:
+- start day
+- check interval
+- break chance
+- range
+- max block hardness
+- whether blocks drop items
+- whether a target or obstacle is required
+- whether mobGriefing can stop it
+- whether containers, tool-required blocks, and light sources are protected
+
+The default hardness limit is meant for soft blocks and wooden doors, while stone, ores, containers, machines, and light blocks stay protected unless you loosen the safety settings.
+
+Use `/zblockbreak dayone` if you want to enable it and make it active immediately.
+
+## 8) Stats, Effects, and Drops
 - kill tracking
 - kill milestones with advancements at 250, 1000, and 3000 zombie kills
 - cooldown tracking
@@ -209,6 +230,26 @@ All commands require OP level 2.
 | `/zdayspawn cooldown <true\|false>` | Enable death cooldown system. |
 | `/zdayspawn effects <true\|false>` | Enable spawn particles/sounds. |
 | `/zdayspawn debug <true\|false>` | Enable debug logging. |
+
+## Block Breaking (`/zblockbreak`)
+| Command | What it does |
+|---|---|
+| `/zblockbreak` | Shows current zombie block-breaking settings. |
+| `/zblockbreak status` | Shows current zombie block-breaking settings. |
+| `/zblockbreak dayone` | Enables zombie block breaking and sets the start day to 0. |
+| `/zblockbreak enabled <true\|false>` | Toggles zombie block breaking. |
+| `/zblockbreak startday <0-3650>` | Sets the day when block breaking can start. |
+| `/zblockbreak interval <20-72000>` | Sets how often each zombie can attempt block breaking. |
+| `/zblockbreak chance <0.0-1.0>` | Sets the chance per scheduled block-breaking check. |
+| `/zblockbreak range <1-4>` | Sets how far in front of the zombie it checks. |
+| `/zblockbreak hardness <0.0-50.0>` | Sets the maximum block hardness zombies can break. |
+| `/zblockbreak drops <true\|false>` | Toggles item drops from zombie-broken blocks. |
+| `/zblockbreak target <true\|false>` | Requires zombies to have a valid target before breaking. |
+| `/zblockbreak obstacle <true\|false>` | Requires a blocked path or covered target before breaking. |
+| `/zblockbreak mobgriefing <true\|false>` | Makes mobGriefing and loader mob-griefing events control this feature. |
+| `/zblockbreak containers <true\|false>` | Allows or blocks breaking chests, furnaces, and block-entity blocks. |
+| `/zblockbreak toolblocks <true\|false>` | Allows or blocks breaking blocks that require the correct tool. |
+| `/zblockbreak lights <true\|false>` | Allows or blocks breaking light-emitting blocks. |
 
 ## Live Attribute Commands (`/zattr`)
 | Command | What it does |
@@ -429,6 +470,7 @@ Main sections:
 - `general`
 - `dayspawning`
 - `variants`
+- `blockbreaking`
 - `horde`
 - `bloodmoon`
 - `scaling`

@@ -74,4 +74,12 @@ class EventHandlerTest {
         assertFalse(EventHandler.shouldCancelSunFireDamage(true, false, false));
         assertFalse(EventHandler.shouldCancelSunFireDamage(true, true, true));
     }
+
+    @Test
+    void sunlightThresholdMatchesVanillaBrightnessCurve() {
+        assertFalse(EventHandler.hasStrongSunlight(0, 0.0F));
+        assertFalse(EventHandler.hasStrongSunlight(11, 0.0F));
+        assertTrue(EventHandler.hasStrongSunlight(12, 0.0F));
+        assertTrue(EventHandler.hasStrongSunlight(0, 0.75F));
+    }
 }

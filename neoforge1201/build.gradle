@@ -4,7 +4,7 @@ plugins {
     id 'idea'
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev.legacyforge' version '2.0.91'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.141'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -15,7 +15,7 @@ def sharedProperties = new Properties()
 file('../gradle.properties').withInputStream(sharedProperties.&load)
 def shared = { String key -> sharedProperties.getProperty(key) }
 
-version = shared('forge1201_release_version') ?: shared('mod_version')
+version = shared('neoforge1201_release_version') ?: shared('forge1201_release_version') ?: shared('mod_version')
 group = shared('mod_group_id')
 
 repositories {
@@ -23,13 +23,15 @@ repositories {
 }
 
 base {
-    archivesName = "${shared('mod_id')}-forge-${minecraft_version}"
+    archivesName = "${shared('mod_id')}-neoforge-${minecraft_version}"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 legacyForge {
-    version = project.minecraft_version + '-' + project.forge_version
+    enable {
+        neoForgeVersion = project.neoforge_version
+    }
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -76,10 +78,10 @@ legacyForge {
 sourceSets {
     main {
         java {
-            srcDir 'src/main/java'
+            srcDir '../forge1201/src/main/java'
         }
         resources {
-            srcDirs = ['../src/main/resources', '../src/generated/resources', 'src/main/resources']
+            srcDirs = ['../src/main/resources', '../src/generated/resources', '../forge1201/src/main/resources', 'src/main/resources']
             exclude 'META-INF/neoforge.mods.toml'
             exclude 'data/**/advancement/**'
             exclude 'pack.mcmeta'
@@ -108,17 +110,17 @@ dependencies {
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
     var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            forge_version          : forge_version,
-            forge_version_range    : forge_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : shared('mod_id'),
-            mod_name               : shared('mod_name'),
-            mod_license            : shared('mod_license'),
-            mod_version            : version,
-            mod_authors            : 'Rique',
-            mod_description        : 'A configurable zombie apocalypse gameplay addon for Forge 1.20.1.'
+            minecraft_version        : minecraft_version,
+            minecraft_version_range  : minecraft_version_range,
+            neoforge_version         : neoforge_version,
+            neoforge_version_range   : neoforge_version_range,
+            loader_version_range     : loader_version_range,
+            mod_id                   : shared('mod_id'),
+            mod_name                 : shared('mod_name'),
+            mod_license              : shared('mod_license'),
+            mod_version              : version,
+            mod_authors              : 'Rique',
+            mod_description          : 'A configurable zombie apocalypse gameplay addon for NeoForge 1.20.1.'
     ]
     inputs.properties replaceProperties
     expand replaceProperties
@@ -130,7 +132,7 @@ sourceSets.main.resources.srcDir generateModMetadata
 legacyForge.ideSyncTask generateModMetadata
 
 tasks.named('processResources', ProcessResources).configure {
-    from('src/main/resources/pack.mcmeta')
+    from('../forge1201/src/main/resources/pack.mcmeta')
 }
 
 tasks.named('compileJava', JavaCompile).configure {

@@ -35,6 +35,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -42,6 +44,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -50,6 +53,8 @@ public final class EventHandler {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long EXTERNAL_FIRE_GRACE_TICKS = 30L * 20L;
+    private static final long FIRE_STATE_PRUNE_INTERVAL_TICKS = 20L;
+    private static final long COOLDOWN_PRUNE_INTERVAL_TICKS = 60L * 20L;
     private static final Map<UUID, Long> EXTERNAL_FIRE_UNTIL = new HashMap<>();
 
     private record SpawnRuntimeSettings(
@@ -134,6 +139,11 @@ public final class EventHandler {
     }
 
     @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        clearRuntimeState();
+    }
+
+    @SubscribeEvent
     public static void onLivingAttack(LivingAttackEvent event) {
         if (!Config.COMMON.preventSunBurn.get()
                 || !(event.getEntity() instanceof Zombie zombie)
@@ -160,16 +170,20 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onEntityTick(LivingEvent.LivingTickEvent event) {
-        if (!Config.COMMON.preventSunBurn.get()) {
-            return;
-        }
-
         if (!(event.getEntity() instanceof Zombie zombie)
                 || zombie.level().isClientSide
                 || !ZombieClassMobs.isZombieClass(zombie)) {
             return;
         }
 
+        if (Config.COMMON.preventSunBurn.get()) {
+            handleSunBurnTick(zombie);
+        }
+
+        ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+    }
+
+    private static void handleSunBurnTick(Zombie zombie) {
         if (!zombie.isOnFire()) {
             clearExpiredExternalFire(zombie);
             return;
@@ -267,7 +281,12 @@ public final class EventHandler {
 
         long gameTime = level.getGameTime();
         if (level.dimension() == Level.OVERWORLD) {
-            pruneExpiredExternalFire(gameTime);
+            if (gameTime % FIRE_STATE_PRUNE_INTERVAL_TICKS == 0L) {
+                pruneExpiredExternalFire(gameTime);
+            }
+            if (gameTime % COOLDOWN_PRUNE_INTERVAL_TICKS == 0L) {
+                StatisticsManager.get(level).pruneExpiredCooldowns(gameTime);
+            }
             HordeManager.tick(level);
         }
 
@@ -424,7 +443,9 @@ public final class EventHandler {
             zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, spawnGroupData, null);
             zombie.setBaby(spawnAsBaby);
             DifficultyManager.applyScaling(zombie, level, spawnPos);
-            level.addFreshEntity(zombie);
+            if (!level.addFreshEntity(zombie)) {
+                continue;
+            }
             spawned++;
 
             if (settings.spawnEffectsEnabled()) {
@@ -521,6 +542,20 @@ public final class EventHandler {
         return isBlockLightSpawnAllowed(
                 level.getBrightness(LightLayer.BLOCK, spawnPos),
                 maxBlockLightForSpawning);
+    }
+
+    private static boolean canZombieDestroyBlock(
+            ServerLevel level,
+            BlockPos pos,
+            Zombie zombie,
+            boolean respectMobGriefing) {
+        if (respectMobGriefing) {
+            return ForgeHooks.canEntityDestroy(level, pos, zombie);
+        }
+
+        BlockState state = level.getBlockState(pos);
+        return state.canEntityDestroy(level, pos, zombie)
+                && ForgeEventFactory.onEntityDestroyBlock(zombie, pos, state);
     }
 
     private static int countNearbyZombies(ServerLevel level, ServerPlayer player, int range) {
@@ -658,7 +693,15 @@ public final class EventHandler {
             return false;
         }
 
-        return zombie.getLightLevelDependentMagicValue() > 0.5F;
+        return hasStrongSunlight(
+                zombie.level().getMaxLocalRawBrightness(eyePos),
+                zombie.level().dimensionType().ambientLight());
+    }
+
+    static boolean hasStrongSunlight(int rawBrightness, float ambientLight) {
+        float normalizedBrightness = (float) Mth.clamp(rawBrightness, 0, 15) / 15.0F;
+        float adjustedBrightness = normalizedBrightness / (4.0F - (3.0F * normalizedBrightness));
+        return Mth.lerp(Mth.clamp(ambientLight, 0.0F, 1.0F), adjustedBrightness, 1.0F) > 0.5F;
     }
 
     static boolean shouldCancelSunFireDamage(

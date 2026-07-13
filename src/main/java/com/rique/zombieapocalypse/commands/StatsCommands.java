@@ -94,7 +94,7 @@ public final class StatsCommands {
         StatisticsManager stats = StatisticsManager.get(level);
 
         Map<UUID, Integer> allKills = stats.getAllKills();
-        int totalKills = stats.getTotalKills();
+        long totalKills = stats.getTotalKills();
 
         CommandUtil.feedback(source,
                 "Server statistics:\n"

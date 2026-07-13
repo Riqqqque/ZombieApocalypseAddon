@@ -38,7 +38,7 @@ public class StatisticsManager extends SavedData {
             for (int i = 0; i < killsList.size(); i++) {
                 CompoundTag entry = killsList.getCompound(i);
                 if (entry.hasUUID("uuid")) {
-                    manager.playerKills.put(entry.getUUID("uuid"), entry.getInt("count"));
+                    manager.playerKills.put(entry.getUUID("uuid"), Math.max(0, entry.getInt("count")));
                 }
             }
         }
@@ -48,7 +48,7 @@ public class StatisticsManager extends SavedData {
             for (int i = 0; i < milestoneList.size(); i++) {
                 CompoundTag entry = milestoneList.getCompound(i);
                 if (entry.hasUUID("uuid")) {
-                    manager.milestoneKills.put(entry.getUUID("uuid"), entry.getInt("count"));
+                    manager.milestoneKills.put(entry.getUUID("uuid"), Math.max(0, entry.getInt("count")));
                 }
             }
         }
@@ -132,12 +132,23 @@ public class StatisticsManager extends SavedData {
     KillUpdate recordZombieClassKill(UUID playerUuid, boolean trackStatistics) {
         int statsKills = playerKills.getOrDefault(playerUuid, 0);
         if (trackStatistics) {
-            statsKills = playerKills.merge(playerUuid, 1, Integer::sum);
+            statsKills = playerKills.compute(
+                    playerUuid,
+                    (uuid, current) -> incrementKillCount(current == null ? 0 : current));
         }
 
-        int totalMilestoneKills = milestoneKills.merge(playerUuid, 1, Integer::sum);
+        int totalMilestoneKills = milestoneKills.compute(
+                playerUuid,
+                (uuid, current) -> incrementKillCount(current == null ? 0 : current));
         setDirty();
         return new KillUpdate(statsKills, totalMilestoneKills);
+    }
+
+    static int incrementKillCount(int current) {
+        if (current < 0) {
+            return 1;
+        }
+        return current == Integer.MAX_VALUE ? Integer.MAX_VALUE : current + 1;
     }
 
     public int getKills(UUID playerUuid) {
@@ -158,8 +169,8 @@ public class StatisticsManager extends SavedData {
         return trackedPlayers;
     }
 
-    public int getTotalKills() {
-        return playerKills.values().stream().mapToInt(Integer::intValue).sum();
+    public long getTotalKills() {
+        return playerKills.values().stream().mapToLong(Integer::longValue).sum();
     }
 
     public void queueAdvancementResets(Iterable<UUID> playerUuids) {
@@ -189,7 +200,11 @@ public class StatisticsManager extends SavedData {
             return;
         }
 
-        int cooldownSeconds = Config.COMMON.deathCooldownSeconds.get();
+        startDeathCooldown(playerUuid, gameTime, Config.COMMON.deathCooldownSeconds.get());
+    }
+
+    void startDeathCooldown(UUID playerUuid, long gameTime, int cooldownSeconds) {
+        cooldownSeconds = Math.max(0, cooldownSeconds);
         long cooldownEndTime = gameTime + (cooldownSeconds * 20L);
         deathCooldowns.put(playerUuid, cooldownEndTime);
         setDirty();
@@ -224,8 +239,27 @@ public class StatisticsManager extends SavedData {
             return 0;
         }
 
-        long remaining = (endTime - gameTime) / 20L;
-        return (int) Math.max(0L, remaining);
+        return remainingCooldownSeconds(endTime, gameTime);
+    }
+
+    static int remainingCooldownSeconds(long endGameTime, long gameTime) {
+        long remainingTicks = endGameTime - gameTime;
+        if (remainingTicks <= 0L) {
+            return 0;
+        }
+
+        long seconds = ((remainingTicks - 1L) / 20L) + 1L;
+        return (int) Math.min(Integer.MAX_VALUE, seconds);
+    }
+
+    public int pruneExpiredCooldowns(long gameTime) {
+        int previousSize = deathCooldowns.size();
+        deathCooldowns.entrySet().removeIf(entry -> gameTime >= entry.getValue());
+        int removed = previousSize - deathCooldowns.size();
+        if (removed > 0) {
+            setDirty();
+        }
+        return removed;
     }
 
     public double getSpawnFactor(UUID playerUuid, long gameTime) {
