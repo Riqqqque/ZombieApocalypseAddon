@@ -34,4 +34,17 @@ class HordeManagerTest {
                 "Zombie waves for 5 minutes.",
                 HordeManager.buildHordeIncomingSubtitle(5, 10, false));
     }
+
+    @Test
+    void bloodMoonEndNotifiesAtNormalSunriseButCanCombineAfterSleep() {
+        assertTrue(HordeManager.shouldNotifyBloodMoonEndImmediately(23000L));
+        assertFalse(HordeManager.shouldNotifyBloodMoonEndImmediately(0L));
+    }
+
+    @Test
+    void activeHordeTimeRoundsUpUntilTheFinalTick() {
+        assertEquals(5L, HordeManager.remainingSeconds(200L, 100L));
+        assertEquals(1L, HordeManager.remainingSeconds(200L, 199L));
+        assertEquals(0L, HordeManager.remainingSeconds(200L, 200L));
+    }
 }

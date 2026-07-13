@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.20'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -32,11 +32,28 @@ def forge1201Build = tasks.register('buildForge1201', GradleBuild) {
     notCompatibleWithConfigurationCache('Runs the standalone Forge 1.20.1 compatibility build.')
 }
 
+def neoForge1201Build = tasks.register('buildNeoForge1201', GradleBuild) {
+    dir = file('neoforge1201')
+    tasks = ['build']
+    notCompatibleWithConfigurationCache('Runs the standalone NeoForge 1.20.1 compatibility build.')
+}
+
+// Nested loader builds share Gradle and Minecraft transformation caches. Keep
+// them ordered so clean release builds cannot contend with each other.
+forge1201Build.configure {
+    mustRunAfter project.tasks.named('jar')
+}
+neoForge1201Build.configure {
+    mustRunAfter forge1201Build
+}
+
 def syncModrinthArtifacts = tasks.register('syncModrinthArtifacts', Sync) {
     dependsOn tasks.named('jar')
     dependsOn forge1201Build
+    dependsOn neoForge1201Build
     from(tasks.named('jar').flatMap { it.archiveFile })
     from(file("forge1201/build/libs/${mod_id}-forge-1.20.1-${forge1201_release_version}.jar"))
+    from(file("neoforge1201/build/libs/${mod_id}-neoforge-1.20.1-${neoforge1201_release_version}.jar"))
     into(modrinthOutputDir)
 }
 
@@ -177,6 +194,7 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.compilerArgs.addAll(['-Xlint:deprecation', '-Xlint:unchecked'])
 }
 
 tasks.named('test', Test).configure {
@@ -189,6 +207,7 @@ tasks.named('build').configure {
 
 tasks.named('clean').configure {
     delete file('forge1201/build')
+    delete file('neoforge1201/build')
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.

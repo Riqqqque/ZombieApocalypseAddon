@@ -45,6 +45,21 @@ public final class Config {
         public final ForgeConfigSpec.DoubleValue babyZombieChance;
         public final ForgeConfigSpec.DoubleValue zombieVillagerChance;
 
+        // Zombie block breaking
+        public final ForgeConfigSpec.BooleanValue enableZombieBlockBreaking;
+        public final ForgeConfigSpec.IntValue zombieBlockBreakingStartDay;
+        public final ForgeConfigSpec.IntValue zombieBlockBreakingInterval;
+        public final ForgeConfigSpec.DoubleValue zombieBlockBreakingChance;
+        public final ForgeConfigSpec.IntValue zombieBlockBreakingRange;
+        public final ForgeConfigSpec.DoubleValue zombieBlockBreakingMaxHardness;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingDropBlocks;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingRequireTarget;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingRequireObstacle;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingRespectMobGriefing;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingAllowBlockEntities;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingAllowToolRequiredBlocks;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingAllowLightBlocks;
+
         // Horde events
         public final ForgeConfigSpec.BooleanValue enableHordeEvents;
         public final ForgeConfigSpec.IntValue hordeIntervalDays;
@@ -363,6 +378,102 @@ public final class Config {
                             "Base chance for a custom spawn to become a zombie villager.",
                             "Any remaining chance after the variant rolls becomes a normal zombie.")
                     .defineInRange("zombieVillagerChance", 0.05, 0.0, 1.0);
+            builder.pop();
+
+            builder.comment(sectionComment(
+                    "ZOMBIE BLOCK BREAKING",
+                    "Optional destructive behavior for zombie-class mobs.",
+                    "Safe beginner setup: leave this disabled unless your server wants base pressure.",
+                    "When enabled, zombies only try on a timer and chance roll, so this avoids every-zombie every-tick scans.",
+                    "The defaults protect chests, furnaces, modded machines, light sources, tool-required blocks, and unbreakable blocks.",
+                    "Use start day 0 if you want it active immediately after enabling."))
+                    .push("blockbreaking");
+            enableZombieBlockBreaking = builder
+                    .comment(
+                            "Main on/off switch for zombie block breaking.",
+                            "false = zombies never break blocks from this mod.",
+                            "true = zombie-class mobs can break blocks after zombieBlockBreakingStartDay if the other rules allow it.")
+                    .define("enableZombieBlockBreaking", false);
+
+            zombieBlockBreakingStartDay = builder
+                    .comment(
+                            "Apocalypse day when block breaking is allowed to start after the feature is enabled.",
+                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "10 = zombies cannot break blocks until the day counter reaches 10.")
+                    .defineInRange("zombieBlockBreakingStartDay", 10, 0, 3650);
+
+            zombieBlockBreakingInterval = builder
+                    .comment(
+                            "How often each zombie can attempt block breaking.",
+                            "20 ticks = 1 second.",
+                            "Default 100 = each zombie checks at most once every 5 seconds.",
+                            "Lower values feel more aggressive but cost more CPU on crowded servers.")
+                    .defineInRange("zombieBlockBreakingInterval", 100, 20, 72000);
+
+            zombieBlockBreakingChance = builder
+                    .comment(
+                            "Chance that a scheduled block-breaking check actually tries to break a block.",
+                            "0.0 = never break, 1.0 = every scheduled check tries.",
+                            "Default 0.20 means 20% per scheduled check.")
+                    .defineInRange("zombieBlockBreakingChance", 0.20, 0.0, 1.0);
+
+            zombieBlockBreakingRange = builder
+                    .comment(
+                            "How far in front of the zombie it can look for a block to break.",
+                            "1 = only the immediate wall/door in front of it.",
+                            "2-4 lets it reach slightly farther but increases checks per attempt.")
+                    .defineInRange("zombieBlockBreakingRange", 1, 1, 4);
+
+            zombieBlockBreakingMaxHardness = builder
+                    .comment(
+                            "Maximum block hardness zombies are allowed to break.",
+                            "Low values make them break soft blocks only. Higher values allow stronger building blocks.",
+                            "Examples: dirt is about 0.5, glass is about 0.3, planks are about 2.0, wooden doors are about 3.0, obsidian is 50.",
+                            "Unbreakable blocks are always protected.")
+                    .defineInRange("zombieBlockBreakingMaxHardness", 3.0, 0.0, 50.0);
+
+            zombieBlockBreakingDropBlocks = builder
+                    .comment(
+                            "Whether blocks broken by zombies should drop items.",
+                            "false avoids item spam and farming exploits.",
+                            "true makes broken blocks drop like normal block destruction.")
+                    .define("zombieBlockBreakingDropBlocks", false);
+
+            zombieBlockBreakingRequireTarget = builder
+                    .comment(
+                            "If true, zombies only break blocks while they have a valid target.",
+                            "This stops random terrain griefing when zombies are wandering.")
+                    .define("zombieBlockBreakingRequireTarget", true);
+
+            zombieBlockBreakingRequireObstacle = builder
+                    .comment(
+                            "If true, zombies only try to break blocks when blocked or when their target is behind cover.",
+                            "This helps focus breaking on walls, doors, and barriers instead of random nearby blocks.")
+                    .define("zombieBlockBreakingRequireObstacle", true);
+
+            zombieBlockBreakingRespectMobGriefing = builder
+                    .comment(
+                            "If true, the vanilla mobGriefing gamerule and loader mob-griefing events can stop zombie block breaking.",
+                            "If false, this feature can work even when mobGriefing is false, but block protection and destroy events still apply.")
+                    .define("zombieBlockBreakingRespectMobGriefing", true);
+
+            zombieBlockBreakingAllowBlockEntities = builder
+                    .comment(
+                            "If true, zombies may break blocks with block entities, like chests, furnaces, and many modded machines.",
+                            "Strong warning: leave this false unless you really want zombies to destroy storage or machinery.")
+                    .define("zombieBlockBreakingAllowBlockEntities", false);
+
+            zombieBlockBreakingAllowToolRequiredBlocks = builder
+                    .comment(
+                            "If true, zombies may break blocks that normally require the correct tool for drops.",
+                            "false protects many stone, ore, metal, and stronger building blocks even if max hardness would allow them.")
+                    .define("zombieBlockBreakingAllowToolRequiredBlocks", false);
+
+            zombieBlockBreakingAllowLightBlocks = builder
+                    .comment(
+                            "If true, zombies may break light-emitting blocks like torches, lanterns, glowstone, and similar blocks.",
+                            "false keeps light-based base protection useful when maxBlockLightForSpawning is configured.")
+                    .define("zombieBlockBreakingAllowLightBlocks", false);
             builder.pop();
 
             builder.comment(sectionComment(

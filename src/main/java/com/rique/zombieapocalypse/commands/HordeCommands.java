@@ -66,8 +66,11 @@ public final class HordeCommands {
                 .requires(source -> source.hasPermission(2))
                 .executes(context -> {
                     ServerLevel level = context.getSource().getLevel();
-                    HordeManager.triggerBloodMoon(level);
-                    CommandUtil.feedback(context.getSource(), "Blood moon has been forced.", true);
+                    boolean activeNow = HordeManager.triggerBloodMoon(level);
+                    CommandUtil.feedback(
+                            context.getSource(),
+                            activeNow ? "Blood moon is active now." : "Blood moon queued for tonight.",
+                            true);
                     return 1;
                 }));
     }

@@ -16,7 +16,7 @@ class UtilityCommandsTest {
     @Test
     void cleanupMessageExplainsUninstallPrep() {
         assertEquals(
-                "Cleanup complete. Removed 0 zombie-class entities and reset apocalypse event state. Custom spawning, hordes, blood moons, scaling, and attribute tuning are disabled for this server session.",
+                "Cleanup complete. Removed 0 zombie-class entities and reset apocalypse event state. Custom spawning, events, scaling, attributes, block breaking, sunlight immunity, extra drops, and death cooldowns are disabled.",
                 UtilityCommands.buildCleanupMessage(0, true));
     }
 }

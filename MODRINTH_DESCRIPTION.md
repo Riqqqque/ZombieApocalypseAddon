@@ -11,7 +11,7 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Multiplayer: install on the server only
 - Client install: optional for multiplayer
 - Singleplayer: install on the client, because singleplayer runs an integrated server
-- Current targets: NeoForge 1.21.1 and Forge 1.20.1
+- Current targets: NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1
 - All admin commands require OP level 2
 - Most major systems can be changed live with commands
 
@@ -21,6 +21,7 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Optional zombie sunlight immunity
 - Optional block-light spawn protection for torches, lanterns, glowstone, and similar light sources
 - Optional baby zombie spawn control
+- Optional zombie block breaking with day gating and safety controls
 - Natural and manual horde events
 - Random and forced blood moon nights
 - Morning day-counter announcements
@@ -125,6 +126,33 @@ Examples:
 
 This checks block light only. Sunlight is ignored so daytime spawning can still work.
 
+### Optional Zombie Block Breaking
+
+Zombies can be allowed to break blocks after a chosen apocalypse day.
+
+This system is disabled by default because it can damage bases. If a server owner enables it, they can tune:
+
+- start day
+- check interval
+- break chance
+- break range
+- max block hardness
+- whether broken blocks drop items
+- whether zombies need a target
+- whether zombies need to be blocked or chasing a covered target
+- whether the vanilla `mobGriefing` gamerule can stop it
+- whether containers, modded block entities, tool-required blocks, and light sources are protected
+
+The default hardness limit is meant for soft blocks and wooden doors, while stone, ores, containers, machines, and light blocks stay protected unless you loosen the safety settings.
+
+Quick setup:
+
+- `/zblockbreak dayone` = enable it and make it active immediately
+- `/zblockbreak enabled true` = enable it while still respecting the configured start day
+- `/zblockbreak startday 10` = let zombies start breaking blocks on day 10
+
+The defaults are intentionally safer: no block breaking unless enabled, no container/machine breaking, no light-source breaking, no tool-required block breaking, and no item drops from broken blocks.
+
 ### Difficulty Scaling
 
 Zombie pressure can scale as the world progresses.
@@ -217,7 +245,7 @@ All commands require OP level 2.
 - `/zburn <true|false>` - Control whether zombies burn in daylight
 - `/zkill` - Remove zombie-class entities from loaded levels
 - `/zcleanup` - Remove loaded zombie leftovers and reset apocalypse event state
-- `/zcleanup uninstall` - Cleanup plus disable custom spawning, hordes, blood moons, scaling, and attributes for the current server session
+- `/zcleanup uninstall` - Cleanup plus disable spawning, events, scaling, attributes, block breaking, sunlight immunity, extra drops, and cooldowns before removal
 
 ### Day Control
 
@@ -273,6 +301,25 @@ All commands require OP level 2.
 - `/zdayspawn effects <true|false>` - Toggle spawn particles and sounds
 - `/zdayspawn debug <true|false>` - Toggle debug logging
 
+### Block Breaking
+
+- `/zblockbreak` - Show current zombie block-breaking settings
+- `/zblockbreak status` - Show current zombie block-breaking settings
+- `/zblockbreak dayone` - Enable zombie block breaking and set the start day to `0`
+- `/zblockbreak enabled <true|false>` - Toggle zombie block breaking
+- `/zblockbreak startday <day>` - Set the day when block breaking can start
+- `/zblockbreak interval <ticks>` - Set how often each zombie can attempt block breaking
+- `/zblockbreak chance <0.0-1.0>` - Set the chance per scheduled block-breaking check
+- `/zblockbreak range <1-4>` - Set how far in front of the zombie it checks
+- `/zblockbreak hardness <0.0-50.0>` - Set the maximum block hardness zombies can break
+- `/zblockbreak drops <true|false>` - Toggle item drops from zombie-broken blocks
+- `/zblockbreak target <true|false>` - Require zombies to have a valid target before breaking
+- `/zblockbreak obstacle <true|false>` - Require a blocked path or covered target before breaking
+- `/zblockbreak mobgriefing <true|false>` - Make mobGriefing and loader mob-griefing events control this feature
+- `/zblockbreak containers <true|false>` - Allow or block breaking chests, furnaces, and block-entity blocks
+- `/zblockbreak toolblocks <true|false>` - Allow or block breaking blocks that require the correct tool
+- `/zblockbreak lights <true|false>` - Allow or block breaking light-emitting blocks
+
 ### Scaling
 
 - `/zscaling status` - Show current scaling state
@@ -319,6 +366,7 @@ You can use it for:
 - a long-running world with increasing pressure over time
 - a softer early game that becomes harder later
 - a brutal server where day and night are both dangerous
+- an optional base-pressure setup where zombies can break selected blocks after a chosen day
 
 Most major settings can also be changed live with commands, which makes balancing much easier during active testing.
 
@@ -337,14 +385,16 @@ For a hardcore apocalypse world:
 - enable hordes and blood moons
 - enable scaling and advanced attributes
 - increase event wave size and event multipliers
+- optionally enable `/zblockbreak dayone` or set a later `/zblockbreak startday`
 
 ## Installation Notes
 
 - Multiplayer servers only need the mod installed on the server.
 - Players can join without installing the mod on their client.
 - For singleplayer, install it on the client.
-- Use the NeoForge file for Minecraft 1.21.1.
-- Use the Forge file for Minecraft 1.20.1.
+- Use the NeoForge 1.21.1 file for Minecraft 1.21.1 NeoForge servers.
+- Use the NeoForge 1.20.1 file for Minecraft 1.20.1 NeoForge servers.
+- Use the Forge 1.20.1 file for Minecraft 1.20.1 Forge servers.
 - Back up your world before changing major spawn or scaling settings.
 
 If you want a configurable zombie apocalypse system with constant pressure, escalating events, live admin controls, and deep stat tuning, this mod is built for exactly that.

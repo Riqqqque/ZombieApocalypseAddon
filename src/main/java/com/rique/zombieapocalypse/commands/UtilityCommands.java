@@ -76,6 +76,11 @@ public final class UtilityCommands {
             Config.COMMON.enableBloodMoon.set(false);
             Config.COMMON.enableDifficultyScaling.set(false);
             Config.COMMON.enableAttributeModifiers.set(false);
+            Config.COMMON.enableZombieBlockBreaking.set(false);
+            Config.COMMON.enableDayCounterAnnouncements.set(false);
+            Config.COMMON.preventSunBurn.set(false);
+            Config.COMMON.enableExtraDrops.set(false);
+            Config.COMMON.enableDeathCooldown.set(false);
         }
 
         CommandUtil.feedback(source, buildCleanupMessage(removed, uninstallPrep), true);
@@ -101,7 +106,7 @@ public final class UtilityCommands {
         String message = "Cleanup complete. Removed " + removed
                 + " zombie-class entities and reset apocalypse event state.";
         if (uninstallPrep) {
-            return message + " Custom spawning, hordes, blood moons, scaling, and attribute tuning are disabled for this server session.";
+            return message + " Custom spawning, events, scaling, attributes, block breaking, sunlight immunity, extra drops, and death cooldowns are disabled.";
         }
         return message;
     }
