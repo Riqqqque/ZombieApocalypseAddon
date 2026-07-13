@@ -23,7 +23,7 @@ Core gameplay:
 - Persistent kill and cooldown statistics.
 
 Admin commands:
-/zhelp, /zburn, /zkill, /zday, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn, /zattr
+/zhelp, /zburn, /zkill, /zday, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn, /zblockbreak, /zattr
 '''
 
 [[dependencies.${mod_id}]]

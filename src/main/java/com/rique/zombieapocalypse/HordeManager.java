@@ -192,6 +192,11 @@ public final class HordeManager {
             return;
         }
 
+        if (bloodMoonTransition == BloodMoonTransition.ENDED && shouldNotifyBloodMoonEndImmediately(dayTime)) {
+            notifyAllPlayers(level, "Dawn Breaks", "The blood moon fades.");
+            return;
+        }
+
         if (!isDayAnnouncementWindow(dayTime)) {
             return;
         }
@@ -224,6 +229,10 @@ public final class HordeManager {
 
     private static boolean isDayAnnouncementWindow(long dayTime) {
         return EventSchedule.isHordeRollWindow(dayTime);
+    }
+
+    static boolean shouldNotifyBloodMoonEndImmediately(long dayTime) {
+        return !isDayAnnouncementWindow(dayTime);
     }
 
     static boolean shouldAnnounceDay(long currentDay, long dayTime, long lastAnnouncedDay, boolean enabled) {
@@ -288,7 +297,7 @@ public final class HordeManager {
         }
     }
 
-    public static void triggerBloodMoon(ServerLevel level) {
+    public static boolean triggerBloodMoon(ServerLevel level) {
         ServerLevel eventLevel = eventLevel(level);
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         long absoluteDayTime = eventLevel.getDayTime();
@@ -303,10 +312,11 @@ public final class HordeManager {
             if (!alreadyActive) {
                 notifyAllPlayers(eventLevel, "BLOOD MOON", "Zombies are swarming tonight.");
             }
-            return;
+            return true;
         }
 
         state.setForcedBloodMoonPending(true);
+        return false;
     }
 
     public static boolean isHordeActive(ServerLevel level) {
@@ -328,8 +338,12 @@ public final class HordeManager {
             return 0L;
         }
 
-        long remaining = (state.getHordeEndGameTime() - eventLevel.getGameTime()) / 20L;
-        return Math.max(0L, remaining);
+        return remainingSeconds(state.getHordeEndGameTime(), eventLevel.getGameTime());
+    }
+
+    static long remainingSeconds(long endGameTime, long gameTime) {
+        long remainingTicks = endGameTime - gameTime;
+        return remainingTicks <= 0L ? 0L : ((remainingTicks - 1L) / 20L) + 1L;
     }
 
     public static double getSpawnMultiplier(ServerLevel level) {

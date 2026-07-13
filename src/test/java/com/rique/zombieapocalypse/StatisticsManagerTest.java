@@ -61,4 +61,24 @@ class StatisticsManagerTest {
         assertEquals(0, manager.getMilestoneKills(playerUuid));
         assertTrue(manager.consumePendingAdvancementReset(playerUuid));
     }
+
+    @Test
+    void killCountersSaturateInsteadOfWrappingNegative() {
+        assertEquals(1, StatisticsManager.incrementKillCount(-10));
+        assertEquals(42, StatisticsManager.incrementKillCount(41));
+        assertEquals(Integer.MAX_VALUE, StatisticsManager.incrementKillCount(Integer.MAX_VALUE));
+    }
+
+    @Test
+    void cooldownDisplayRoundsUpAndExpiredEntriesArePruned() {
+        StatisticsManager manager = new StatisticsManager();
+        UUID playerUuid = UUID.randomUUID();
+
+        manager.startDeathCooldown(playerUuid, 100L, 5);
+
+        assertEquals(5, StatisticsManager.remainingCooldownSeconds(200L, 100L));
+        assertEquals(1, StatisticsManager.remainingCooldownSeconds(200L, 199L));
+        assertEquals(1, manager.pruneExpiredCooldowns(200L));
+        assertEquals(0, manager.pruneExpiredCooldowns(200L));
+    }
 }
