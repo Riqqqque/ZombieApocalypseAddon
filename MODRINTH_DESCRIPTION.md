@@ -22,6 +22,7 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Optional block-light spawn protection for torches, lanterns, glowstone, and similar light sources
 - Optional baby zombie spawn control
 - Optional zombie block breaking with day gating and safety controls
+- Optional zombie block placing with one-block bridge and step behavior
 - Natural and manual horde events
 - Random and forced blood moon nights
 - Morning day-counter announcements
@@ -153,6 +154,34 @@ Quick setup:
 
 The defaults are intentionally safer: no block breaking unless enabled, no container/machine breaking, no light-source breaking, no tool-required block breaking, and no item drops from broken blocks.
 
+### Optional Zombie Block Placing
+
+Zombie-class mobs can place a safe solid block to cross a one-block gap or make a one-block step while pursuing a target.
+
+This system is disabled by default. If enabled, you can tune:
+
+- start day
+- attempt interval and chance
+- placed block ID
+- lifetime placement limit per zombie
+- target requirement and maximum target distance
+- whether an obstacle is required
+- bridges and steps separately
+- fluid and replaceable-block replacement
+- whether the vanilla `mobGriefing` gamerule can stop placement
+
+The placed block must be stable, solid, breakable, and free of block entities. Placement stays inside loaded chunks and the world border, cannot overlap entities, and fires normal Forge/NeoForge block-place events so claim and protection mods can cancel it.
+
+Quick setup:
+
+- `/zblockplace dayone` = enable it and make it active immediately
+- `/zblockplace enabled true` = enable it while keeping the configured start day
+- `/zblockplace startday 15` = let zombies start placing blocks on day 15
+- `/zblockplace block minecraft:cobblestone` = choose the block they place
+- `/zblockplace limit 8` = limit each zombie to eight placed blocks
+
+The safe defaults keep block placing off, start it on day 15 when enabled, limit each zombie to eight blocks, require an active target and obstacle/gap, respect `mobGriefing`, and protect fluids, plants, snow, containers, and occupied spaces.
+
 ### Difficulty Scaling
 
 Zombie pressure can scale as the world progresses.
@@ -245,7 +274,7 @@ All commands require OP level 2.
 - `/zburn <true|false>` - Control whether zombies burn in daylight
 - `/zkill` - Remove zombie-class entities from loaded levels
 - `/zcleanup` - Remove loaded zombie leftovers and reset apocalypse event state
-- `/zcleanup uninstall` - Cleanup plus disable spawning, events, scaling, attributes, block breaking, sunlight immunity, extra drops, and cooldowns before removal
+- `/zcleanup uninstall` - Cleanup plus disable spawning, events, scaling, attributes, block breaking, block placing, sunlight immunity, extra drops, and cooldowns before removal
 
 ### Day Control
 
@@ -319,6 +348,27 @@ All commands require OP level 2.
 - `/zblockbreak containers <true|false>` - Allow or block breaking chests, furnaces, and block-entity blocks
 - `/zblockbreak toolblocks <true|false>` - Allow or block breaking blocks that require the correct tool
 - `/zblockbreak lights <true|false>` - Allow or block breaking light-emitting blocks
+
+### Block Placing
+
+- `/zblockplace` - Show current zombie block-placing settings
+- `/zblockplace status` - Show current zombie block-placing settings
+- `/zblockplace dayone` - Enable zombie block placing and set the start day to `0`
+- `/zblockplace enabled <true|false>` - Toggle zombie block placing
+- `/zblockplace startday <0-3650>` - Set the day when block placing can start
+- `/zblockplace interval <20-72000>` - Set how often each zombie can attempt block placing
+- `/zblockplace chance <0.0-1.0>` - Set the chance per scheduled block-placing check
+- `/zblockplace block <namespace:id>` - Choose the safe solid block zombies place
+- `/zblockplace limit <0-256>` - Set the lifetime placement limit per zombie; `0` is unlimited
+- `/zblockplace distance <4-128>` - Set the farthest target distance that allows placement
+- `/zblockplace target <true|false>` - Require zombies to have a valid target before placing
+- `/zblockplace obstacle <true|false>` - Require a blocked path, covered/raised target, or gap
+- `/zblockplace mobgriefing <true|false>` - Make `mobGriefing` and loader events control placement
+- `/zblockplace bridges <true|false>` - Toggle filling one-block-deep gaps
+- `/zblockplace steps <true|false>` - Toggle placing one-block steps
+- `/zblockplace fluids <true|false>` - Allow or block replacing fluid blocks
+- `/zblockplace replaceable <true|false>` - Allow or block replacing plants, snow, and similar blocks
+- `/zblockplace resetcounts` - Reset lifetime placement counts for loaded zombie-class mobs
 
 ### Scaling
 
