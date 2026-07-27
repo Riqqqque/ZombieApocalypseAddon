@@ -28,6 +28,12 @@ public final class HordeManager {
         ENDED
     }
 
+    private enum HordeTransition {
+        NONE,
+        STARTED,
+        ENDED
+    }
+
     /**
      * Snapshot of event state for a single tick, avoiding repeated
      * {@link ApocalypseWorldData#get} lookups.
@@ -73,24 +79,43 @@ public final class HordeManager {
         long dayTime = absoluteDayTime % 24000L;
         long currentDay = absoluteDayTime / 24000L;
 
-        expireHordeIfNeeded(overworldLevel, state, gameTime);
-        boolean hordeStarted = tryStartScheduledHorde(overworldLevel, state, currentDay, dayTime);
+        HordeTransition hordeTransition = updateHorde(overworldLevel, state, gameTime, currentDay, dayTime);
         BloodMoonTransition bloodMoonTransition = updateBloodMoon(overworldLevel, state, currentDay, dayTime);
-        notifyDayTransitions(overworldLevel, state, currentDay, dayTime, hordeStarted, bloodMoonTransition);
+        notifyDayTransitions(overworldLevel, state, currentDay, dayTime, hordeTransition, bloodMoonTransition);
     }
 
-    private static void expireHordeIfNeeded(ServerLevel level, ApocalypseWorldData state, long gameTime) {
+    private static HordeTransition updateHorde(
+            ServerLevel level,
+            ApocalypseWorldData state,
+            long gameTime,
+            long currentDay,
+            long dayTime) {
+        if (expireHordeIfNeeded(state, gameTime)) {
+            // A horde that reaches dawn consumes that day's roll. Otherwise it can
+            // immediately restart during the same five-second scheduling window.
+            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime)) {
+                state.setLastHordeRollDay(currentDay);
+            }
+            return HordeTransition.ENDED;
+        }
+
+        return tryStartScheduledHorde(level, state, currentDay, dayTime)
+                ? HordeTransition.STARTED
+                : HordeTransition.NONE;
+    }
+
+    private static boolean expireHordeIfNeeded(ApocalypseWorldData state, long gameTime) {
         if (!state.isHordeActive() || gameTime < state.getHordeEndGameTime()) {
-            return;
+            return false;
         }
 
         state.setHordeActive(false);
         state.setHordeEndGameTime(0L);
-        notifyAllPlayers(level, "Horde Ended", "The zombie horde has dispersed.");
 
         if (Config.COMMON.enableDebugLogging.get()) {
             LOGGER.info("[ZombieApocalypse] Horde ended");
         }
+        return true;
     }
 
     private static boolean tryStartScheduledHorde(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
@@ -185,19 +210,21 @@ public final class HordeManager {
             ApocalypseWorldData state,
             long currentDay,
             long dayTime,
-            boolean hordeStarted,
+            HordeTransition hordeTransition,
             BloodMoonTransition bloodMoonTransition) {
         if (bloodMoonTransition == BloodMoonTransition.STARTED) {
             notifyAllPlayers(level, "BLOOD MOON", "Zombies are swarming tonight.");
             return;
         }
 
-        if (bloodMoonTransition == BloodMoonTransition.ENDED && shouldNotifyBloodMoonEndImmediately(dayTime)) {
-            notifyAllPlayers(level, "Dawn Breaks", "The blood moon fades.");
-            return;
-        }
+        boolean hordeStarted = hordeTransition == HordeTransition.STARTED;
+        boolean hordeEnded = hordeTransition == HordeTransition.ENDED;
+        boolean bloodMoonEnded = bloodMoonTransition == BloodMoonTransition.ENDED;
 
         if (!isDayAnnouncementWindow(dayTime)) {
+            if (hordeEnded || bloodMoonEnded) {
+                notifyEndedEvents(level, hordeEnded, bloodMoonEnded, false, currentDay);
+            }
             return;
         }
 
@@ -205,19 +232,26 @@ public final class HordeManager {
         boolean eventNotificationsEnabled = Config.COMMON.enableEventNotifications.get();
         boolean shouldAnnounceDay = shouldAnnounceDay(currentDay, dayTime, state.getLastDayAnnouncementDay(), dayCounterEnabled);
 
-        if (eventNotificationsEnabled && (hordeStarted || bloodMoonTransition == BloodMoonTransition.ENDED)) {
-            String title = hordeStarted ? "HORDE INCOMING" : "Dawn Breaks";
-            String subtitle = hordeStarted
-                    ? buildHordeIncomingSubtitle(Math.max(1, Config.COMMON.hordeDurationMinutes.get()), currentDay,
-                            shouldAnnounceDay)
-                    : "The blood moon fades.";
+        if (eventNotificationsEnabled && hordeStarted) {
+            String subtitle = buildHordeIncomingSubtitle(
+                    Math.max(1, Config.COMMON.hordeDurationMinutes.get()),
+                    currentDay,
+                    shouldAnnounceDay);
+            if (bloodMoonEnded) {
+                subtitle += " The blood moon fades.";
+            }
             if (shouldAnnounceDay) {
-                if (!hordeStarted) {
-                    subtitle = "Day " + currentDay + " | " + subtitle;
-                }
                 state.setLastDayAnnouncementDay(currentDay);
             }
-            sendTitleToAllPlayers(level, title, subtitle);
+            sendTitleToAllPlayers(level, "HORDE INCOMING", subtitle);
+            return;
+        }
+
+        if (eventNotificationsEnabled && (hordeEnded || bloodMoonEnded)) {
+            notifyEndedEvents(level, hordeEnded, bloodMoonEnded, shouldAnnounceDay, currentDay);
+            if (shouldAnnounceDay) {
+                state.setLastDayAnnouncementDay(currentDay);
+            }
             return;
         }
 
@@ -227,12 +261,49 @@ public final class HordeManager {
         }
     }
 
-    private static boolean isDayAnnouncementWindow(long dayTime) {
-        return EventSchedule.isHordeRollWindow(dayTime);
+    private static void notifyEndedEvents(
+            ServerLevel level,
+            boolean hordeEnded,
+            boolean bloodMoonEnded,
+            boolean includeDayAnnouncement,
+            long currentDay) {
+        if (!Config.COMMON.enableEventNotifications.get()) {
+            return;
+        }
+
+        String title;
+        String subtitle;
+        if (bloodMoonEnded && hordeEnded) {
+            title = "Dawn Breaks";
+        } else if (bloodMoonEnded) {
+            title = "Dawn Breaks";
+        } else {
+            title = "Horde Ended";
+        }
+
+        subtitle = buildEndedEventsSubtitle(hordeEnded, bloodMoonEnded, includeDayAnnouncement, currentDay);
+        sendTitleToAllPlayers(level, title, subtitle);
     }
 
-    static boolean shouldNotifyBloodMoonEndImmediately(long dayTime) {
-        return !isDayAnnouncementWindow(dayTime);
+    static String buildEndedEventsSubtitle(
+            boolean hordeEnded,
+            boolean bloodMoonEnded,
+            boolean includeDayAnnouncement,
+            long currentDay) {
+        String subtitle;
+        if (bloodMoonEnded && hordeEnded) {
+            subtitle = "The blood moon fades and the zombie horde has dispersed.";
+        } else if (bloodMoonEnded) {
+            subtitle = "The blood moon fades.";
+        } else {
+            subtitle = "The zombie horde has dispersed.";
+        }
+
+        return includeDayAnnouncement ? "Day " + currentDay + " | " + subtitle : subtitle;
+    }
+
+    private static boolean isDayAnnouncementWindow(long dayTime) {
+        return EventSchedule.isHordeRollWindow(dayTime);
     }
 
     static boolean shouldAnnounceDay(long currentDay, long dayTime, long lastAnnouncedDay, boolean enabled) {
@@ -381,6 +452,10 @@ public final class HordeManager {
 
     static boolean isScheduledHordeBlockedByGrace(long currentDay, int daylightSpawnStartDay) {
         return currentDay < Math.max(0, daylightSpawnStartDay);
+    }
+
+    static boolean shouldConsumeScheduledHordeRollAfterEnd(long dayTime) {
+        return EventSchedule.isHordeRollWindow(dayTime);
     }
 
     private static ServerLevel eventLevel(ServerLevel level) {

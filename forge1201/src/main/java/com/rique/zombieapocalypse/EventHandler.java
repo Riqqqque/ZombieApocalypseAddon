@@ -56,6 +56,8 @@ public final class EventHandler {
     private static final long FIRE_STATE_PRUNE_INTERVAL_TICKS = 20L;
     private static final long COOLDOWN_PRUNE_INTERVAL_TICKS = 60L * 20L;
     private static final Map<UUID, Long> EXTERNAL_FIRE_UNTIL = new HashMap<>();
+    private static int lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
+    private static int lastWarnedSpawnRange = Integer.MIN_VALUE;
 
     private record SpawnRuntimeSettings(
             boolean deathCooldownEnabled,
@@ -108,7 +110,7 @@ public final class EventHandler {
         }
 
         boolean hasImpossibleDistanceConfig() {
-            return isSpawnDistanceImpossible(minDistance, horizontalRange);
+            return SpawnMath.isSpawnDistanceImpossible(minDistance, horizontalRange);
         }
 
         int minDistanceSquared() {
@@ -136,6 +138,8 @@ public final class EventHandler {
 
     public static void clearRuntimeState() {
         EXTERNAL_FIRE_UNTIL.clear();
+        lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
+        lastWarnedSpawnRange = Integer.MIN_VALUE;
     }
 
     @SubscribeEvent
@@ -323,12 +327,10 @@ public final class EventHandler {
 
         SpawnRuntimeSettings settings = SpawnRuntimeSettings.capture(level);
         if (settings.hasImpossibleDistanceConfig()) {
-            if (settings.debugLogging()) {
-                LOGGER.warn("[ZombieApocalypse] minSpawnDistance ({}) is too large for spawnRange ({}). No spawns possible!",
-                        settings.minDistance(), settings.horizontalRange());
-            }
+            warnImpossibleSpawnDistance(settings.minDistance(), settings.horizontalRange());
             return;
         }
+        clearSpawnDistanceWarning();
 
         StatisticsManager stats = settings.deathCooldownEnabled() ? StatisticsManager.get(level) : null;
         for (ServerPlayer player : level.players()) {
@@ -587,12 +589,6 @@ public final class EventHandler {
         return isDay && !hordeActive && currentDay < Math.max(0, daylightSpawnStartDay);
     }
 
-    static boolean isSpawnDistanceImpossible(int minDistance, int horizontalRange) {
-        long safeRange = Math.max(1, horizontalRange);
-        long safeMinDistance = Math.max(0, minDistance);
-        return safeMinDistance * safeMinDistance > 2L * safeRange * safeRange;
-    }
-
     static boolean isBlockLightSpawnAllowed(int blockLight, int maxBlockLightForSpawning) {
         if (maxBlockLightForSpawning < 0) {
             return true;
@@ -740,5 +736,25 @@ public final class EventHandler {
             return;
         }
         EXTERNAL_FIRE_UNTIL.entrySet().removeIf(entry -> gameTime >= entry.getValue());
+    }
+
+    private static void warnImpossibleSpawnDistance(int minDistance, int horizontalRange) {
+        if (lastWarnedMinSpawnDistance == minDistance && lastWarnedSpawnRange == horizontalRange) {
+            return;
+        }
+
+        lastWarnedMinSpawnDistance = minDistance;
+        lastWarnedSpawnRange = horizontalRange;
+        LOGGER.warn(
+                "[ZombieApocalypse] Custom spawning is paused: minSpawnDistance={} cannot fit inside spawnRange={}. "
+                        + "Lower minSpawnDistance to {} or less, or raise spawnRange.",
+                minDistance,
+                horizontalRange,
+                SpawnMath.maxHorizontalDistance(horizontalRange));
+    }
+
+    private static void clearSpawnDistanceWarning() {
+        lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
+        lastWarnedSpawnRange = Integer.MIN_VALUE;
     }
 }
