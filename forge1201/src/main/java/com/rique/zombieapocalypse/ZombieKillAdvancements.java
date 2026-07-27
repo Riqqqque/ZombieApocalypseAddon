@@ -36,7 +36,7 @@ public final class ZombieKillAdvancements {
             }
 
             Advancement advancement = advancementManager.getAdvancement(
-                    new ResourceLocation(ZombieApocalypseAddon.MODID, milestone.path()));
+                    milestoneId(milestone));
             if (advancement != null) {
                 player.getAdvancements().award(advancement, CRITERION);
             }
@@ -52,10 +52,18 @@ public final class ZombieKillAdvancements {
         for (int i = MILESTONES.length - 1; i >= 0; i--) {
             Milestone milestone = MILESTONES[i];
             Advancement advancement = advancementManager.getAdvancement(
-                    new ResourceLocation(ZombieApocalypseAddon.MODID, milestone.path()));
+                    milestoneId(milestone));
             if (advancement != null) {
                 player.getAdvancements().revoke(advancement, CRITERION);
             }
         }
+    }
+
+    private static ResourceLocation milestoneId(Milestone milestone) {
+        ResourceLocation id = ResourceLocation.tryBuild(ZombieApocalypseAddon.MODID, milestone.path());
+        if (id == null) {
+            throw new IllegalStateException("Invalid zombie kill advancement path: " + milestone.path());
+        }
+        return id;
     }
 }

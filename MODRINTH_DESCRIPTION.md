@@ -396,5 +396,6 @@ For a hardcore apocalypse world:
 - Use the NeoForge 1.20.1 file for Minecraft 1.20.1 NeoForge servers.
 - Use the Forge 1.20.1 file for Minecraft 1.20.1 Forge servers.
 - Back up your world before changing major spawn or scaling settings.
+- If custom zombies stop spawning, run `/zdayspawn status`. It warns when the minimum spawn distance cannot fit inside the configured spawn range, which pauses custom spawning until the values are corrected.
 
 If you want a configurable zombie apocalypse system with constant pressure, escalating events, live admin controls, and deep stat tuning, this mod is built for exactly that.

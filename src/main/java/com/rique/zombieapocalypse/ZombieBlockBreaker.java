@@ -65,9 +65,11 @@ public final class ZombieBlockBreaker {
             return;
         }
 
-        if (!isBlockBreakingActive(
-                Config.COMMON.enableZombieBlockBreaking.get(),
-                DifficultyManager.getCurrentDay(level),
+        if (!Config.COMMON.enableZombieBlockBreaking.get()) {
+            return;
+        }
+
+        if (!isBlockBreakingActive(true, DifficultyManager.getCurrentDay(level),
                 Config.COMMON.zombieBlockBreakingStartDay.get())) {
             return;
         }

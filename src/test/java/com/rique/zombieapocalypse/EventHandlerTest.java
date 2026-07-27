@@ -30,10 +30,11 @@ class EventHandlerTest {
 
     @Test
     void spawnDistanceIsOnlyImpossibleOutsideTheSpawnSquare() {
-        assertEquals(false, EventHandler.isSpawnDistanceImpossible(12, 30));
-        assertEquals(false, EventHandler.isSpawnDistanceImpossible(30, 30));
-        assertEquals(false, EventHandler.isSpawnDistanceImpossible(42, 30));
-        assertEquals(true, EventHandler.isSpawnDistanceImpossible(43, 30));
+        assertEquals(false, SpawnMath.isSpawnDistanceImpossible(12, 30));
+        assertEquals(false, SpawnMath.isSpawnDistanceImpossible(30, 30));
+        assertEquals(false, SpawnMath.isSpawnDistanceImpossible(42, 30));
+        assertEquals(true, SpawnMath.isSpawnDistanceImpossible(43, 30));
+        assertEquals(42, SpawnMath.maxHorizontalDistance(30));
     }
 
     @Test

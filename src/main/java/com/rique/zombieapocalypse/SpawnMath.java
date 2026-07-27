@@ -15,6 +15,17 @@ public final class SpawnMath {
         return Math.max(0.0, Math.min(1.0, value));
     }
 
+    public static boolean isSpawnDistanceImpossible(int minDistance, int horizontalRange) {
+        long safeRange = Math.max(1, horizontalRange);
+        long safeMinDistance = Math.max(0, minDistance);
+        return safeMinDistance * safeMinDistance > 2L * safeRange * safeRange;
+    }
+
+    public static int maxHorizontalDistance(int horizontalRange) {
+        int safeRange = Math.max(1, horizontalRange);
+        return (int) Math.floor(Math.sqrt(2.0) * safeRange);
+    }
+
     public static double computeLinearScale(long currentDay, int startDay, int maxDay) {
         if (currentDay < startDay) {
             return 0.0;
