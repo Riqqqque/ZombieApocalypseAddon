@@ -36,6 +36,7 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
@@ -140,6 +141,7 @@ public final class EventHandler {
         EXTERNAL_FIRE_UNTIL.clear();
         lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
         lastWarnedSpawnRange = Integer.MIN_VALUE;
+        ZombieBlockPlacer.clearRuntimeState();
     }
 
     @SubscribeEvent
@@ -185,6 +187,7 @@ public final class EventHandler {
         }
 
         ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+        ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
     }
 
     private static void handleSunBurnTick(Zombie zombie) {
@@ -558,6 +561,22 @@ public final class EventHandler {
         BlockState state = level.getBlockState(pos);
         return state.canEntityDestroy(level, pos, zombie)
                 && ForgeEventFactory.onEntityDestroyBlock(zombie, pos, state);
+    }
+
+    private static boolean canZombiePlaceBlock(
+            ServerLevel level,
+            BlockPos pos,
+            Zombie zombie,
+            boolean respectMobGriefing,
+            Direction placementDirection) {
+        if (respectMobGriefing && !ForgeEventFactory.getMobGriefingEvent(level, zombie)) {
+            return false;
+        }
+
+        return !ForgeEventFactory.onBlockPlace(
+                zombie,
+                BlockSnapshot.create(level.dimension(), level, pos),
+                placementDirection);
     }
 
     private static int countNearbyZombies(ServerLevel level, ServerPlayer player, int range) {

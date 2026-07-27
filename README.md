@@ -18,6 +18,7 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Zombie-class mobs spawn around survival players day and night.
 - Torch/lantern/glowstone-style light can optionally block custom spawns.
 - Optional zombie block breaking can add configurable base pressure after a chosen day.
+- Optional zombie block placing lets zombies build limited one-block steps and bridges.
 - Horde events can occur naturally or be started manually.
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
@@ -100,7 +101,25 @@ The default hardness limit is meant for soft blocks and wooden doors, while ston
 
 Use `/zblockbreak dayone` if you want to enable it and make it active immediately.
 
-## 8) Stats, Effects, and Drops
+## 8) Optional Zombie Block Placing
+Zombie-class mobs can place a safe solid block to cross a one-block gap or make a one-block step while pursuing a target.
+
+This is off by default. If enabled, you control:
+- start day
+- attempt interval and chance
+- placed block ID
+- lifetime placement limit per zombie
+- target requirement and maximum target distance
+- whether an obstacle is required
+- bridges and steps separately
+- fluid and replaceable-block replacement
+- whether `mobGriefing` can stop placement
+
+Placed blocks must be stable, solid, breakable blocks without block entities. Placement stays inside loaded chunks and the world border, cannot overlap entities, and fires the normal loader block-place event so claim and protection mods can cancel it.
+
+Use `/zblockplace dayone` for immediate activation, or enable it with a later start day for slower progression.
+
+## 9) Stats, Effects, and Drops
 - kill tracking
 - kill milestones with advancements at 250, 1000, and 3000 zombie kills
 - cooldown tracking
@@ -250,6 +269,28 @@ All commands require OP level 2.
 | `/zblockbreak containers <true\|false>` | Allows or blocks breaking chests, furnaces, and block-entity blocks. |
 | `/zblockbreak toolblocks <true\|false>` | Allows or blocks breaking blocks that require the correct tool. |
 | `/zblockbreak lights <true\|false>` | Allows or blocks breaking light-emitting blocks. |
+
+## Block Placing (`/zblockplace`)
+| Command | What it does |
+|---|---|
+| `/zblockplace` | Shows current zombie block-placing settings. |
+| `/zblockplace status` | Shows current zombie block-placing settings. |
+| `/zblockplace dayone` | Enables zombie block placing and sets the start day to 0. |
+| `/zblockplace enabled <true\|false>` | Toggles zombie block placing. |
+| `/zblockplace startday <0-3650>` | Sets the day when block placing can start. |
+| `/zblockplace interval <20-72000>` | Sets how often each zombie can attempt block placing. |
+| `/zblockplace chance <0.0-1.0>` | Sets the chance per scheduled block-placing check. |
+| `/zblockplace block <namespace:id>` | Chooses the safe solid block zombies place. |
+| `/zblockplace limit <0-256>` | Sets the lifetime placement limit per zombie. `0` is unlimited. |
+| `/zblockplace distance <4-128>` | Sets the farthest target distance that allows placement. |
+| `/zblockplace target <true\|false>` | Requires zombies to have a valid target before placing. |
+| `/zblockplace obstacle <true\|false>` | Requires a blocked path, covered/raised target, or gap. |
+| `/zblockplace mobgriefing <true\|false>` | Makes `mobGriefing` and loader mob-griefing events control placement. |
+| `/zblockplace bridges <true\|false>` | Toggles filling one-block-deep gaps. |
+| `/zblockplace steps <true\|false>` | Toggles placing one-block steps. |
+| `/zblockplace fluids <true\|false>` | Allows or blocks replacing fluid blocks. |
+| `/zblockplace replaceable <true\|false>` | Allows or blocks replacing plants, snow, and similar blocks. |
+| `/zblockplace resetcounts` | Resets lifetime placement counts for loaded zombie-class mobs. |
 
 ## Live Attribute Commands (`/zattr`)
 | Command | What it does |

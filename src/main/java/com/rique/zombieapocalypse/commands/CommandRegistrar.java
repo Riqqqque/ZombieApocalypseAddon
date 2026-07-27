@@ -18,6 +18,7 @@ public final class CommandRegistrar {
         ScalingCommands.register(dispatcher);
         DaySpawnCommands.register(dispatcher);
         BlockBreakCommands.register(dispatcher);
+        BlockPlaceCommands.register(dispatcher);
         AttributeCommands.register(dispatcher);
     }
 }
