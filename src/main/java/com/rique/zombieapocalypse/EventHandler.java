@@ -38,6 +38,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.CommonHooks;
+import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -140,6 +141,7 @@ public final class EventHandler {
         EXTERNAL_FIRE_UNTIL.clear();
         lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
         lastWarnedSpawnRange = Integer.MIN_VALUE;
+        ZombieBlockPlacer.clearRuntimeState();
     }
 
     @SubscribeEvent
@@ -185,6 +187,7 @@ public final class EventHandler {
         }
 
         ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+        ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
     }
 
     private static void handleSunBurnTick(Zombie zombie) {
@@ -558,6 +561,22 @@ public final class EventHandler {
         BlockState state = level.getBlockState(pos);
         return state.canEntityDestroy(level, pos, zombie)
                 && EventHooks.onEntityDestroyBlock(zombie, pos, state);
+    }
+
+    private static boolean canZombiePlaceBlock(
+            ServerLevel level,
+            BlockPos pos,
+            Zombie zombie,
+            boolean respectMobGriefing,
+            Direction placementDirection) {
+        if (respectMobGriefing && !EventHooks.canEntityGrief(level, zombie)) {
+            return false;
+        }
+
+        return !EventHooks.onBlockPlace(
+                zombie,
+                BlockSnapshot.create(level.dimension(), level, pos),
+                placementDirection);
     }
 
     private static int countNearbyZombies(ServerLevel level, ServerPlayer player, int range) {

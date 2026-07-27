@@ -60,6 +60,22 @@ public final class Config {
         public final ModConfigSpec.BooleanValue zombieBlockBreakingAllowToolRequiredBlocks;
         public final ModConfigSpec.BooleanValue zombieBlockBreakingAllowLightBlocks;
 
+        // Zombie block placing
+        public final ModConfigSpec.BooleanValue enableZombieBlockPlacing;
+        public final ModConfigSpec.IntValue zombieBlockPlacingStartDay;
+        public final ModConfigSpec.IntValue zombieBlockPlacingInterval;
+        public final ModConfigSpec.DoubleValue zombieBlockPlacingChance;
+        public final ModConfigSpec.ConfigValue<String> zombieBlockPlacingBlock;
+        public final ModConfigSpec.IntValue zombieBlockPlacingMaxPerZombie;
+        public final ModConfigSpec.IntValue zombieBlockPlacingMaxTargetDistance;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingRequireTarget;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingRequireObstacle;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingRespectMobGriefing;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingAllowBridges;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingAllowSteps;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingReplaceFluids;
+        public final ModConfigSpec.BooleanValue zombieBlockPlacingReplaceReplaceableBlocks;
+
         // Horde events
         public final ModConfigSpec.BooleanValue enableHordeEvents;
         public final ModConfigSpec.IntValue hordeIntervalDays;
@@ -476,6 +492,112 @@ public final class Config {
                             "If true, zombies may break light-emitting blocks like torches, lanterns, glowstone, and similar blocks.",
                             "false keeps light-based base protection useful when maxBlockLightForSpawning is configured.")
                     .define("zombieBlockBreakingAllowLightBlocks", false);
+            builder.pop();
+
+            builder.comment(sectionComment(
+                    "ZOMBIE BLOCK PLACING",
+                    "Optional siege behavior that lets zombie-class mobs place simple building blocks to reach targets.",
+                    "Safe beginner setup: leave this disabled. It is separate from zombie block breaking.",
+                    "Placement honors mobGriefing and loader block-place events by default, so protection mods can cancel it.",
+                    "Each zombie has a configurable placement limit to prevent unlimited terrain clutter.",
+                    "Use start day 0 if you want it active immediately after enabling."))
+                    .push("blockplacing");
+            enableZombieBlockPlacing = builder
+                    .comment(
+                            "Main on/off switch for zombie block placing.",
+                            "false = zombies never place blocks from this mod.",
+                            "true = zombie-class mobs can place blocks after zombieBlockPlacingStartDay if the other rules allow it.")
+                    .define("enableZombieBlockPlacing", false);
+
+            zombieBlockPlacingStartDay = builder
+                    .comment(
+                            "Apocalypse day when block placing is allowed to start after the feature is enabled.",
+                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "15 = zombies cannot place blocks until the day counter reaches 15.")
+                    .defineInRange("zombieBlockPlacingStartDay", 15, 0, 3650);
+
+            zombieBlockPlacingInterval = builder
+                    .comment(
+                            "How often each zombie can attempt block placing.",
+                            "20 ticks = 1 second.",
+                            "Default 100 = each zombie checks at most once every 5 seconds.",
+                            "Lower values feel more aggressive but cost more CPU on crowded servers.")
+                    .defineInRange("zombieBlockPlacingInterval", 100, 20, 72000);
+
+            zombieBlockPlacingChance = builder
+                    .comment(
+                            "Chance that a scheduled block-placing check actually tries to place a block.",
+                            "0.0 = never place, 1.0 = every scheduled check tries.",
+                            "Default 0.15 means 15% per scheduled check.")
+                    .defineInRange("zombieBlockPlacingChance", 0.15, 0.0, 1.0);
+
+            zombieBlockPlacingBlock = builder
+                    .comment(
+                            "Block zombies place, written as a namespaced block ID.",
+                            "Examples: minecraft:cobblestone, minecraft:dirt, minecraft:oak_planks.",
+                            "Air, falling blocks, block-entity blocks, unbreakable blocks, fluids, and non-solid blocks are rejected for safety.",
+                            "Invalid IDs pause block placing and produce one clear server warning.")
+                    .define("zombieBlockPlacingBlock", "minecraft:cobblestone");
+
+            zombieBlockPlacingMaxPerZombie = builder
+                    .comment(
+                            "Maximum number of blocks one zombie may place during its lifetime.",
+                            "0 = unlimited. Use unlimited only if terrain clutter is intentional.",
+                            "Default 8 limits griefing even when many placement attempts succeed.")
+                    .defineInRange("zombieBlockPlacingMaxPerZombie", 8, 0, 256);
+
+            zombieBlockPlacingMaxTargetDistance = builder
+                    .comment(
+                            "Farthest target distance where a zombie may place blocks.",
+                            "This stops distant targets from causing unnecessary building.",
+                            "Default 32 blocks is close enough for active pursuit without broad terrain changes.")
+                    .defineInRange("zombieBlockPlacingMaxTargetDistance", 32, 4, 128);
+
+            zombieBlockPlacingRequireTarget = builder
+                    .comment(
+                            "If true, zombies only place blocks while pursuing a valid living target.",
+                            "Creative and spectator players do not count as valid targets.",
+                            "Leave this true to prevent wandering zombies from building randomly.")
+                    .define("zombieBlockPlacingRequireTarget", true);
+
+            zombieBlockPlacingRequireObstacle = builder
+                    .comment(
+                            "If true, zombies only place when blocked, when the target is above/behind cover, or when bridging a gap.",
+                            "If false, zombies may place valid step blocks while pursuing a target even on open terrain.")
+                    .define("zombieBlockPlacingRequireObstacle", true);
+
+            zombieBlockPlacingRespectMobGriefing = builder
+                    .comment(
+                            "If true, the vanilla mobGriefing gamerule and loader mob-griefing events can stop block placing.",
+                            "Block-place events are always fired so claim and protection mods can cancel placement.",
+                            "Set false only if you intentionally want this feature to ignore the mobGriefing gamerule.")
+                    .define("zombieBlockPlacingRespectMobGriefing", true);
+
+            zombieBlockPlacingAllowBridges = builder
+                    .comment(
+                            "Allows zombies to fill a one-block-deep gap directly in front of them.",
+                            "The new block must attach to solid ground behind it, so zombies cannot build floating bridges.")
+                    .define("zombieBlockPlacingAllowBridges", true);
+
+            zombieBlockPlacingAllowSteps = builder
+                    .comment(
+                            "Allows zombies to place a one-block step directly in front of them.",
+                            "Steps require solid support below and enough empty space for entities.")
+                    .define("zombieBlockPlacingAllowSteps", true);
+
+            zombieBlockPlacingReplaceFluids = builder
+                    .comment(
+                            "Allows placement to replace water or other replaceable fluid blocks.",
+                            "false protects water builds and prevents zombies from filling fluids.",
+                            "This never replaces solid blocks.")
+                    .define("zombieBlockPlacingReplaceFluids", false);
+
+            zombieBlockPlacingReplaceReplaceableBlocks = builder
+                    .comment(
+                            "Allows placement to replace non-fluid replaceable blocks such as grass, flowers, or snow layers.",
+                            "false means zombies only place into air, plus fluids when zombieBlockPlacingReplaceFluids is enabled.",
+                            "Block entities and solid blocks are always protected.")
+                    .define("zombieBlockPlacingReplaceReplaceableBlocks", false);
             builder.pop();
 
             builder.comment(sectionComment(
