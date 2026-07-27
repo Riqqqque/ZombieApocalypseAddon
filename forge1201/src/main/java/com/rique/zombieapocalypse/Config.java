@@ -305,7 +305,9 @@ public final class Config {
             minSpawnDistance = builder
                     .comment(
                             "Closest distance a custom spawn is allowed to appear from a player.",
-                            "Raise this if mobs feel like they are popping in too close.")
+                            "Raise this if mobs feel like they are popping in too close.",
+                            "This must still fit inside the square made by spawnRange.",
+                            "Example: range 30 supports at most about 42 blocks diagonally. A larger minimum pauses custom spawning.")
                     .defineInRange("minSpawnDistance", 12, 8, 64);
 
             spawnAttemptsPerZombie = builder

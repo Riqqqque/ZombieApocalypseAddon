@@ -491,6 +491,10 @@ Main sections:
 - For troubleshooting, enable debug logs with:
 `/zdayspawn debug true`
 
+If custom zombies stop spawning, run `/zdayspawn status`. The command now warns when
+`minSpawnDistance` cannot fit inside `spawnRange`; that invalid combination pauses
+custom spawning until one of those values is corrected.
+
 ## Development
 - Build: `./gradlew build`
 - Full clean build: `./gradlew clean build`

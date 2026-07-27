@@ -9,6 +9,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.SpawnMath;
 
 public final class DaySpawnCommands {
 
@@ -98,7 +99,10 @@ public final class DaySpawnCommands {
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
                                     Config.COMMON.spawnRange.set(value);
-                                    CommandUtil.feedback(context.getSource(), "Spawn range: " + value + " blocks", true);
+                                    CommandUtil.feedback(
+                                            context.getSource(),
+                                            "Spawn range: " + value + " blocks" + buildSpawnDistanceWarning(),
+                                            true);
                                     return 1;
                                 })))
                 .then(Commands.literal("mindist")
@@ -106,7 +110,10 @@ public final class DaySpawnCommands {
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
                                     Config.COMMON.minSpawnDistance.set(value);
-                                    CommandUtil.feedback(context.getSource(), "Minimum spawn distance: " + value + " blocks", true);
+                                    CommandUtil.feedback(
+                                            context.getSource(),
+                                            "Minimum spawn distance: " + value + " blocks" + buildSpawnDistanceWarning(),
+                                            true);
                                     return 1;
                                 })))
                 .then(Commands.literal("daylightstart")
@@ -226,7 +233,21 @@ public final class DaySpawnCommands {
         status.append("Death cooldown: ").append(CommandUtil.onOff(Config.COMMON.enableDeathCooldown.get())).append('\n');
         status.append("Spawn effects: ").append(CommandUtil.onOff(Config.COMMON.enableSpawnEffects.get())).append('\n');
         status.append("Debug logging: ").append(CommandUtil.onOff(Config.COMMON.enableDebugLogging.get()));
+        status.append(buildSpawnDistanceWarning());
         return status.toString();
+    }
+
+    private static String buildSpawnDistanceWarning() {
+        int minDistance = Config.COMMON.minSpawnDistance.get();
+        int spawnRange = Config.COMMON.spawnRange.get();
+        if (!SpawnMath.isSpawnDistanceImpossible(minDistance, spawnRange)) {
+            return "";
+        }
+
+        return "\nWARNING: Custom spawning is paused because min distance " + minDistance
+                + " cannot fit inside range " + spawnRange
+                + ". Lower min distance to " + SpawnMath.maxHorizontalDistance(spawnRange)
+                + " or less, or raise the range.";
     }
 
     private static String formatMaxBlockLight(int value) {

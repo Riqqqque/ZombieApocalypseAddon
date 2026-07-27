@@ -36,9 +36,20 @@ class HordeManagerTest {
     }
 
     @Test
-    void bloodMoonEndNotifiesAtNormalSunriseButCanCombineAfterSleep() {
-        assertTrue(HordeManager.shouldNotifyBloodMoonEndImmediately(23000L));
-        assertFalse(HordeManager.shouldNotifyBloodMoonEndImmediately(0L));
+    void hordeEndingAtDawnConsumesThatDaysScheduledRoll() {
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(0L));
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(99L));
+        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(100L));
+    }
+
+    @Test
+    void simultaneousDawnEventsUseOneCombinedSubtitle() {
+        assertEquals(
+                "Day 10 | The blood moon fades and the zombie horde has dispersed.",
+                HordeManager.buildEndedEventsSubtitle(true, true, true, 10L));
+        assertEquals(
+                "The zombie horde has dispersed.",
+                HordeManager.buildEndedEventsSubtitle(true, false, false, 10L));
     }
 
     @Test
