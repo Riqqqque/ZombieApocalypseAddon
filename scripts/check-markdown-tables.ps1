@@ -26,7 +26,7 @@ function Get-MarkdownFiles {
 
 foreach ($root in $Path) {
     foreach ($file in Get-MarkdownFiles $root) {
-        $lines = Get-Content -LiteralPath $file.FullName
+        $lines = @(Get-Content -LiteralPath $file.FullName)
         $insideFence = $false
 
         for ($lineNumber = 0; $lineNumber -lt $lines.Count; $lineNumber++) {

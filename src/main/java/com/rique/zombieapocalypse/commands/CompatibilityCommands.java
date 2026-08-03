@@ -22,21 +22,21 @@ public final class CompatibilityCommands {
                 .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
-                .then(toggleBoolNode("modded", Config.COMMON.enableModdedZombieCompatibility::set,
+                .then(toggleBoolNode("modded", value -> Config.set(Config.COMMON.enableModdedZombieCompatibility, value),
                         "Automatic modded zombie recognition"))
-                .then(toggleBoolNode("difficulty", Config.COMMON.applyDifficultyToModdedZombies::set,
+                .then(toggleBoolNode("difficulty", value -> Config.set(Config.COMMON.applyDifficultyToModdedZombies, value),
                         "Addon difficulty for modded zombies"))
-                .then(toggleBoolNode("ai", Config.COMMON.applyAiFeaturesToModdedZombies::set,
+                .then(toggleBoolNode("ai", value -> Config.set(Config.COMMON.applyAiFeaturesToModdedZombies, value),
                         "Addon AI features for modded zombies"))
-                .then(toggleBoolNode("spawnrules", Config.COMMON.respectExternalSpawnRules::set,
+                .then(toggleBoolNode("spawnrules", value -> Config.set(Config.COMMON.respectExternalSpawnRules, value),
                         "External spawn rules"))
-                .then(toggleBoolNode("externalai", Config.COMMON.respectExternalZombieAi::set,
+                .then(toggleBoolNode("externalai", value -> Config.set(Config.COMMON.respectExternalZombieAi, value),
                         "External zombie AI ownership"))
-                .then(toggleBoolNode("externaldifficulty", Config.COMMON.respectExternalDifficulty::set,
+                .then(toggleBoolNode("externaldifficulty", value -> Config.set(Config.COMMON.respectExternalDifficulty, value),
                         "External difficulty ownership"))
-                .then(toggleBoolNode("doors", Config.COMMON.respectZombieDoorBreakingAbility::set,
+                .then(toggleBoolNode("doors", value -> Config.set(Config.COMMON.respectZombieDoorBreakingAbility, value),
                         "Zombie door protection"))
-                .then(toggleBoolNode("equipment", Config.COMMON.preserveExistingZombieEquipment::set,
+                .then(toggleBoolNode("equipment", value -> Config.set(Config.COMMON.preserveExistingZombieEquipment, value),
                         "Preserve existing zombie equipment")));
     }
 

@@ -1,0 +1,78 @@
+name: Bug report
+description: Report a repeatable crash or gameplay problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: checkboxes
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am using an official current build from Modrinth or CurseForge.
+          required: true
+        - label: I searched existing issues and the troubleshooting guide.
+          required: true
+        - label: I removed passwords, tokens, server addresses, and private player information.
+          required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Minecraft and loader
+      options:
+        - NeoForge 1.21.1
+        - NeoForge 1.20.1
+        - Forge 1.20.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Mod version
+      placeholder: "Example: 2.2.30"
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Dedicated server
+        - Singleplayer or LAN
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Explain the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start a world with...
+        2. Run...
+        3. Wait until...
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant configuration
+      description: Attach the config or paste only the relevant settings.
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: Attach or paste the complete mod list. Say "None" if this is the only mod.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Attach logs/latest.log from a session where the problem happened. Do not paste only the final crash line.
+    validations:
+      required: true

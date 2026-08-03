@@ -94,7 +94,7 @@ public final class AttributeCommands {
 
                                                     try {
                                                         setting.set(value);
-                                                        double applied = setting.get();
+                                                        double applied = setting.integer() ? Math.rint(value) : value;
                                                         String appliedText = setting.integer()
                                                                 ? Integer.toString((int) Math.round(applied))
                                                                 : CommandUtil.number(applied);
@@ -127,8 +127,7 @@ public final class AttributeCommands {
                                                                 false);
                                                         return 0;
                                                     }
-
-                                                    setting.set(enabled);
+                                                    Config.set(setting, enabled);
                                                     CommandUtil.feedback(context.getSource(),
                                                             "Set " + key + " = " + CommandUtil.onOff(enabled),
                                                             true);
@@ -290,10 +289,10 @@ public final class AttributeCommands {
     }
 
     private static NumericSetting doubleSetting(ModConfigSpec.DoubleValue value) {
-        return new NumericSetting(false, value::get, value::set);
+        return new NumericSetting(false, value::get, newValue -> Config.set(value, newValue));
     }
 
     private static NumericSetting intSetting(ModConfigSpec.IntValue value) {
-        return new NumericSetting(true, () -> value.get(), v -> value.set((int) Math.round(v)));
+        return new NumericSetting(true, () -> value.get(), v -> Config.set(value, (int) Math.round(v)));
     }
 }

@@ -34,7 +34,7 @@ public final class UtilityCommands {
                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                         .executes(context -> {
                             boolean enableBurning = BoolArgumentType.getBool(context, "enabled");
-                            Config.COMMON.preventSunBurn.set(!enableBurning);
+                            Config.set(Config.COMMON.preventSunBurn, !enableBurning);
                             CommandUtil.feedback(context.getSource(),
                                     "Zombie daylight burning: " + CommandUtil.onOff(enableBurning),
                                     true);
@@ -70,18 +70,20 @@ public final class UtilityCommands {
         EventHandler.clearRuntimeState();
 
         if (uninstallPrep) {
-            Config.COMMON.enableDaySpawning.set(false);
-            Config.COMMON.enableHordeEvents.set(false);
-            Config.COMMON.enableBloodMoon.set(false);
-            Config.COMMON.enableDifficultyScaling.set(false);
-            Config.COMMON.enableAttributeModifiers.set(false);
-            Config.COMMON.enableZombieBlockBreaking.set(false);
-            Config.COMMON.enableZombieBlockPlacing.set(false);
-            Config.COMMON.enableZombieTowering.set(false);
-            Config.COMMON.enableDayCounterAnnouncements.set(false);
-            Config.COMMON.preventSunBurn.set(false);
-            Config.COMMON.enableExtraDrops.set(false);
-            Config.COMMON.enableDeathCooldown.set(false);
+            Config.edit(() -> {
+                Config.set(Config.COMMON.enableDaySpawning, false);
+                Config.set(Config.COMMON.enableHordeEvents, false);
+                Config.set(Config.COMMON.enableBloodMoon, false);
+                Config.set(Config.COMMON.enableDifficultyScaling, false);
+                Config.set(Config.COMMON.enableAttributeModifiers, false);
+                Config.set(Config.COMMON.enableZombieBlockBreaking, false);
+                Config.set(Config.COMMON.enableZombieBlockPlacing, false);
+                Config.set(Config.COMMON.enableZombieTowering, false);
+                Config.set(Config.COMMON.enableDayCounterAnnouncements, false);
+                Config.set(Config.COMMON.preventSunBurn, false);
+                Config.set(Config.COMMON.enableExtraDrops, false);
+                Config.set(Config.COMMON.enableDeathCooldown, false);
+            });
         }
 
         CommandUtil.feedback(source, buildCleanupMessage(removed, uninstallPrep), true);
