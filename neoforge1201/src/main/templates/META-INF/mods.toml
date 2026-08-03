@@ -17,14 +17,14 @@ Install this on the server. Clients do not need the mod to join.
 Core gameplay:
 - Optional sunlight immunity for zombies.
 - Custom day/night spawning near players.
-- Optional zombie block breaking and block placing.
+- Optional zombie block breaking, block placing, and swarm towering.
 - Horde events and blood moon nights.
 - Day-based difficulty scaling.
 - Death cooldown safety window.
 - Persistent kill and cooldown statistics.
 
 Admin commands:
-/zhelp, /zburn, /zkill, /zcleanup, /zday, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn, /zblockbreak, /zblockplace, /zattr
+/zhelp, /zburn, /zkill, /zcleanup, /zcompat, /zday, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn, /zblockbreak, /zblockplace, /ztower, /zattr
 '''
 
 [[dependencies.${mod_id}]]

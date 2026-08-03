@@ -6,10 +6,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -73,11 +73,11 @@ public final class DifficultyManager {
                 Config.COMMON.maxScalingDay.get());
     }
 
-    public static void applyScaling(Zombie zombie, ServerLevel level) {
+    public static void applyScaling(Mob zombie, ServerLevel level) {
         applyScaling(zombie, level, zombie.blockPosition());
     }
 
-    public static void applyScaling(Zombie zombie, ServerLevel level, BlockPos spawnPos) {
+    public static void applyScaling(Mob zombie, ServerLevel level, BlockPos spawnPos) {
         if (!shouldApplyScaling(zombie)) {
             return;
         }
@@ -101,7 +101,7 @@ public final class DifficultyManager {
         }
     }
 
-    static boolean shouldApplyScaling(Zombie zombie) {
+    static boolean shouldApplyScaling(Mob zombie) {
         return shouldApplyScaling(
                 zombie.getTags().contains(SCALING_APPLIED_TAG),
                 Config.COMMON.enableAttributeModifiers.get(),
@@ -115,7 +115,7 @@ public final class DifficultyManager {
         return !alreadyApplied && (attributeModifiersEnabled || difficultyScalingEnabled);
     }
 
-    private static void applyConfiguredAttributes(Zombie zombie, ServerLevel level, BlockPos spawnPos, double difficultyFactor) {
+    private static void applyConfiguredAttributes(Mob zombie, ServerLevel level, BlockPos spawnPos, double difficultyFactor) {
         boolean customEnabled = Config.COMMON.enableAttributeModifiers.get();
         double legacyFactor = Config.COMMON.enableDifficultyScaling.get() ? difficultyFactor : 0.0;
         if (!customEnabled && legacyFactor <= 0.0) {
@@ -269,7 +269,7 @@ public final class DifficultyManager {
     }
 
     private static void applyAttribute(
-            Zombie zombie,
+            Mob zombie,
             Attribute attribute,
             AttributeKey key,
             SpawnVariant variant,
@@ -322,7 +322,7 @@ public final class DifficultyManager {
         return (value * safeMultiplier(multiplier)) + safeValue(bonus);
     }
 
-    private static SpawnVariant resolveVariant(Zombie zombie) {
+    private static SpawnVariant resolveVariant(Mob zombie) {
         EntityType<?> type = zombie.getType();
         if (type == EntityType.HUSK) {
             return SpawnVariant.HUSK;
@@ -548,17 +548,22 @@ public final class DifficultyManager {
         return value;
     }
 
-    private static void applyRandomArmor(Zombie zombie, RandomSource random, double factor) {
-        if (random.nextFloat() < 0.4F + (float) factor * 0.4F) {
+    private static void applyRandomArmor(Mob zombie, RandomSource random, double factor) {
+        boolean preserveExisting = Config.COMMON.preserveExistingZombieEquipment.get();
+        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), preserveExisting)
+                && random.nextFloat() < 0.4F + (float) factor * 0.4F) {
             zombie.setItemSlot(EquipmentSlot.HEAD, getRandomArmor(random, factor, EquipmentSlot.HEAD));
         }
-        if (random.nextFloat() < 0.3F + (float) factor * 0.4F) {
+        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), preserveExisting)
+                && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
             zombie.setItemSlot(EquipmentSlot.CHEST, getRandomArmor(random, factor, EquipmentSlot.CHEST));
         }
-        if (random.nextFloat() < 0.2F + (float) factor * 0.4F) {
+        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.LEGS).isEmpty(), preserveExisting)
+                && random.nextFloat() < 0.2F + (float) factor * 0.4F) {
             zombie.setItemSlot(EquipmentSlot.LEGS, getRandomArmor(random, factor, EquipmentSlot.LEGS));
         }
-        if (random.nextFloat() < 0.3F + (float) factor * 0.4F) {
+        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.FEET).isEmpty(), preserveExisting)
+                && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
             zombie.setItemSlot(EquipmentSlot.FEET, getRandomArmor(random, factor, EquipmentSlot.FEET));
         }
     }
@@ -617,7 +622,13 @@ public final class DifficultyManager {
         };
     }
 
-    private static void applyRandomWeapon(Zombie zombie, RandomSource random, double factor) {
+    private static void applyRandomWeapon(Mob zombie, RandomSource random, double factor) {
+        if (!shouldEquipSlot(
+                zombie.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty(),
+                Config.COMMON.preserveExistingZombieEquipment.get())) {
+            return;
+        }
+
         double roll = random.nextDouble();
 
         double woodenMax = 0.4 - factor * 0.2;
@@ -636,6 +647,10 @@ public final class DifficultyManager {
         }
 
         zombie.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+    }
+
+    static boolean shouldEquipSlot(boolean slotEmpty, boolean preserveExisting) {
+        return slotEmpty || !preserveExisting;
     }
 
     public static String getScalingStatus(ServerLevel level) {

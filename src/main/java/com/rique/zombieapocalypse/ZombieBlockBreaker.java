@@ -248,11 +248,22 @@ public final class ZombieBlockBreaker {
             Zombie zombie,
             Settings settings,
             DestroyPermission destroyPermission) {
+        if (isDoorProtected(
+                state.is(BlockTags.DOORS),
+                ZombieCompatibility.shouldRespectDoorBreakingAbility(),
+                zombie.canBreakDoors())) {
+            return false;
+        }
+
         if (!isAllowedBlockState(level, pos, state, settings)) {
             return false;
         }
 
         return destroyPermission.canDestroy(level, pos, zombie, settings.respectMobGriefing());
+    }
+
+    static boolean isDoorProtected(boolean door, boolean respectDoorBreakingAbility, boolean zombieCanBreakDoors) {
+        return door && respectDoorBreakingAbility && !zombieCanBreakDoors;
     }
 
     private static boolean isAllowedBlockState(ServerLevel level, BlockPos pos, BlockState state, Settings settings) {

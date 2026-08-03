@@ -19,6 +19,8 @@ If you want tension at all times instead of a peaceful daytime loop, this mod is
 - Torch/lantern/glowstone-style light can optionally block custom spawns.
 - Optional zombie block breaking can add configurable base pressure after a chosen day.
 - Optional zombie block placing lets zombies build limited one-block steps and bridges.
+- Optional World War Z-style towering lets crowded zombies climb over each other after a chosen day.
+- Compatibility controls recognize modded zombies while avoiding duplicate AI and difficulty systems.
 - Horde events can occur naturally or be started manually.
 - Blood moon nights can occur randomly or be forced manually.
 - Difficulty scaling increases pressure over time.
@@ -119,7 +121,50 @@ Placed blocks must be stable, solid, breakable blocks without block entities. Pl
 
 Use `/zblockplace dayone` for immediate activation, or enable it with a later start day for slower progression.
 
-## 9) Stats, Effects, and Drops
+## 9) Optional Zombie Towering
+Recognized Zombie subclasses can use a nearby swarm to climb upward and push toward an obstructed, covered, or raised target.
+
+This is off by default and starts on day 20 when enabled. It never places or breaks blocks. The default rules require:
+- a valid non-creative, non-spectator target
+- at least two other nearby Zombie subclasses
+- a collision, nearby barrier, covered target, or raised target
+- enough block clearance above the climbing zombie
+- a target within 32 blocks
+- a height no more than eight blocks above the target
+
+Checks are staggered across ticks and the chance roll happens before the bounded nearby-entity lookup. Zombies cannot tower while riding, carrying passengers, swimming, in lava, or running without AI. Horizontal speed is capped, and airborne zombies need physical swarm support before receiving another boost.
+
+Use `/ztower enabled true` to keep the default day-20 gate, `/ztower startday <day>` to change it, or `/ztower dayone` for immediate activation.
+
+## 10) Mod Compatibility
+
+Modded `Zombie` subclasses are recognized automatically. Known nonstandard zombie entities are included through optional entity-type tags, and server owners can add or exclude exact entity IDs in the `compatibility` config section.
+
+Recognized modded zombies count toward nearby caps, `/zkill`, kill statistics, milestone advancements, and optional drops. Difficulty scaling can apply to them without replacing equipment they already spawned with. Sun protection and the optional AI features apply to compatible `Zombie` subclasses.
+
+The addon fires the official loader spawn-placement, position, finalize-spawn, block-break, block-place, and mob-griefing hooks. Spawn-control and claim mods can therefore reject addon actions. Compatibility safeguards also avoid duplicate AI or difficulty behavior where another supported mod owns it, and can respect a zombie's door-breaking ability for mods such as Zombie Proof Doors.
+
+Built-in compatibility covers:
+
+- Zombie Awareness
+- Zombie Horse Spawn
+- Mo' Zombies Wave
+- More Zombie Villagers
+- Zombies Reworked
+- Zombie Villagers From Spawner
+- Zombie Variants
+- Zombies+
+- Zombie Proof Doors
+- Undead Nights
+- The Hordes
+- Improved Mobs
+- In Control!
+- Bad Mobs
+- Giant Spawn
+
+Use `/zcompat status` to see detected integrations and active safeguards. Each behavior can be changed live, but the defaults are the safest starting point for mixed modpacks.
+
+## 11) Stats, Effects, and Drops
 - kill tracking
 - kill milestones with advancements at 250, 1000, and 3000 zombie kills
 - cooldown tracking
@@ -193,6 +238,19 @@ All commands require OP level 2.
 | `/zday [status\|set <day>]` | Shows or sets the world day counter. |
 | `/zkill` | Removes all zombie-class entities from loaded levels. |
 | `/zcleanup [uninstall]` | Removes loaded zombie leftovers, resets apocalypse event state, and can pause core systems for safe temporary removal. |
+
+## Compatibility (`/zcompat`)
+| Command | What it does |
+|---|---|
+| `/zcompat [status]` | Shows detected supported mods and active compatibility safeguards. |
+| `/zcompat modded <true\|false>` | Toggles automatic recognition of modded `Zombie` subclasses. |
+| `/zcompat difficulty <true\|false>` | Toggles addon difficulty scaling for recognized modded zombies. |
+| `/zcompat ai <true\|false>` | Toggles addon block breaking, block placing, and towering for recognized modded `Zombie` subclasses. |
+| `/zcompat spawnrules <true\|false>` | Lets external spawn-control mods approve or reject addon spawn positions. |
+| `/zcompat externalai <true\|false>` | Avoids addon AI features where a supported mod owns zombie AI. |
+| `/zcompat externaldifficulty <true\|false>` | Avoids stacking addon difficulty on entities managed by another difficulty mod. |
+| `/zcompat doors <true\|false>` | Respects per-zombie door-breaking permission before the addon breaks a door. |
+| `/zcompat equipment <true\|false>` | Preserves weapons and armor already supplied by Minecraft or another mod. |
 
 ## Events
 | Command | What it does |
@@ -291,6 +349,24 @@ All commands require OP level 2.
 | `/zblockplace fluids <true\|false>` | Allows or blocks replacing fluid blocks. |
 | `/zblockplace replaceable <true\|false>` | Allows or blocks replacing plants, snow, and similar blocks. |
 | `/zblockplace resetcounts` | Resets lifetime placement counts for loaded zombie-class mobs. |
+
+## Zombie Towering (`/ztower`)
+| Command | What it does |
+|---|---|
+| `/ztower` | Shows current zombie towering settings. |
+| `/ztower status` | Shows current zombie towering settings. |
+| `/ztower dayone` | Enables towering and sets the start day to 0. |
+| `/ztower enabled <true\|false>` | Toggles zombie towering. |
+| `/ztower startday <0-3650>` | Sets the day when towering can start. |
+| `/ztower interval <5-72000>` | Sets how often each zombie can check for towering. |
+| `/ztower chance <0.0-1.0>` | Sets the chance per scheduled towering check. |
+| `/ztower distance <4-128>` | Sets the farthest target distance that allows towering. |
+| `/ztower crowd <1-16>` | Sets the number of other nearby zombies required. |
+| `/ztower radius <0.75-6.0>` | Sets the nearby-crowd search radius. |
+| `/ztower vertical <0.1-1.0>` | Sets the upward velocity of a towering boost. |
+| `/ztower forward <0.0-0.6>` | Sets the target-facing horizontal velocity. |
+| `/ztower height <1-32>` | Sets the maximum height above the target. |
+| `/ztower obstacle <true\|false>` | Requires a collision, barrier, covered target, or raised target. |
 
 ## Live Attribute Commands (`/zattr`)
 | Command | What it does |
@@ -509,9 +585,12 @@ All settings are in the common config (`zombieapocalypseaddon-common.toml`) and 
 
 Main sections:
 - `general`
+- `compatibility`
 - `dayspawning`
 - `variants`
 - `blockbreaking`
+- `blockplacing`
+- `towering`
 - `horde`
 - `bloodmoon`
 - `scaling`

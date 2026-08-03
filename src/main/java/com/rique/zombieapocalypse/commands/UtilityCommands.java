@@ -11,7 +11,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.monster.Zombie;
 
 import com.rique.zombieapocalypse.ApocalypseWorldData;
 import com.rique.zombieapocalypse.Config;
@@ -78,6 +77,7 @@ public final class UtilityCommands {
             Config.COMMON.enableAttributeModifiers.set(false);
             Config.COMMON.enableZombieBlockBreaking.set(false);
             Config.COMMON.enableZombieBlockPlacing.set(false);
+            Config.COMMON.enableZombieTowering.set(false);
             Config.COMMON.enableDayCounterAnnouncements.set(false);
             Config.COMMON.preventSunBurn.set(false);
             Config.COMMON.enableExtraDrops.set(false);
@@ -91,13 +91,13 @@ public final class UtilityCommands {
     static int removeZombieClassEntities(MinecraftServer server) {
         int removed = 0;
         for (ServerLevel level : server.getAllLevels()) {
-            List<Zombie> toRemove = new ArrayList<>();
+            List<Entity> toRemove = new ArrayList<>();
             for (Entity entity : level.getAllEntities()) {
-                if (entity instanceof Zombie zombie && ZombieClassMobs.isZombieClass(zombie)) {
-                    toRemove.add(zombie);
+                if (ZombieClassMobs.isZombieClass(entity)) {
+                    toRemove.add(entity);
                 }
             }
-            toRemove.forEach(Zombie::discard);
+            toRemove.forEach(Entity::discard);
             removed += toRemove.size();
         }
         return removed;
@@ -107,7 +107,7 @@ public final class UtilityCommands {
         String message = "Cleanup complete. Removed " + removed
                 + " zombie-class entities and reset apocalypse event state.";
         if (uninstallPrep) {
-            return message + " Custom spawning, events, scaling, attributes, block breaking, block placing, sunlight immunity, extra drops, and death cooldowns are disabled.";
+            return message + " Custom spawning, events, scaling, attributes, block breaking, block placing, towering, sunlight immunity, extra drops, and death cooldowns are disabled.";
         }
         return message;
     }
