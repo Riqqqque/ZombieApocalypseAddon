@@ -22,6 +22,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -186,8 +187,11 @@ public final class EventHandler {
             handleSunBurnTick(zombie);
         }
 
-        ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
-        ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
+        if (ZombieCompatibility.shouldUseAddonAi(zombie)) {
+            ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+            ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
+            ZombieTowering.tick(zombie);
+        }
     }
 
     private static void handleSunBurnTick(Zombie zombie) {
@@ -235,16 +239,19 @@ public final class EventHandler {
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         if (event.loadedFromDisk()
                 || !(event.getLevel() instanceof ServerLevel level)
-                || !(event.getEntity() instanceof Zombie zombie)
-                || !ZombieClassMobs.isZombieClass(zombie)) {
+                || !(event.getEntity() instanceof Mob mob)
+                || !ZombieClassMobs.isZombieClass(mob)) {
             return;
         }
 
-        if (shouldForceAdultZombie(zombie.isBaby(), Config.COMMON.babyZombieChance.get())) {
+        if (mob instanceof Zombie zombie
+                && shouldForceAdultZombie(zombie.isBaby(), Config.COMMON.babyZombieChance.get())) {
             forceAdultZombie(zombie);
         }
 
-        DifficultyManager.applyScaling(zombie, level, zombie.blockPosition());
+        if (ZombieCompatibility.shouldApplyDifficulty(mob)) {
+            DifficultyManager.applyScaling(mob, level, mob.blockPosition());
+        }
     }
 
     @SubscribeEvent
@@ -445,7 +452,15 @@ public final class EventHandler {
             }
 
             Zombie.ZombieGroupData spawnGroupData = new Zombie.ZombieGroupData(spawnAsBaby, spawnAsBaby);
-            zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, spawnGroupData);
+            if (!SpawnCompatibilityHooks.isPositionAllowed(zombie, level, MobSpawnType.EVENT)) {
+                continue;
+            }
+            SpawnCompatibilityHooks.finalizeSpawn(
+                    zombie,
+                    level,
+                    level.getCurrentDifficultyAt(spawnPos),
+                    MobSpawnType.EVENT,
+                    spawnGroupData);
             zombie.setBaby(spawnAsBaby);
             DifficultyManager.applyScaling(zombie, level, spawnPos);
             if (!level.addFreshEntity(zombie)) {
@@ -581,9 +596,9 @@ public final class EventHandler {
 
     private static int countNearbyZombies(ServerLevel level, ServerPlayer player, int range) {
         return level.getEntitiesOfClass(
-                Zombie.class,
+                Mob.class,
                 player.getBoundingBox().inflate(range),
-                zombie -> zombie.isAlive() && ZombieClassMobs.isZombieClass(zombie)).size();
+                mob -> mob.isAlive() && ZombieClassMobs.isZombieClass(mob)).size();
     }
 
     private static boolean canSpawnInBiome(ServerLevel level, BlockPos pos, SpawnRuntimeSettings settings) {

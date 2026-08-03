@@ -84,6 +84,7 @@ sourceSets {
             srcDirs = ['../src/main/resources', '../src/generated/resources', '../forge1201/src/main/resources', 'src/main/resources']
             exclude 'META-INF/neoforge.mods.toml'
             exclude 'data/**/advancement/**'
+            exclude 'data/**/tags/entity_type/**'
             exclude 'pack.mcmeta'
         }
     }
@@ -141,7 +142,9 @@ tasks.named('compileJava', JavaCompile).configure {
         exclude 'com/rique/zombieapocalypse/Config.java'
         exclude 'com/rique/zombieapocalypse/DifficultyManager.java'
         exclude 'com/rique/zombieapocalypse/EventHandler.java'
+        exclude 'com/rique/zombieapocalypse/LoadedMods.java'
         exclude 'com/rique/zombieapocalypse/ModCommands.java'
+        exclude 'com/rique/zombieapocalypse/SpawnCompatibilityHooks.java'
         exclude 'com/rique/zombieapocalypse/StatisticsManager.java'
         exclude 'com/rique/zombieapocalypse/ZombieApocalypseAddon.java'
         exclude 'com/rique/zombieapocalypse/ZombieKillAdvancements.java'

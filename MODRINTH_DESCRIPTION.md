@@ -23,6 +23,8 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Optional baby zombie spawn control
 - Optional zombie block breaking with day gating and safety controls
 - Optional zombie block placing with one-block bridge and step behavior
+- Optional World War Z-style zombie towering with crowd and day gating
+- Built-in compatibility controls for modded zombies, AI systems, spawn rules, and equipment
 - Natural and manual horde events
 - Random and forced blood moon nights
 - Morning day-counter announcements
@@ -38,12 +40,14 @@ This is not just "more zombies." It is a configurable zombie survival framework 
 - Optional spawn particles and sounds
 - Detailed config comments for easier setup
 
-Zombie-class mobs include:
+Vanilla zombie-class mobs include:
 
 - Zombie
 - Husk
 - Drowned
 - Zombie Villager
+
+Modded `Zombie` subclasses are recognized automatically, and known nonstandard zombie entities are supported through optional entity tags.
 
 ## Core Gameplay Systems
 
@@ -182,6 +186,55 @@ Quick setup:
 
 The safe defaults keep block placing off, start it on day 15 when enabled, limit each zombie to eight blocks, require an active target and obstacle/gap, respect `mobGriefing`, and protect fluids, plants, snow, containers, and occupied spaces.
 
+### Optional Zombie Towering
+
+Crowded, recognized `Zombie` subclasses can climb over each other and push toward an obstructed, covered, or raised target without placing blocks or creating permanent passenger stacks.
+
+This system is disabled by default. When enabled, it starts on day 20 unless you change the start day. You can tune:
+
+- start day
+- attempt interval and chance
+- maximum target distance
+- nearby zombie count and crowd radius
+- vertical and forward boost strength
+- maximum height above the target
+- whether an obstacle, collision, covered target, or raised target is required
+
+The default safety rules require a valid survival target and at least two other nearby `Zombie` subclasses. Checks are staggered across ticks, chance is evaluated before the bounded entity scan, block clearance is verified before movement, and horizontal speed is capped. Riding, passenger-carrying, swimming, lava-bound, and no-AI zombies cannot tower. Airborne zombies need swarm support before receiving another boost.
+
+Quick setup:
+
+- `/ztower enabled true` = enable towering while keeping the day-20 start
+- `/ztower startday 30` = delay towering until day 30
+- `/ztower dayone` = enable towering immediately
+- `/ztower status` = show the active rules and current day gate
+
+### Mod Compatibility
+
+The compatibility layer recognizes modded zombies without blindly taking control of every mob. Recognized entities can count toward nearby caps, `/zkill`, kill milestones, optional drops, and difficulty scaling. Existing modded weapons and armor are preserved by default.
+
+The addon uses official Forge and NeoForge spawn, mob-griefing, block-break, and block-place hooks so spawn-control and protection mods can reject its actions. It also avoids duplicate AI or difficulty behavior for supported mods that already manage those systems, and respects per-zombie door-breaking permission by default.
+
+Built-in compatibility covers:
+
+- Zombie Awareness
+- Zombie Horse Spawn
+- Mo' Zombies Wave
+- More Zombie Villagers
+- Zombies Reworked
+- Zombie Villagers From Spawner
+- Zombie Variants
+- Zombies+
+- Zombie Proof Doors
+- Undead Nights
+- The Hordes
+- Improved Mobs
+- In Control!
+- Bad Mobs
+- Giant Spawn
+
+Use `/zcompat status` to see detected integrations. The config also accepts comma-separated entity IDs for unusual zombie mods that need an explicit include or exclusion.
+
 ### Difficulty Scaling
 
 Zombie pressure can scale as the world progresses.
@@ -274,7 +327,20 @@ All commands require OP level 2.
 - `/zburn <true|false>` - Control whether zombies burn in daylight
 - `/zkill` - Remove zombie-class entities from loaded levels
 - `/zcleanup` - Remove loaded zombie leftovers and reset apocalypse event state
-- `/zcleanup uninstall` - Cleanup plus disable spawning, events, scaling, attributes, block breaking, block placing, sunlight immunity, extra drops, and cooldowns before removal
+- `/zcleanup uninstall` - Cleanup plus disable spawning, events, scaling, attributes, block breaking, block placing, towering, sunlight immunity, extra drops, and cooldowns before removal
+
+### Compatibility
+
+- `/zcompat` - Show detected supported mods and compatibility safeguards
+- `/zcompat status` - Show detected supported mods and compatibility safeguards
+- `/zcompat modded <true|false>` - Toggle automatic modded `Zombie` subclass recognition
+- `/zcompat difficulty <true|false>` - Toggle addon difficulty for recognized modded zombies
+- `/zcompat ai <true|false>` - Toggle addon AI features for recognized modded `Zombie` subclasses
+- `/zcompat spawnrules <true|false>` - Let external spawn-control mods approve or reject addon spawns
+- `/zcompat externalai <true|false>` - Avoid duplicate AI behavior from supported mods
+- `/zcompat externaldifficulty <true|false>` - Avoid double difficulty scaling from supported mods
+- `/zcompat doors <true|false>` - Respect per-zombie door-breaking permission
+- `/zcompat equipment <true|false>` - Preserve existing modded weapons and armor
 
 ### Day Control
 
@@ -370,6 +436,23 @@ All commands require OP level 2.
 - `/zblockplace replaceable <true|false>` - Allow or block replacing plants, snow, and similar blocks
 - `/zblockplace resetcounts` - Reset lifetime placement counts for loaded zombie-class mobs
 
+### Zombie Towering
+
+- `/ztower` - Show current zombie towering settings
+- `/ztower status` - Show current zombie towering settings
+- `/ztower dayone` - Enable towering and set the start day to `0`
+- `/ztower enabled <true|false>` - Toggle zombie towering
+- `/ztower startday <0-3650>` - Set the day when towering can start
+- `/ztower interval <5-72000>` - Set how often each zombie can check for towering
+- `/ztower chance <0.0-1.0>` - Set the chance per scheduled towering check
+- `/ztower distance <4-128>` - Set the farthest target distance that allows towering
+- `/ztower crowd <1-16>` - Set the number of other nearby zombies required
+- `/ztower radius <0.75-6.0>` - Set the nearby-crowd search radius
+- `/ztower vertical <0.1-1.0>` - Set the upward velocity
+- `/ztower forward <0.0-0.6>` - Set the target-facing horizontal velocity
+- `/ztower height <1-32>` - Set the maximum height above the target
+- `/ztower obstacle <true|false>` - Require a collision, barrier, covered target, or raised target
+
 ### Scaling
 
 - `/zscaling status` - Show current scaling state
@@ -408,6 +491,8 @@ If you are unsure what key to use, run:
 
 The config file is designed to be readable and includes comments, safe ranges, and explanations for new users.
 
+The `compatibility` section contains safe defaults, plain-language explanations, exact entity-ID include/exclude fields, and the same main toggles exposed by `/zcompat`.
+
 You can use it for:
 
 - a more hostile vanilla-style survival world
@@ -417,6 +502,7 @@ You can use it for:
 - a softer early game that becomes harder later
 - a brutal server where day and night are both dangerous
 - an optional base-pressure setup where zombies can break selected blocks after a chosen day
+- a late-game swarm setup where crowded zombies can tower over defenses after a chosen day
 
 Most major settings can also be changed live with commands, which makes balancing much easier during active testing.
 
@@ -436,6 +522,7 @@ For a hardcore apocalypse world:
 - enable scaling and advanced attributes
 - increase event wave size and event multipliers
 - optionally enable `/zblockbreak dayone` or set a later `/zblockbreak startday`
+- optionally enable `/ztower enabled true` and tune `/ztower startday`
 
 ## Installation Notes
 

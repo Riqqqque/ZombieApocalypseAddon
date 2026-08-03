@@ -16,7 +16,7 @@ class UtilityCommandsTest {
     @Test
     void cleanupMessageExplainsUninstallPrep() {
         assertEquals(
-                "Cleanup complete. Removed 0 zombie-class entities and reset apocalypse event state. Custom spawning, events, scaling, attributes, block breaking, block placing, sunlight immunity, extra drops, and death cooldowns are disabled.",
+                "Cleanup complete. Removed 0 zombie-class entities and reset apocalypse event state. Custom spawning, events, scaling, attributes, block breaking, block placing, towering, sunlight immunity, extra drops, and death cooldowns are disabled.",
                 UtilityCommands.buildCleanupMessage(0, true));
     }
 }

@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "undeadnights:horde_zombie", "required": false },
+    { "id": "undeadnights:demolition_zombie", "required": false },
+    { "id": "undeadnights:elite_zombie", "required": false },
+    { "id": "hordes:zombie_player", "required": false },
+    { "id": "hordes:husk_player", "required": false },
+    { "id": "hordes:drowned_player", "required": false }
+  ]
+}

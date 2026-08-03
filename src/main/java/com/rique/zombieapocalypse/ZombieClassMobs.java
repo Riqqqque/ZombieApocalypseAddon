@@ -10,14 +10,11 @@ public final class ZombieClassMobs {
     }
 
     public static boolean isZombieClass(Entity entity) {
-        return isZombieClass(entity.getType());
+        return ZombieCompatibility.isZombieClass(entity);
     }
 
     public static boolean isZombieClass(EntityType<?> type) {
-        return type == EntityType.ZOMBIE
-                || type == EntityType.HUSK
-                || type == EntityType.DROWNED
-                || type == EntityType.ZOMBIE_VILLAGER;
+        return ZombieCompatibility.isZombieClass(type);
     }
 
     static boolean isZombieClass(ResourceLocation typeId) {
