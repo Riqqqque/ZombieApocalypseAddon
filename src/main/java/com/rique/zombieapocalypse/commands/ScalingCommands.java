@@ -16,11 +16,14 @@ public final class ScalingCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zscaling")
                 .requires(source -> source.hasPermission(2))
+                .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
-                        .executes(context -> {
-                            ServerLevel level = context.getSource().getLevel();
-                            CommandUtil.feedback(context.getSource(), DifficultyManager.getScalingStatus(level), false);
-                            return 1;
-                        })));
+                        .executes(context -> showStatus(context.getSource()))));
+    }
+
+    private static int showStatus(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        CommandUtil.feedback(source, DifficultyManager.getScalingStatus(level), false);
+        return 1;
     }
 }

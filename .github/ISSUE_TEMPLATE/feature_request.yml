@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a focused, configurable improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: checkboxes
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the current command/config documentation.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the player or server-owner problem, not only the proposed setting.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Suggested behavior
+      description: Explain how it should work in normal gameplay.
+    validations:
+      required: true
+  - type: textarea
+    id: controls
+    attributes:
+      label: Configuration and defaults
+      description: Explain how administrators should control it and what the safe default should be.
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility or performance concerns
+      description: List related mods, edge cases, or possible server-performance costs.

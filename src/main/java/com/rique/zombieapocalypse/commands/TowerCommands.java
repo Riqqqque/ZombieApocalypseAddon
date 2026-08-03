@@ -25,21 +25,27 @@ public final class TowerCommands {
                 .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
+                .then(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true)))
+                .then(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false)))
                 .then(Commands.literal("dayone")
                         .executes(context -> {
-                            Config.COMMON.enableZombieTowering.set(true);
-                            Config.COMMON.zombieToweringStartDay.set(0);
+                            Config.edit(() -> {
+                                Config.set(Config.COMMON.enableZombieTowering, true);
+                                Config.set(Config.COMMON.zombieToweringStartDay, 0);
+                            });
                             CommandUtil.feedback(context.getSource(),
                                     "Zombie towering enabled and set to start immediately.", true);
                             return 1;
                         }))
-                .then(toggleBoolNode("enabled", Config.COMMON.enableZombieTowering::set,
+                .then(toggleBoolNode("enabled", value -> Config.set(Config.COMMON.enableZombieTowering, value),
                         "Zombie towering"))
                 .then(Commands.literal("startday")
                         .then(Commands.argument("day", IntegerArgumentType.integer(0, 3650))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "day");
-                                    Config.COMMON.zombieToweringStartDay.set(value);
+                                    Config.set(Config.COMMON.zombieToweringStartDay, value);
                                     String message = value == 0
                                             ? "Zombie towering can start immediately when enabled."
                                             : "Zombie towering starts on day " + value + '.';
@@ -50,16 +56,16 @@ public final class TowerCommands {
                         .then(Commands.argument("ticks", IntegerArgumentType.integer(5, 72000))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "ticks");
-                                    Config.COMMON.zombieToweringInterval.set(value);
+                                    Config.set(Config.COMMON.zombieToweringInterval, value);
                                     CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering interval: " + value + " ticks", true);
+                                            "Zombie towering interval: " + CommandUtil.ticks(value), true);
                                     return 1;
                                 })))
                 .then(Commands.literal("chance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "value");
-                                    Config.COMMON.zombieToweringChance.set(value);
+                                    Config.set(Config.COMMON.zombieToweringChance, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering chance: " + CommandUtil.percent(value), true);
                                     return 1;
@@ -68,7 +74,7 @@ public final class TowerCommands {
                         .then(Commands.argument("blocks", IntegerArgumentType.integer(4, 128))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.COMMON.zombieToweringMaxTargetDistance.set(value);
+                                    Config.set(Config.COMMON.zombieToweringMaxTargetDistance, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering target distance: " + value + " blocks", true);
                                     return 1;
@@ -77,7 +83,7 @@ public final class TowerCommands {
                         .then(Commands.argument("zombies", IntegerArgumentType.integer(1, 16))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "zombies");
-                                    Config.COMMON.zombieToweringMinNearbyZombies.set(value);
+                                    Config.set(Config.COMMON.zombieToweringMinNearbyZombies, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Nearby zombies required for towering: " + value, true);
                                     return 1;
@@ -86,7 +92,7 @@ public final class TowerCommands {
                         .then(Commands.argument("blocks", DoubleArgumentType.doubleArg(0.75, 6.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "blocks");
-                                    Config.COMMON.zombieToweringCrowdRadius.set(value);
+                                    Config.set(Config.COMMON.zombieToweringCrowdRadius, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering crowd radius: " + value + " blocks", true);
                                     return 1;
@@ -95,7 +101,7 @@ public final class TowerCommands {
                         .then(Commands.argument("velocity", DoubleArgumentType.doubleArg(0.1, 1.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "velocity");
-                                    Config.COMMON.zombieToweringVerticalBoost.set(value);
+                                    Config.set(Config.COMMON.zombieToweringVerticalBoost, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering vertical boost: " + value, true);
                                     return 1;
@@ -104,7 +110,7 @@ public final class TowerCommands {
                         .then(Commands.argument("velocity", DoubleArgumentType.doubleArg(0.0, 0.6))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "velocity");
-                                    Config.COMMON.zombieToweringForwardBoost.set(value);
+                                    Config.set(Config.COMMON.zombieToweringForwardBoost, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering forward boost: " + value, true);
                                     return 1;
@@ -113,12 +119,12 @@ public final class TowerCommands {
                         .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 32))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.COMMON.zombieToweringMaxHeightAboveTarget.set(value);
+                                    Config.set(Config.COMMON.zombieToweringMaxHeightAboveTarget, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie towering height above target: " + value + " blocks", true);
                                     return 1;
                                 })))
-                .then(toggleBoolNode("obstacle", Config.COMMON.zombieToweringRequireObstacle::set,
+                .then(toggleBoolNode("obstacle", value -> Config.set(Config.COMMON.zombieToweringRequireObstacle, value),
                         "Require obstacle or raised/covered target")));
     }
 
@@ -136,6 +142,12 @@ public final class TowerCommands {
                         }));
     }
 
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        Config.set(Config.COMMON.enableZombieTowering, enabled);
+        CommandUtil.feedback(source, "Zombie towering: " + CommandUtil.onOff(enabled), true);
+        return 1;
+    }
+
     private static int showStatus(CommandSourceStack source) {
         long currentDay = DifficultyManager.getCurrentDay(source.getLevel());
         int startDay = Config.COMMON.zombieToweringStartDay.get();
@@ -148,7 +160,7 @@ public final class TowerCommands {
         status.append("Active today: ").append(CommandUtil.onOff(active))
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
-        status.append("Interval: ").append(Config.COMMON.zombieToweringInterval.get()).append(" ticks\n");
+        status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieToweringInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieToweringChance.get())).append('\n');
         status.append("Max target distance: ")
                 .append(Config.COMMON.zombieToweringMaxTargetDistance.get()).append(" blocks\n");

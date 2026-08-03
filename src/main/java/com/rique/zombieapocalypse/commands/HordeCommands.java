@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerLevel;
 
+import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.HordeManager;
 
 public final class HordeCommands {
@@ -21,6 +22,7 @@ public final class HordeCommands {
     private static void registerZHorde(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zhorde")
                 .requires(source -> source.hasPermission(2))
+                .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("start")
                         .executes(context -> {
                             ServerLevel level = context.getSource().getLevel();
@@ -36,29 +38,7 @@ public final class HordeCommands {
                             return 1;
                         }))
                 .then(Commands.literal("status")
-                        .executes(context -> {
-                            ServerLevel level = context.getSource().getLevel();
-
-                            boolean horde = HordeManager.isHordeActive(level);
-                            boolean bloodMoon = HordeManager.isBloodMoonActive(level);
-                            boolean forcedBloodMoon = HordeManager.isBloodMoonForced(level);
-
-                            StringBuilder sb = new StringBuilder();
-                            sb.append("Event status:\n");
-                            sb.append("Horde: ").append(horde ? "ACTIVE" : "inactive");
-                            if (horde) {
-                                sb.append(" (").append(HordeManager.getHordeRemainingSeconds(level)).append("s remaining)");
-                            }
-                            sb.append("\nBlood moon: ").append(bloodMoon ? "ACTIVE" : "inactive");
-                            if (forcedBloodMoon) {
-                                sb.append(" (forced)");
-                            }
-                            sb.append("\nSpawn multiplier: ")
-                                    .append(CommandUtil.multiplier(HordeManager.getSpawnMultiplier(level)));
-
-                            CommandUtil.feedback(context.getSource(), sb.toString(), false);
-                            return 1;
-                        })));
+                        .executes(context -> showStatus(context.getSource()))));
     }
 
     private static void registerZBloodMoon(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -73,5 +53,30 @@ public final class HordeCommands {
                             true);
                     return 1;
                 }));
+    }
+
+    private static int showStatus(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        boolean horde = HordeManager.isHordeActive(level);
+        boolean bloodMoon = HordeManager.isBloodMoonActive(level);
+        boolean forcedBloodMoon = HordeManager.isBloodMoonForced(level);
+
+        StringBuilder status = new StringBuilder("Event status:\n");
+        status.append("Scheduled hordes: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get()))
+                .append(" | Current horde: ").append(horde ? "ACTIVE" : "inactive");
+        if (horde) {
+            status.append(" (").append(HordeManager.getHordeRemainingSeconds(level)).append(" seconds left)");
+        }
+        status.append("\nRandom blood moons: ")
+                .append(CommandUtil.onOff(Config.COMMON.enableBloodMoon.get()))
+                .append(" | Current blood moon: ").append(bloodMoon ? "ACTIVE" : "inactive");
+        if (forcedBloodMoon) {
+            status.append(" (forced)");
+        }
+        status.append("\nCurrent spawn multiplier: ")
+                .append(CommandUtil.multiplier(HordeManager.getSpawnMultiplier(level)));
+
+        CommandUtil.feedback(source, status.toString(), false);
+        return 1;
     }
 }

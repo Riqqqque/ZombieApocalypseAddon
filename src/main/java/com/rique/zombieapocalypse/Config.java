@@ -1,13 +1,20 @@
 package com.rique.zombieapocalypse;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.tuple.Pair;
 
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
 
     public static final ModConfigSpec COMMON_SPEC;
     public static final Common COMMON;
+    private static final ThreadLocal<Map<List<String>, Object>> PENDING_CHANGES = new ThreadLocal<>();
+    private static volatile ModConfig loadedConfig;
 
     static {
         Pair<Common, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(Common::new);
@@ -16,6 +23,58 @@ public final class Config {
     }
 
     private Config() {
+    }
+
+    public static void bind(ModConfig config) {
+        if (config.getSpec() == COMMON_SPEC) {
+            loadedConfig = config;
+        }
+    }
+
+    public static <T> void set(ModConfigSpec.ConfigValue<T> setting, T value) {
+        ModConfigSpec.ValueSpec valueSpec = COMMON_SPEC.getSpec().get(setting.getPath());
+        if (valueSpec != null && !valueSpec.test(value)) {
+            throw new IllegalArgumentException("Value is outside the allowed range.");
+        }
+
+        Map<List<String>, Object> pending = PENDING_CHANGES.get();
+        if (pending == null) {
+            edit(() -> set(setting, value));
+            return;
+        }
+        pending.put(List.copyOf(setting.getPath()), value);
+    }
+
+    public static void edit(Runnable changes) {
+        if (PENDING_CHANGES.get() != null) {
+            changes.run();
+            return;
+        }
+
+        Map<List<String>, Object> pending = new LinkedHashMap<>();
+        PENDING_CHANGES.set(pending);
+        try {
+            changes.run();
+            applyChanges(pending);
+        } finally {
+            PENDING_CHANGES.remove();
+        }
+    }
+
+    private static synchronized void applyChanges(Map<List<String>, Object> changes) {
+        if (changes.isEmpty()) {
+            return;
+        }
+
+        ModConfig config = loadedConfig;
+        if (config == null || config.getLoadedConfig() == null) {
+            throw new IllegalStateException("Zombie Apocalypse config is not loaded yet.");
+        }
+
+        var loaded = config.getLoadedConfig();
+        changes.forEach(loaded.config()::set);
+        loaded.save();
+        COMMON_SPEC.afterReload();
     }
 
     public static final class Common {
@@ -269,9 +328,12 @@ public final class Config {
 
         public Common(ModConfigSpec.Builder builder) {
             builder.comment(sectionComment(
-                    "GENERAL SETTINGS",
-                    "Safe beginner setup: leave these defaults alone unless you know exactly what behavior you want.",
-                    "These switches affect all zombie-class mobs handled by the mod."))
+                    "START HERE",
+                    "Most servers only need the [dayspawning], [variants], [horde], [bloodmoon], and [scaling] sections.",
+                    "Fast setup in game: /za preset casual, /za preset standard, or /za preset hardcore.",
+                    "Check the important live settings with /za status. Use /za help for short command topics.",
+                    "20 ticks = 1 second. Chances use decimals: 0.25 = 25%, 0.50 = 50%, and 1.0 = 100%.",
+                    "Stop the server before editing this file manually. Advanced settings are safe to leave at their defaults."))
                     .push("general");
             preventSunBurn = builder
                     .comment(
@@ -296,7 +358,7 @@ public final class Config {
             builder.comment(sectionComment(
                     "MOD COMPATIBILITY",
                     "Controls how this addon cooperates with other zombie, difficulty, AI, and spawn-control mods.",
-                    "Safe beginner setup: keep every default in this section.",
+                    "Beginner advice: skip this section and keep every default.",
                     "No compatibility option creates a hard dependency. Missing mods and missing optional entity IDs are ignored."))
                     .push("compatibility");
             enableModdedZombieCompatibility = builder
@@ -1138,7 +1200,7 @@ public final class Config {
                     "Use this when you want one variant to feel different from the others."))
                     .push("variants");
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Normal zombie stat overrides.",
                     "Good beginner use: keep normal zombies close to vanilla and make special variants scarier."))
                     .push("zombie");
@@ -1183,7 +1245,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Husk stat overrides.",
                     "Good hardcore use: make husks hit harder in deserts without changing all zombies."))
                     .push("husk");
@@ -1227,7 +1289,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Drowned stat overrides.",
                     "Good hardcore use: make drowned tankier or faster in water-heavy worlds."))
                     .push("drowned");
@@ -1271,7 +1333,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceBonus", 0.0, -1.0, 1.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Zombie villager stat overrides.",
                     "Good beginner use: keep these near normal zombies unless you want them to be rare threats."))
                     .push("zombieVillager");
@@ -1323,7 +1385,7 @@ public final class Config {
                     "Beginner advice: use small changes like 1.10 or 0.90 first."))
                     .push("contexts");
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Desert and badlands context multipliers.",
                     "Useful for dry-biome husk pressure."))
                     .push("desert");
@@ -1349,7 +1411,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Ocean, river, swamp, and mangrove swamp context multipliers.",
                     "Useful for making drowned or wet-biome zombies feel different."))
                     .push("water");
@@ -1375,7 +1437,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Mushroom fields context multipliers.",
                     "If mushroomSafeZone is true, custom spawns are blocked there, but natural zombies can still use these stats."))
                     .push("mushroom");
@@ -1401,7 +1463,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "Nether context multipliers.",
                     "Only affects zombie-class mobs in the Nether. Keep values modest because Nether combat is already risky."))
                     .push("nether");
@@ -1427,7 +1489,7 @@ public final class Config {
                     .defineInRange("knockbackResistanceMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
 
-            builder.comment(sectionComment(
+            builder.comment(subsectionComment(
                     "End context multipliers.",
                     "Only affects zombie-class mobs in the End. Useful for custom packs that add zombie pressure there."))
                     .push("end");
@@ -1630,6 +1692,15 @@ public final class Config {
             lines[3] = "============================================================";
             lines[4] = " ";
             System.arraycopy(details, 0, lines, 5, details.length);
+            return lines;
+        }
+
+        private static String[] subsectionComment(String title, String... details) {
+            String[] lines = new String[details.length + 3];
+            lines[0] = " ";
+            lines[1] = "-------------------- " + title + " --------------------";
+            lines[2] = " ";
+            System.arraycopy(details, 0, lines, 3, details.length);
             return lines;
         }
 

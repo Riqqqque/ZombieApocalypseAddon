@@ -30,21 +30,27 @@ public final class BlockPlaceCommands {
                 .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
+                .then(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true)))
+                .then(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false)))
                 .then(Commands.literal("dayone")
                         .executes(context -> {
-                            Config.COMMON.enableZombieBlockPlacing.set(true);
-                            Config.COMMON.zombieBlockPlacingStartDay.set(0);
+                            Config.edit(() -> {
+                                Config.set(Config.COMMON.enableZombieBlockPlacing, true);
+                                Config.set(Config.COMMON.zombieBlockPlacingStartDay, 0);
+                            });
                             CommandUtil.feedback(context.getSource(),
                                     "Zombie block placing enabled and set to start immediately.", true);
                             return 1;
                         }))
-                .then(toggleBoolNode("enabled", Config.COMMON.enableZombieBlockPlacing::set,
+                .then(toggleBoolNode("enabled", value -> Config.set(Config.COMMON.enableZombieBlockPlacing, value),
                         "Zombie block placing"))
                 .then(Commands.literal("startday")
                         .then(Commands.argument("day", IntegerArgumentType.integer(0, 3650))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "day");
-                                    Config.COMMON.zombieBlockPlacingStartDay.set(value);
+                                    Config.set(Config.COMMON.zombieBlockPlacingStartDay, value);
                                     String message = value <= 0
                                             ? "Zombie block placing can start immediately when enabled."
                                             : "Zombie block placing starts on day " + value + '.';
@@ -55,16 +61,16 @@ public final class BlockPlaceCommands {
                         .then(Commands.argument("ticks", IntegerArgumentType.integer(20, 72000))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "ticks");
-                                    Config.COMMON.zombieBlockPlacingInterval.set(value);
+                                    Config.set(Config.COMMON.zombieBlockPlacingInterval, value);
                                     CommandUtil.feedback(context.getSource(),
-                                            "Zombie block placing interval: " + value + " ticks", true);
+                                            "Zombie block placing interval: " + CommandUtil.ticks(value), true);
                                     return 1;
                                 })))
                 .then(Commands.literal("chance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "value");
-                                    Config.COMMON.zombieBlockPlacingChance.set(value);
+                                    Config.set(Config.COMMON.zombieBlockPlacingChance, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block placing chance: " + CommandUtil.percent(value), true);
                                     return 1;
@@ -78,7 +84,7 @@ public final class BlockPlaceCommands {
                         .then(Commands.argument("blocks", IntegerArgumentType.integer(0, 256))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.COMMON.zombieBlockPlacingMaxPerZombie.set(value);
+                                    Config.set(Config.COMMON.zombieBlockPlacingMaxPerZombie, value);
                                     String label = value == 0 ? "unlimited" : Integer.toString(value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block placement limit per zombie: " + label, true);
@@ -88,25 +94,25 @@ public final class BlockPlaceCommands {
                         .then(Commands.argument("blocks", IntegerArgumentType.integer(4, 128))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.COMMON.zombieBlockPlacingMaxTargetDistance.set(value);
+                                    Config.set(Config.COMMON.zombieBlockPlacingMaxTargetDistance, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block placing target distance: " + value + " blocks", true);
                                     return 1;
                                 })))
-                .then(toggleBoolNode("target", Config.COMMON.zombieBlockPlacingRequireTarget::set,
+                .then(toggleBoolNode("target", value -> Config.set(Config.COMMON.zombieBlockPlacingRequireTarget, value),
                         "Require zombie target"))
-                .then(toggleBoolNode("obstacle", Config.COMMON.zombieBlockPlacingRequireObstacle::set,
+                .then(toggleBoolNode("obstacle", value -> Config.set(Config.COMMON.zombieBlockPlacingRequireObstacle, value),
                         "Require obstacle, covered target, or gap"))
-                .then(toggleBoolNode("mobgriefing", Config.COMMON.zombieBlockPlacingRespectMobGriefing::set,
+                .then(toggleBoolNode("mobgriefing", value -> Config.set(Config.COMMON.zombieBlockPlacingRespectMobGriefing, value),
                         "Respect mobGriefing"))
-                .then(toggleBoolNode("bridges", Config.COMMON.zombieBlockPlacingAllowBridges::set,
+                .then(toggleBoolNode("bridges", value -> Config.set(Config.COMMON.zombieBlockPlacingAllowBridges, value),
                         "Zombie gap bridging"))
-                .then(toggleBoolNode("steps", Config.COMMON.zombieBlockPlacingAllowSteps::set,
+                .then(toggleBoolNode("steps", value -> Config.set(Config.COMMON.zombieBlockPlacingAllowSteps, value),
                         "Zombie step placing"))
-                .then(toggleBoolNode("fluids", Config.COMMON.zombieBlockPlacingReplaceFluids::set,
+                .then(toggleBoolNode("fluids", value -> Config.set(Config.COMMON.zombieBlockPlacingReplaceFluids, value),
                         "Replace fluid blocks"))
                 .then(toggleBoolNode("replaceable",
-                        Config.COMMON.zombieBlockPlacingReplaceReplaceableBlocks::set,
+                        value -> Config.set(Config.COMMON.zombieBlockPlacingReplaceReplaceableBlocks, value),
                         "Replace plants/snow/other replaceable blocks"))
                 .then(Commands.literal("resetcounts")
                         .executes(context -> {
@@ -128,9 +134,15 @@ public final class BlockPlaceCommands {
             return 0;
         }
 
-        Config.COMMON.zombieBlockPlacingBlock.set(blockId);
+        Config.set(Config.COMMON.zombieBlockPlacingBlock, blockId);
         ZombieBlockPlacer.clearRuntimeState();
         CommandUtil.feedback(source, "Zombie placement block: " + blockId, true);
+        return 1;
+    }
+
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        Config.set(Config.COMMON.enableZombieBlockPlacing, enabled);
+        CommandUtil.feedback(source, "Zombie block placing: " + CommandUtil.onOff(enabled), true);
         return 1;
     }
 
@@ -180,7 +192,7 @@ public final class BlockPlaceCommands {
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
         status.append("Block: ").append(Config.COMMON.zombieBlockPlacingBlock.get()).append('\n');
-        status.append("Interval: ").append(Config.COMMON.zombieBlockPlacingInterval.get()).append(" ticks\n");
+        status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieBlockPlacingInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieBlockPlacingChance.get())).append('\n');
         status.append("Limit per zombie: ").append(limit == 0 ? "unlimited" : limit).append('\n');
         status.append("Max target distance: ")

@@ -1,0 +1,43 @@
+name: Config help
+description: Ask how to configure spawning, events, difficulty, bases, or compatibility.
+title: "[Config]: "
+labels:
+  - question
+  - configuration
+body:
+  - type: dropdown
+    id: target
+    attributes:
+      label: Minecraft and loader
+      options:
+        - NeoForge 1.21.1
+        - NeoForge 1.20.1
+        - Forge 1.20.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Mod version
+      placeholder: "Example: 2.2.30"
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to configure?
+      description: Describe the gameplay result you want.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Include the relevant commands or config values and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Server context
+      description: Include player count, other zombie/spawn mods, and performance limits if relevant.
