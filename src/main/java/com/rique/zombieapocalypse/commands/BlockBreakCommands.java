@@ -28,20 +28,28 @@ public final class BlockBreakCommands {
                             CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource()), false);
                             return 1;
                         }))
+                .then(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true)))
+                .then(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false)))
                 .then(Commands.literal("dayone")
                         .executes(context -> {
-                            Config.COMMON.enableZombieBlockBreaking.set(true);
-                            Config.COMMON.zombieBlockBreakingStartDay.set(0);
+                            Config.edit(() -> {
+                                Config.set(Config.COMMON.enableZombieBlockBreaking, true);
+                                Config.set(Config.COMMON.zombieBlockBreakingStartDay, 0);
+                            });
                             CommandUtil.feedback(context.getSource(),
                                     "Zombie block breaking enabled and set to start immediately.", true);
                             return 1;
                         }))
-                .then(toggleBoolNode("enabled", Config.COMMON.enableZombieBlockBreaking::set, "Zombie block breaking"))
+                .then(toggleBoolNode("enabled",
+                        value -> Config.set(Config.COMMON.enableZombieBlockBreaking, value),
+                        "Zombie block breaking"))
                 .then(Commands.literal("startday")
                         .then(Commands.argument("day", IntegerArgumentType.integer(0, 3650))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "day");
-                                    Config.COMMON.zombieBlockBreakingStartDay.set(value);
+                                    Config.set(Config.COMMON.zombieBlockBreakingStartDay, value);
                                     String message = value <= 0
                                             ? "Zombie block breaking can start immediately when enabled."
                                             : "Zombie block breaking starts on day " + value + '.';
@@ -52,16 +60,16 @@ public final class BlockBreakCommands {
                         .then(Commands.argument("ticks", IntegerArgumentType.integer(20, 72000))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "ticks");
-                                    Config.COMMON.zombieBlockBreakingInterval.set(value);
+                                    Config.set(Config.COMMON.zombieBlockBreakingInterval, value);
                                     CommandUtil.feedback(context.getSource(),
-                                            "Zombie block breaking interval: " + value + " ticks", true);
+                                            "Zombie block breaking interval: " + CommandUtil.ticks(value), true);
                                     return 1;
                                 })))
                 .then(Commands.literal("chance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "value");
-                                    Config.COMMON.zombieBlockBreakingChance.set(value);
+                                    Config.set(Config.COMMON.zombieBlockBreakingChance, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block breaking chance: " + CommandUtil.percent(value), true);
                                     return 1;
@@ -70,7 +78,7 @@ public final class BlockBreakCommands {
                         .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 4))
                                 .executes(context -> {
                                     int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.COMMON.zombieBlockBreakingRange.set(value);
+                                    Config.set(Config.COMMON.zombieBlockBreakingRange, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block breaking range: " + value + " blocks", true);
                                     return 1;
@@ -79,24 +87,24 @@ public final class BlockBreakCommands {
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 50.0))
                                 .executes(context -> {
                                     double value = DoubleArgumentType.getDouble(context, "value");
-                                    Config.COMMON.zombieBlockBreakingMaxHardness.set(value);
+                                    Config.set(Config.COMMON.zombieBlockBreakingMaxHardness, value);
                                     CommandUtil.feedback(context.getSource(),
                                             "Zombie block breaking max hardness: " + CommandUtil.number(value), true);
                                     return 1;
                                 })))
-                .then(toggleBoolNode("drops", Config.COMMON.zombieBlockBreakingDropBlocks::set,
+                .then(toggleBoolNode("drops", value -> Config.set(Config.COMMON.zombieBlockBreakingDropBlocks, value),
                         "Block drops from zombie breaking"))
-                .then(toggleBoolNode("target", Config.COMMON.zombieBlockBreakingRequireTarget::set,
+                .then(toggleBoolNode("target", value -> Config.set(Config.COMMON.zombieBlockBreakingRequireTarget, value),
                         "Require zombie target"))
-                .then(toggleBoolNode("obstacle", Config.COMMON.zombieBlockBreakingRequireObstacle::set,
+                .then(toggleBoolNode("obstacle", value -> Config.set(Config.COMMON.zombieBlockBreakingRequireObstacle, value),
                         "Require blocked path/covered target"))
-                .then(toggleBoolNode("mobgriefing", Config.COMMON.zombieBlockBreakingRespectMobGriefing::set,
+                .then(toggleBoolNode("mobgriefing", value -> Config.set(Config.COMMON.zombieBlockBreakingRespectMobGriefing, value),
                         "Respect mobGriefing"))
-                .then(toggleBoolNode("containers", Config.COMMON.zombieBlockBreakingAllowBlockEntities::set,
+                .then(toggleBoolNode("containers", value -> Config.set(Config.COMMON.zombieBlockBreakingAllowBlockEntities, value),
                         "Allow containers/block entities"))
-                .then(toggleBoolNode("toolblocks", Config.COMMON.zombieBlockBreakingAllowToolRequiredBlocks::set,
+                .then(toggleBoolNode("toolblocks", value -> Config.set(Config.COMMON.zombieBlockBreakingAllowToolRequiredBlocks, value),
                         "Allow tool-required blocks"))
-                .then(toggleBoolNode("lights", Config.COMMON.zombieBlockBreakingAllowLightBlocks::set,
+                .then(toggleBoolNode("lights", value -> Config.set(Config.COMMON.zombieBlockBreakingAllowLightBlocks, value),
                         "Allow light-emitting blocks")));
     }
 
@@ -114,6 +122,12 @@ public final class BlockBreakCommands {
                         }));
     }
 
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        Config.set(Config.COMMON.enableZombieBlockBreaking, enabled);
+        CommandUtil.feedback(source, "Zombie block breaking: " + CommandUtil.onOff(enabled), true);
+        return 1;
+    }
+
     private static String buildStatusMessage(CommandSourceStack source) {
         long currentDay = DifficultyManager.getCurrentDay(source.getLevel());
         int startDay = Config.COMMON.zombieBlockBreakingStartDay.get();
@@ -126,9 +140,10 @@ public final class BlockBreakCommands {
         status.append("Active today: ").append(CommandUtil.onOff(active))
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
-        status.append("Interval: ").append(Config.COMMON.zombieBlockBreakingInterval.get()).append(" ticks\n");
+        status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieBlockBreakingInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieBlockBreakingChance.get())).append('\n');
-        status.append("Range: ").append(Config.COMMON.zombieBlockBreakingRange.get()).append(" blocks\n");
+        status.append("Range: ")
+                .append(CommandUtil.count(Config.COMMON.zombieBlockBreakingRange.get(), "block")).append('\n');
         status.append("Max hardness: ")
                 .append(CommandUtil.number(Config.COMMON.zombieBlockBreakingMaxHardness.get())).append('\n');
         status.append("Drop broken blocks: ")

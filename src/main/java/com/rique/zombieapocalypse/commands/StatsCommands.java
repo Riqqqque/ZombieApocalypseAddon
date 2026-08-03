@@ -24,7 +24,6 @@ public final class StatsCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zstats")
-                .requires(source -> source.hasPermission(2))
                 .executes(context -> {
                     if (context.getSource().getEntity() instanceof ServerPlayer player) {
                         showPlayerStats(context.getSource(), player);
@@ -44,31 +43,32 @@ public final class StatsCommands {
                             showServerStats(context.getSource());
                             return 1;
                         }))
-                        .then(Commands.literal("clear")
-                                .executes(context -> {
-                                    MinecraftServer server = context.getSource().getServer();
-                                    ServerLevel level = context.getSource().getLevel();
-                                    StatisticsManager stats = StatisticsManager.get(level);
+                .then(Commands.literal("clear")
+                        .requires(source -> source.hasPermission(2))
+                        .executes(context -> {
+                            MinecraftServer server = context.getSource().getServer();
+                            ServerLevel level = context.getSource().getLevel();
+                            StatisticsManager stats = StatisticsManager.get(level);
 
-                                    Set<UUID> playersToReset = new HashSet<>(stats.getPlayersWithTrackedProgress());
-                                    for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                                        playersToReset.add(player.getUUID());
-                                    }
+                            Set<UUID> playersToReset = new HashSet<>(stats.getPlayersWithTrackedProgress());
+                            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                                playersToReset.add(player.getUUID());
+                            }
 
-                                    stats.queueAdvancementResets(playersToReset);
-                                    stats.clearAll();
+                            stats.queueAdvancementResets(playersToReset);
+                            stats.clearAll();
 
-                                    for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                                        ZombieKillAdvancements.clearMilestones(player);
-                                        stats.consumePendingAdvancementReset(player.getUUID());
-                                    }
+                            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                                ZombieKillAdvancements.clearMilestones(player);
+                                stats.consumePendingAdvancementReset(player.getUUID());
+                            }
 
-                                    CommandUtil.feedback(
-                                            context.getSource(),
-                                            "All statistics, milestone progress, and cooldowns were cleared.",
-                                            true);
-                                    return 1;
-                                })));
+                            CommandUtil.feedback(
+                                    context.getSource(),
+                                    "All statistics, milestone progress, and cooldowns were cleared.",
+                                    true);
+                            return 1;
+                        })));
     }
 
     private static void showPlayerStats(CommandSourceStack source, ServerPlayer player) {

@@ -1,5 +1,6 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -24,6 +25,19 @@ final class CommandUtil {
 
     static String multiplier(double value) {
         return String.format(Locale.ROOT, "%.2fx", value);
+    }
+
+    static String ticks(int ticks) {
+        String seconds = BigDecimal.valueOf(ticks)
+                .divide(BigDecimal.valueOf(20))
+                .stripTrailingZeros()
+                .toPlainString();
+        return ticks + (ticks == 1 ? " tick (" : " ticks (")
+                + seconds + (ticks == 20 ? " second)" : " seconds)");
+    }
+
+    static String count(int value, String singular) {
+        return value + " " + singular + (value == 1 ? "" : "s");
     }
 
     static String number(double value) {

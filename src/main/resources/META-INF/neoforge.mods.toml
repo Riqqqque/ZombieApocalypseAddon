@@ -14,6 +14,8 @@ A server-side configurable zombie apocalypse gameplay addon for NeoForge 1.21.1.
 
 Install this on the server. Clients do not need the mod to join.
 
+Start with /za for a short dashboard, safe presets, and config help.
+
 Core gameplay:
 - Optional sunlight immunity for zombies.
 - Custom day/night spawning near players.
@@ -23,8 +25,7 @@ Core gameplay:
 - Death cooldown safety window.
 - Persistent kill and cooldown statistics.
 
-Admin commands:
-/zhelp, /zburn, /zkill, /zcleanup, /zcompat, /zday, /zhorde, /zbloodmoon, /zstats, /zscaling, /zdayspawn, /zblockbreak, /zblockplace, /ztower, /zattr
+Use /za help for topic-based command help. Existing detailed commands remain available.
 '''
 
 [[dependencies.${mod_id}]]
