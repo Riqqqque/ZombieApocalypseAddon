@@ -11,6 +11,7 @@ public final class CommandRegistrar {
 
     public static void registerAll(CommandDispatcher<CommandSourceStack> dispatcher) {
         HelpCommands.register(dispatcher);
+        CompatibilityCommands.register(dispatcher);
         UtilityCommands.register(dispatcher);
         WorldCommands.register(dispatcher);
         HordeCommands.register(dispatcher);
@@ -19,6 +20,7 @@ public final class CommandRegistrar {
         DaySpawnCommands.register(dispatcher);
         BlockBreakCommands.register(dispatcher);
         BlockPlaceCommands.register(dispatcher);
+        TowerCommands.register(dispatcher);
         AttributeCommands.register(dispatcher);
     }
 }

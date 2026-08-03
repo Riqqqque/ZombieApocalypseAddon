@@ -60,4 +60,12 @@ class ZombieBlockBreakerTest {
         assertFalse(ZombieBlockBreaker.isSearchPassThrough(false, false, true));
         assertFalse(ZombieBlockBreaker.isSearchPassThrough(false, true, false));
     }
+
+    @Test
+    void doorProtectionHonorsTheZombiesDoorBreakingAbility() {
+        assertTrue(ZombieBlockBreaker.isDoorProtected(true, true, false));
+        assertFalse(ZombieBlockBreaker.isDoorProtected(true, true, true));
+        assertFalse(ZombieBlockBreaker.isDoorProtected(true, false, false));
+        assertFalse(ZombieBlockBreaker.isDoorProtected(false, true, false));
+    }
 }

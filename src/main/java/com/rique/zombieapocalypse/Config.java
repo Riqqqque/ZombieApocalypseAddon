@@ -25,6 +25,18 @@ public final class Config {
         public final ModConfigSpec.BooleanValue enableExtraDrops;
         public final ModConfigSpec.BooleanValue enableDebugLogging;
 
+        // Mod compatibility
+        public final ModConfigSpec.BooleanValue enableModdedZombieCompatibility;
+        public final ModConfigSpec.BooleanValue applyDifficultyToModdedZombies;
+        public final ModConfigSpec.BooleanValue applyAiFeaturesToModdedZombies;
+        public final ModConfigSpec.BooleanValue respectExternalSpawnRules;
+        public final ModConfigSpec.BooleanValue respectExternalZombieAi;
+        public final ModConfigSpec.BooleanValue respectExternalDifficulty;
+        public final ModConfigSpec.BooleanValue respectZombieDoorBreakingAbility;
+        public final ModConfigSpec.BooleanValue preserveExistingZombieEquipment;
+        public final ModConfigSpec.ConfigValue<String> additionalZombieEntityTypes;
+        public final ModConfigSpec.ConfigValue<String> excludedZombieEntityTypes;
+
         // Day spawning core
         public final ModConfigSpec.BooleanValue enableDaySpawning;
         public final ModConfigSpec.IntValue daySpawnInterval;
@@ -75,6 +87,19 @@ public final class Config {
         public final ModConfigSpec.BooleanValue zombieBlockPlacingAllowSteps;
         public final ModConfigSpec.BooleanValue zombieBlockPlacingReplaceFluids;
         public final ModConfigSpec.BooleanValue zombieBlockPlacingReplaceReplaceableBlocks;
+
+        // Zombie towering
+        public final ModConfigSpec.BooleanValue enableZombieTowering;
+        public final ModConfigSpec.IntValue zombieToweringStartDay;
+        public final ModConfigSpec.IntValue zombieToweringInterval;
+        public final ModConfigSpec.DoubleValue zombieToweringChance;
+        public final ModConfigSpec.IntValue zombieToweringMaxTargetDistance;
+        public final ModConfigSpec.IntValue zombieToweringMinNearbyZombies;
+        public final ModConfigSpec.DoubleValue zombieToweringCrowdRadius;
+        public final ModConfigSpec.DoubleValue zombieToweringVerticalBoost;
+        public final ModConfigSpec.DoubleValue zombieToweringForwardBoost;
+        public final ModConfigSpec.IntValue zombieToweringMaxHeightAboveTarget;
+        public final ModConfigSpec.BooleanValue zombieToweringRequireObstacle;
 
         // Horde events
         public final ModConfigSpec.BooleanValue enableHordeEvents;
@@ -266,6 +291,84 @@ public final class Config {
                             "Writes extra spawn and event details to the log for troubleshooting.",
                             "Best left off unless you are testing or tracking down a problem.")
                     .define("enableDebugLogging", false);
+            builder.pop();
+
+            builder.comment(sectionComment(
+                    "MOD COMPATIBILITY",
+                    "Controls how this addon cooperates with other zombie, difficulty, AI, and spawn-control mods.",
+                    "Safe beginner setup: keep every default in this section.",
+                    "No compatibility option creates a hard dependency. Missing mods and missing optional entity IDs are ignored."))
+                    .push("compatibility");
+            enableModdedZombieCompatibility = builder
+                    .comment(
+                            "Recognizes modded entities that extend Minecraft's normal Zombie class.",
+                            "This lets them count toward caps and cleanup and receive configured drops, kill credit, and sunlight handling.",
+                            "false = only vanilla zombie, husk, drowned, zombie villager, and explicitly listed/tagged entities are recognized.")
+                    .define("enableModdedZombieCompatibility", true);
+
+            applyDifficultyToModdedZombies = builder
+                    .comment(
+                            "Allows this addon's attribute and day-scaling pipeline to affect recognized modded zombies.",
+                            "Disable this if another mod should have complete control over the stats of its own zombie variants.",
+                            "The addon still marks each entity after one application, so its own scaling is never applied twice.")
+                    .define("applyDifficultyToModdedZombies", true);
+
+            applyAiFeaturesToModdedZombies = builder
+                    .comment(
+                            "Allows recognized modded Zombie subclasses to use enabled block breaking, block placing, and towering features.",
+                            "This does nothing while those individual systems are disabled.",
+                            "Disable it if a custom zombie has movement or destruction behavior that should remain untouched.")
+                    .define("applyAiFeaturesToModdedZombies", true);
+
+            respectExternalSpawnRules = builder
+                    .comment(
+                            "Lets other mods veto or adjust this addon's custom spawns through the loader's normal mob-spawn events.",
+                            "Keep this true for spawn-control mods such as In Control! and Bad Mobs.",
+                            "The addon's daylight and block-light rules still decide the normal default result.")
+                    .define("respectExternalSpawnRules", true);
+
+            respectExternalZombieAi = builder
+                    .comment(
+                            "Avoids running this addon's optional destructive/movement AI on mobs already managed by a known AI overhaul.",
+                            "This prevents duplicate block breaking, leaps, or towering with Zombies Reworked, Improved Mobs, and Undead Nights.",
+                            "Set false only when you intentionally want both mods' AI systems to stack.")
+                    .define("respectExternalZombieAi", true);
+
+            respectExternalDifficulty = builder
+                    .comment(
+                            "Avoids stacking this addon's attribute scaling on mobs controlled by a known external difficulty system.",
+                            "Improved Mobs and specially tagged event zombies keep their own intended stats when this is true.",
+                            "Set false if you intentionally want both difficulty systems to multiply together.")
+                    .define("respectExternalDifficulty", true);
+
+            respectZombieDoorBreakingAbility = builder
+                    .comment(
+                            "Stops the addon's block breaker from destroying doors when that zombie is not allowed to break doors.",
+                            "Keep this true so Zombie Proof Doors and vanilla door-breaking rules remain authoritative.",
+                            "Set false only if the addon's block-breaking feature should ignore that protection.")
+                    .define("respectZombieDoorBreakingAbility", true);
+
+            preserveExistingZombieEquipment = builder
+                    .comment(
+                            "Prevents difficulty scaling from replacing weapons or armor a zombie already has.",
+                            "Keep this true for specialized mobs such as archers, sword zombies, bosses, and modded variants.",
+                            "The addon may still fill an empty equipment slot. false restores the old overwrite behavior.")
+                    .define("preserveExistingZombieEquipment", true);
+
+            additionalZombieEntityTypes = builder
+                    .comment(
+                            "Optional comma-separated entity IDs to treat as zombie-class even if they do not extend Zombie.",
+                            "Example: minecraft:giant,examplemod:infected_mob",
+                            "Use exact namespace:path IDs. Invalid or missing IDs are ignored and reported when debug logging is enabled.",
+                            "Most zombie mods do not need this because Zombie subclasses are detected automatically.")
+                    .define("additionalZombieEntityTypes", "");
+
+            excludedZombieEntityTypes = builder
+                    .comment(
+                            "Optional comma-separated entity IDs that this addon must never treat as zombie-class.",
+                            "Exclusions win over automatic subclass detection, tags, and the additional list.",
+                            "Example: examplemod:zombie_boss,examplemod:friendly_zombie")
+                    .define("excludedZombieEntityTypes", "");
             builder.pop();
 
             builder.comment(sectionComment(
@@ -598,6 +701,84 @@ public final class Config {
                             "false means zombies only place into air, plus fluids when zombieBlockPlacingReplaceFluids is enabled.",
                             "Block entities and solid blocks are always protected.")
                     .define("zombieBlockPlacingReplaceReplaceableBlocks", false);
+            builder.pop();
+
+            builder.comment(sectionComment(
+                    "ZOMBIE TOWERING",
+                    "Optional World War Z-style swarm movement that lets zombie-class mobs climb over each other.",
+                    "Safe beginner setup: leave this disabled. It never places or breaks blocks.",
+                    "Towering requires a valid target and a nearby crowd, and is day-gated to prevent early-world pressure.",
+                    "Checks are staggered by entity ID so large hordes do not all scan on the same tick."))
+                    .push("towering");
+            enableZombieTowering = builder
+                    .comment(
+                            "Main on/off switch for zombie towering.",
+                            "false = zombies never receive towering movement from this mod.",
+                            "true = recognized Zombie subclasses can tower after zombieToweringStartDay if the other rules allow it.")
+                    .define("enableZombieTowering", false);
+
+            zombieToweringStartDay = builder
+                    .comment(
+                            "Apocalypse day when towering is allowed to start after the feature is enabled.",
+                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "20 = zombies cannot tower until the day counter reaches 20.")
+                    .defineInRange("zombieToweringStartDay", 20, 0, 3650);
+
+            zombieToweringInterval = builder
+                    .comment(
+                            "How often each zombie can check for a towering opportunity.",
+                            "20 ticks = 1 second. Checks are spread across ticks using the entity ID.",
+                            "Lower values react faster but increase nearby-entity scans in crowded areas.")
+                    .defineInRange("zombieToweringInterval", 20, 5, 72000);
+
+            zombieToweringChance = builder
+                    .comment(
+                            "Chance that a scheduled towering check continues to the nearby-crowd scan.",
+                            "0.0 = never tower, 1.0 = every eligible scheduled check tries.",
+                            "The chance roll happens before the entity scan to keep failed attempts cheap.")
+                    .defineInRange("zombieToweringChance", 0.45, 0.0, 1.0);
+
+            zombieToweringMaxTargetDistance = builder
+                    .comment(
+                            "Farthest target distance where towering is allowed.",
+                            "This prevents a distant or unloaded fight from making nearby zombies pile up.")
+                    .defineInRange("zombieToweringMaxTargetDistance", 32, 4, 128);
+
+            zombieToweringMinNearbyZombies = builder
+                    .comment(
+                            "Minimum number of other nearby Zombie subclasses required for a towering boost.",
+                            "Default 2 means towering needs a crowd of at least three including the climbing zombie.")
+                    .defineInRange("zombieToweringMinNearbyZombies", 2, 1, 16);
+
+            zombieToweringCrowdRadius = builder
+                    .comment(
+                            "Horizontal radius used to find nearby zombie-class mobs.",
+                            "Keep this small because every eligible attempt performs one bounded entity lookup.")
+                    .defineInRange("zombieToweringCrowdRadius", 2.25, 0.75, 6.0);
+
+            zombieToweringVerticalBoost = builder
+                    .comment(
+                            "Upward velocity applied when a zombie successfully uses the crowd to climb.",
+                            "Default 0.48 is slightly stronger than a normal jump without acting like flight.")
+                    .defineInRange("zombieToweringVerticalBoost", 0.48, 0.1, 1.0);
+
+            zombieToweringForwardBoost = builder
+                    .comment(
+                            "Horizontal velocity toward the target during a towering boost.",
+                            "The result is capped so repeated boosts cannot create runaway horizontal speed.")
+                    .defineInRange("zombieToweringForwardBoost", 0.18, 0.0, 0.6);
+
+            zombieToweringMaxHeightAboveTarget = builder
+                    .comment(
+                            "Maximum height a towering zombie may reach above its target.",
+                            "This prevents a blocked swarm from climbing indefinitely into the sky.")
+                    .defineInRange("zombieToweringMaxHeightAboveTarget", 8, 1, 32);
+
+            zombieToweringRequireObstacle = builder
+                    .comment(
+                            "If true, towering requires a collision, nearby barrier, covered target, or raised target.",
+                            "Leave this true to stop zombie crowds from hopping across open ground.")
+                    .define("zombieToweringRequireObstacle", true);
             builder.pop();
 
             builder.comment(sectionComment(
