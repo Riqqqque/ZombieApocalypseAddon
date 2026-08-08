@@ -32,10 +32,7 @@ public final class DaySpawnCommands {
                         .then(Commands.argument("value", BoolArgumentType.bool())
                                 .executes(context -> {
                                     boolean enabled = BoolArgumentType.getBool(context, "value");
-                                    Config.set(Config.COMMON.enableDaySpawning, enabled);
-                                    CommandUtil.feedback(context.getSource(), "Day spawning: " + CommandUtil.onOff(enabled),
-                                            true);
-                                    return 1;
+                                    return setSpawning(context.getSource(), enabled);
                                 })))
                 .then(Commands.literal("chance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
@@ -148,7 +145,7 @@ public final class DaySpawnCommands {
                         "Require open sky in overworld"))
                 .then(toggleBoolNode("variants", value -> Config.set(Config.COMMON.enableZombieVariants, value), "Zombie variants"))
                 .then(toggleBoolNode("nightboost", value -> Config.set(Config.COMMON.enableNightBoost, value), "Night boost"))
-                .then(toggleBoolNode("horde", value -> Config.set(Config.COMMON.enableHordeEvents, value), "Horde events"))
+                .then(toggleBoolNode("horde", value -> Config.set(Config.COMMON.enableHordeEvents, value), "Scheduled hordes"))
                 .then(toggleBoolNode("daycounter", value -> Config.set(Config.COMMON.enableDayCounterAnnouncements, value),
                         "Morning day counter"))
                 .then(Commands.literal("hordechance")
@@ -160,7 +157,7 @@ public final class DaySpawnCommands {
                                             true);
                                     return 1;
                                 })))
-                .then(toggleBoolNode("bloodmoon", value -> Config.set(Config.COMMON.enableBloodMoon, value), "Blood moon"))
+                .then(toggleBoolNode("bloodmoon", value -> Config.set(Config.COMMON.enableBloodMoon, value), "Random blood moons"))
                 .then(toggleBoolNode("scaling", value -> Config.set(Config.COMMON.enableDifficultyScaling, value), "Difficulty scaling"))
                 .then(toggleBoolNode("attributes", value -> Config.set(Config.COMMON.enableAttributeModifiers, value), "Attribute modifiers"))
                 .then(toggleBoolNode("attributescaling", value -> Config.set(Config.COMMON.scaleAttributesWithDifficulty, value),
@@ -220,7 +217,7 @@ public final class DaySpawnCommands {
                 .append(maxLight < 0 ? "OFF (block light ignored)" : "ON (spawns need light " + maxLight + " or lower)")
                 .append('\n');
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get()))
-                .append(" | Baby chance: ").append(CommandUtil.percent(Config.COMMON.babyZombieChance.get()))
+                .append(" | Custom baby chance: ").append(CommandUtil.percent(Config.COMMON.babyZombieChance.get()))
                 .append(" | Night boost: ").append(CommandUtil.onOff(Config.COMMON.enableNightBoost.get())).append('\n');
         status.append("Use /zdayspawn status all for every related toggle.");
         status.append(buildSpawnDistanceWarning());
@@ -244,7 +241,11 @@ public final class DaySpawnCommands {
         status.append("Require overworld sky: ").append(CommandUtil.onOff(Config.COMMON.requireOpenSkyForOverworldSpawns.get()))
                 .append('\n');
         status.append("Variants: ").append(CommandUtil.onOff(Config.COMMON.enableZombieVariants.get())).append('\n');
-        status.append("Baby zombie chance: ").append(CommandUtil.percent(Config.COMMON.babyZombieChance.get())).append('\n');
+        status.append("Custom baby zombie chance: ").append(CommandUtil.percent(Config.COMMON.babyZombieChance.get()));
+        if (Config.COMMON.babyZombieChance.get() <= 0.0) {
+            status.append(" (all new Zombie subclasses forced adult)");
+        }
+        status.append('\n');
         status.append("Night boost: ").append(CommandUtil.onOff(Config.COMMON.enableNightBoost.get())).append('\n');
         status.append("Horde events: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get())).append('\n');
         status.append("Morning day counter: ").append(CommandUtil.onOff(Config.COMMON.enableDayCounterAnnouncements.get()))

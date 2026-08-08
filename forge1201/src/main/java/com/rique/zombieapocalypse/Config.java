@@ -456,7 +456,9 @@ public final class Config {
             enableDaySpawning = builder
                     .comment(
                             "Main on/off switch for the mod's custom zombie spawning.",
-                            "If false, the mod stops creating its own zombie waves around players.")
+                            "If false, the mod stops creating its own zombie waves around players.",
+                            "Active or queued horde and blood moon pressure is canceled because those events use custom waves.",
+                            "Difficulty, sunlight, drops, stats, optional siege AI, and the morning day counter stay independent.")
                     .define("enableDaySpawning", true);
 
             daySpawnInterval = builder
@@ -513,7 +515,8 @@ public final class Config {
             requireOpenSkyForOverworldSpawns = builder
                     .comment(
                             "If true, overworld custom spawns only happen where the sky is open.",
-                            "Turn this off if you also want custom spawns under trees, roofs, or in more covered areas.")
+                            "Turn this off to search near the player's height for caves, interiors, and covered areas before using the surface.",
+                            "Block-light protection still prevents covered spawns that are brighter than maxBlockLightForSpawning.")
                     .define("requireOpenSkyForOverworldSpawns", true);
 
             maxBlockLightForSpawning = builder
@@ -565,7 +568,8 @@ public final class Config {
                     .comment(
                             "Chance for a custom spawned zombie-type mob to be a baby when that mob type supports it.",
                             "Set this to 0.0 to force new zombie-class spawns to stay adults.",
-                            "0.0 = no baby zombies, 1.0 = every supported custom spawn is a baby.")
+                            "The 0.0 adult-only rule also catches new vanilla and modded Zombie subclasses spawned outside custom waves.",
+                            "1.0 = every supported custom spawn is a baby.")
                     .defineInRange("babyZombieChance", 0.05, 0.0, 1.0);
 
             zombieVillagerChance = builder
@@ -865,7 +869,8 @@ public final class Config {
             enableHordeEvents = builder
                     .comment(
                             "Enables scheduled horde days that can trigger large pressure spikes.",
-                            "Admins can still use horde commands even if this automatic system is disabled.")
+                            "Admins can still use horde commands even if this automatic system is disabled.",
+                            "Hordes require the main custom spawning switch because they strengthen custom waves.")
                     .define("enableHordeEvents", true);
 
             hordeIntervalDays = builder
@@ -929,7 +934,8 @@ public final class Config {
             enableBloodMoon = builder
                     .comment(
                             "Enables random blood moon nights.",
-                            "Admins can still force a blood moon with the command even if this is off.")
+                            "Admins can still force a blood moon with the command even if this is off.",
+                            "Blood moons require the main custom spawning switch because they strengthen custom waves.")
                     .define("enableBloodMoon", true);
 
             bloodMoonChance = builder
@@ -1538,7 +1544,8 @@ public final class Config {
             enableNightBoost = builder
                     .comment(
                             "Adds an extra spawn chance boost at night.",
-                            "This stacks on top of the normal spawn settings.")
+                            "This stacks on top of normal spawn settings in dimensions with a real day/night cycle.",
+                            "Nether, End, and other fixed-time dimensions do not receive a permanent night boost.")
                     .define("enableNightBoost", true);
 
             nightSpawnMultiplier = builder
@@ -1557,7 +1564,8 @@ public final class Config {
             enableBiomeModifiers = builder
                     .comment(
                             "Lets biome type influence which zombie variants spawn more often.",
-                            "Example: more husks in deserts and more drowned in wet biomes.")
+                            "Example: more husks in deserts and more drowned in wet biomes.",
+                            "This does not disable mushroomSafeZone; the safe-zone switch remains independent.")
                     .define("enableBiomeModifiers", true);
 
             desertHuskBonus = builder
@@ -1575,7 +1583,8 @@ public final class Config {
             mushroomSafeZone = builder
                     .comment(
                             "If true, the mod will not do custom spawning in mushroom fields.",
-                            "This lets mushroom biomes act like a safer refuge.")
+                            "This lets mushroom biomes act like a safer refuge.",
+                            "It works even when enableBiomeModifiers is false.")
                     .define("mushroomSafeZone", true);
 
             netherSpawning = builder
@@ -1623,6 +1632,7 @@ public final class Config {
             enableSpawnEffects = builder
                     .comment(
                             "Enables extra sound and particle feedback when custom spawns happen.",
+                            "One effect is produced per successful wave instead of once per zombie.",
                             "Purely cosmetic.")
                     .define("enableSpawnEffects", true);
 
@@ -1655,7 +1665,8 @@ public final class Config {
                     "EXTRA DROPS",
                     "Bonus loot chances for zombie-class mobs.",
                     "Safe beginner setup: keep rare items low so zombies do not replace normal farming.",
-                    "0.10 means 10% chance per killed zombie-class mob."))
+                    "0.10 means 10% chance per killed zombie-class mob.",
+                    "The vanilla doMobLoot gamerule still controls whether any bonus loot can drop."))
                     .push("drops");
             boneChance = builder
                     .comment(

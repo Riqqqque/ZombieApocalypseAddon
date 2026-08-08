@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
 import com.rique.zombieapocalypse.Config;
@@ -26,7 +27,11 @@ public final class HordeCommands {
                 .then(Commands.literal("start")
                         .executes(context -> {
                             ServerLevel level = context.getSource().getLevel();
-                            HordeManager.startHorde(level);
+                            if (!HordeManager.startHorde(level)) {
+                                context.getSource().sendFailure(Component.literal(
+                                        "Custom zombie waves are off. Run /zdayspawn on before starting a horde."));
+                                return 0;
+                            }
                             CommandUtil.feedback(context.getSource(), "Horde event started.", true);
                             return 1;
                         }))
@@ -45,6 +50,11 @@ public final class HordeCommands {
         dispatcher.register(Commands.literal("zbloodmoon")
                 .requires(source -> source.hasPermission(2))
                 .executes(context -> {
+                    if (!Config.COMMON.enableDaySpawning.get()) {
+                        context.getSource().sendFailure(Component.literal(
+                                "Custom zombie waves are off. Run /zdayspawn on before forcing a blood moon."));
+                        return 0;
+                    }
                     ServerLevel level = context.getSource().getLevel();
                     boolean activeNow = HordeManager.triggerBloodMoon(level);
                     CommandUtil.feedback(
@@ -62,6 +72,8 @@ public final class HordeCommands {
         boolean forcedBloodMoon = HordeManager.isBloodMoonForced(level);
 
         StringBuilder status = new StringBuilder("Event status:\n");
+        status.append("Custom zombie waves: ")
+                .append(CommandUtil.onOff(Config.COMMON.enableDaySpawning.get())).append('\n');
         status.append("Scheduled hordes: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get()))
                 .append(" | Current horde: ").append(horde ? "ACTIVE" : "inactive");
         if (horde) {

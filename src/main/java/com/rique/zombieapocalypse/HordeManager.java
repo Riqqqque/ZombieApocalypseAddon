@@ -46,6 +46,10 @@ public final class HordeManager {
     }
 
     public static EventState getEventState(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return new EventState(false, false, 1.0, Config.COMMON.zombiesPerSpawn.get());
+        }
+
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
 
         boolean hordeActive = state.isHordeActive();
@@ -59,14 +63,12 @@ public final class HordeManager {
             spawnMultiplier *= Config.COMMON.bloodMoonSpawnMultiplier.get();
         }
 
-        int zombiesPerSpawn;
-        if (hordeActive) {
-            zombiesPerSpawn = Config.COMMON.hordeZombiesPerSpawn.get();
-        } else if (bloodMoonActive) {
-            zombiesPerSpawn = Config.COMMON.bloodMoonZombiesPerSpawn.get();
-        } else {
-            zombiesPerSpawn = Config.COMMON.zombiesPerSpawn.get();
-        }
+        int zombiesPerSpawn = selectEventWaveSize(
+                hordeActive,
+                bloodMoonActive,
+                Config.COMMON.zombiesPerSpawn.get(),
+                Config.COMMON.hordeZombiesPerSpawn.get(),
+                Config.COMMON.bloodMoonZombiesPerSpawn.get());
 
         return new EventState(hordeActive, bloodMoonActive, spawnMultiplier, zombiesPerSpawn);
     }
@@ -78,6 +80,18 @@ public final class HordeManager {
         long absoluteDayTime = overworldLevel.getDayTime();
         long dayTime = absoluteDayTime % 24000L;
         long currentDay = absoluteDayTime / 24000L;
+
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            stopSpawnEvents(state, currentDay, dayTime);
+            notifyDayTransitions(
+                    overworldLevel,
+                    state,
+                    currentDay,
+                    dayTime,
+                    HordeTransition.NONE,
+                    BloodMoonTransition.NONE);
+            return;
+        }
 
         HordeTransition hordeTransition = updateHorde(overworldLevel, state, gameTime, currentDay, dayTime);
         BloodMoonTransition bloodMoonTransition = updateBloodMoon(overworldLevel, state, currentDay, dayTime);
@@ -119,7 +133,9 @@ public final class HordeManager {
     }
 
     private static boolean tryStartScheduledHorde(ServerLevel level, ApocalypseWorldData state, long currentDay, long dayTime) {
-        if (!Config.COMMON.enableHordeEvents.get() || state.isHordeActive()) {
+        if (!Config.COMMON.enableDaySpawning.get()
+                || !Config.COMMON.enableHordeEvents.get()
+                || state.isHordeActive()) {
             return false;
         }
 
@@ -187,6 +203,18 @@ public final class HordeManager {
             LOGGER.info("[ZombieApocalypse] Blood moon started for night {}", currentDay);
         }
         return BloodMoonTransition.STARTED;
+    }
+
+    static void stopSpawnEvents(ApocalypseWorldData state, long currentDay, long dayTime) {
+        if (state.isHordeActive()) {
+            state.setHordeActive(false);
+            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime)) {
+                state.setLastHordeRollDay(currentDay);
+            }
+        }
+        state.setHordeEndGameTime(0L);
+        state.setBloodMoonActive(false);
+        state.setForcedBloodMoonPending(false);
     }
 
     private static void sendTitleToAllPlayers(ServerLevel level, String title, String subtitle) {
@@ -327,7 +355,11 @@ public final class HordeManager {
         state.setHordeEndGameTime(level.getGameTime() + (durationMinutes * 60L * 20L));
     }
 
-    public static void startHorde(ServerLevel level) {
+    public static boolean startHorde(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return false;
+        }
+
         ServerLevel eventLevel = eventLevel(level);
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
@@ -355,6 +387,7 @@ public final class HordeManager {
         if (Config.COMMON.enableDebugLogging.get()) {
             LOGGER.info("[ZombieApocalypse] Horde started; duration={} minutes", durationMinutes);
         }
+        return true;
     }
 
     public static void stopHorde(ServerLevel level) {
@@ -369,6 +402,10 @@ public final class HordeManager {
     }
 
     public static boolean triggerBloodMoon(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return false;
+        }
+
         ServerLevel eventLevel = eventLevel(level);
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         long absoluteDayTime = eventLevel.getDayTime();
@@ -391,21 +428,24 @@ public final class HordeManager {
     }
 
     public static boolean isHordeActive(ServerLevel level) {
-        return ApocalypseWorldData.get(level.getServer()).isHordeActive();
+        return Config.COMMON.enableDaySpawning.get()
+                && ApocalypseWorldData.get(level.getServer()).isHordeActive();
     }
 
     public static boolean isBloodMoonActive(ServerLevel level) {
-        return ApocalypseWorldData.get(level.getServer()).isBloodMoonActive();
+        return Config.COMMON.enableDaySpawning.get()
+                && ApocalypseWorldData.get(level.getServer()).isBloodMoonActive();
     }
 
     public static boolean isBloodMoonForced(ServerLevel level) {
-        return ApocalypseWorldData.get(level.getServer()).isForcedBloodMoonPending();
+        return Config.COMMON.enableDaySpawning.get()
+                && ApocalypseWorldData.get(level.getServer()).isForcedBloodMoonPending();
     }
 
     public static long getHordeRemainingSeconds(ServerLevel level) {
         ServerLevel eventLevel = eventLevel(level);
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
-        if (!state.isHordeActive()) {
+        if (!Config.COMMON.enableDaySpawning.get() || !state.isHordeActive()) {
             return 0L;
         }
 
@@ -418,6 +458,10 @@ public final class HordeManager {
     }
 
     public static double getSpawnMultiplier(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return 1.0;
+        }
+
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
         double multiplier = 1.0;
 
@@ -433,17 +477,35 @@ public final class HordeManager {
     }
 
     public static int getZombiesPerSpawn(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return Config.COMMON.zombiesPerSpawn.get();
+        }
+
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+        return selectEventWaveSize(
+                state.isHordeActive(),
+                state.isBloodMoonActive(),
+                Config.COMMON.zombiesPerSpawn.get(),
+                Config.COMMON.hordeZombiesPerSpawn.get(),
+                Config.COMMON.bloodMoonZombiesPerSpawn.get());
+    }
 
-        if (state.isHordeActive()) {
-            return Config.COMMON.hordeZombiesPerSpawn.get();
+    static int selectEventWaveSize(
+            boolean hordeActive,
+            boolean bloodMoonActive,
+            int normalSize,
+            int hordeSize,
+            int bloodMoonSize) {
+        if (hordeActive && bloodMoonActive) {
+            return Math.max(Math.max(1, hordeSize), Math.max(1, bloodMoonSize));
         }
-
-        if (state.isBloodMoonActive()) {
-            return Config.COMMON.bloodMoonZombiesPerSpawn.get();
+        if (hordeActive) {
+            return Math.max(1, hordeSize);
         }
-
-        return Config.COMMON.zombiesPerSpawn.get();
+        if (bloodMoonActive) {
+            return Math.max(1, bloodMoonSize);
+        }
+        return Math.max(1, normalSize);
     }
 
     public static int getEventSpawnInterval() {

@@ -31,6 +31,10 @@ public enum GameplayPreset {
             1, 40, 0.30, 16, 0.45, 0.35,
             2.00);
 
+    private static final int SAFE_SPAWN_RANGE = 30;
+    private static final int SAFE_MIN_SPAWN_DISTANCE = 12;
+    private static final int SAFE_SPAWN_ATTEMPTS = 10;
+
     private final String displayName;
     private final String description;
     private final int spawnInterval;
@@ -132,6 +136,10 @@ public enum GameplayPreset {
             Config.set(config.daySpawnChance, spawnChance);
             Config.set(config.zombiesPerSpawn, waveSize);
             Config.set(config.maxDayZombiesPerPlayer, nearbyCap);
+            Config.set(config.spawnRange, SAFE_SPAWN_RANGE);
+            Config.set(config.minSpawnDistance, SAFE_MIN_SPAWN_DISTANCE);
+            Config.set(config.spawnAttemptsPerZombie, SAFE_SPAWN_ATTEMPTS);
+            Config.set(config.requireOpenSkyForOverworldSpawns, true);
             Config.set(config.daylightSpawnStartDay, daylightStartDay);
             Config.set(config.maxBlockLightForSpawning, maxBlockLight);
             Config.set(config.babyZombieChance, babyChance);
@@ -169,6 +177,10 @@ public enum GameplayPreset {
                 && same(config.daySpawnChance.get(), spawnChance)
                 && config.zombiesPerSpawn.get() == waveSize
                 && config.maxDayZombiesPerPlayer.get() == nearbyCap
+                && config.spawnRange.get() == SAFE_SPAWN_RANGE
+                && config.minSpawnDistance.get() == SAFE_MIN_SPAWN_DISTANCE
+                && config.spawnAttemptsPerZombie.get() == SAFE_SPAWN_ATTEMPTS
+                && config.requireOpenSkyForOverworldSpawns.get()
                 && config.daylightSpawnStartDay.get() == daylightStartDay
                 && config.maxBlockLightForSpawning.get() == maxBlockLight
                 && same(config.babyZombieChance.get(), babyChance)

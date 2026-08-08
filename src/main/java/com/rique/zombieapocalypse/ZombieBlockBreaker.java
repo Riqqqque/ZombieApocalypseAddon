@@ -60,48 +60,50 @@ public final class ZombieBlockBreaker {
     private ZombieBlockBreaker() {
     }
 
-    public static void tick(Zombie zombie, DestroyPermission destroyPermission) {
-        if (!(zombie.level() instanceof ServerLevel level) || !zombie.isAlive()) {
-            return;
+    public static boolean tick(Zombie zombie, DestroyPermission destroyPermission) {
+        if (!(zombie.level() instanceof ServerLevel level) || !zombie.isAlive() || zombie.isNoAi()) {
+            return false;
         }
 
         if (!Config.COMMON.enableZombieBlockBreaking.get()) {
-            return;
+            return false;
         }
 
         if (!isBlockBreakingActive(true, DifficultyManager.getCurrentDay(level),
                 Config.COMMON.zombieBlockBreakingStartDay.get())) {
-            return;
+            return false;
         }
 
         long gameTime = level.getGameTime();
         if (!isScheduledTick(gameTime, zombie.getId(), Config.COMMON.zombieBlockBreakingInterval.get())) {
-            return;
+            return false;
         }
 
         Settings settings = Settings.capture();
         LivingEntity target = getValidTarget(zombie);
         if (settings.requireTarget() && target == null) {
-            return;
+            return false;
         }
 
         if (settings.chance() <= 0.0 || zombie.getRandom().nextDouble() >= settings.chance()) {
-            return;
+            return false;
         }
 
         boolean hasLineOfSight = target != null && zombie.hasLineOfSight(target);
         if (!isObstacleCheckSatisfied(settings.requireObstacle(), zombie.horizontalCollision, target != null, hasLineOfSight)) {
-            return;
+            return false;
         }
 
         BlockPos targetPos = findBreakTarget(level, zombie, target, settings, destroyPermission);
         if (targetPos == null) {
-            return;
+            return false;
         }
 
-        if (level.destroyBlock(targetPos, settings.dropBlocks(), zombie) && settings.debugLogging()) {
+        boolean destroyed = level.destroyBlock(targetPos, settings.dropBlocks(), zombie);
+        if (destroyed && settings.debugLogging()) {
             LOGGER.info("[ZombieApocalypse] {} broke block at {}", zombie.getType().getDescriptionId(), targetPos);
         }
+        return destroyed;
     }
 
     static boolean isBlockBreakingActive(boolean enabled, long currentDay, int startDay) {
