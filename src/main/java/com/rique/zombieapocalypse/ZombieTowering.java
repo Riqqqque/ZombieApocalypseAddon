@@ -48,7 +48,7 @@ public final class ZombieTowering {
     private ZombieTowering() {
     }
 
-    public static void tick(Zombie zombie) {
+    public static boolean tick(Zombie zombie) {
         if (!(zombie.level() instanceof ServerLevel level)
                 || !zombie.isAlive()
                 || zombie.isNoAi()
@@ -56,7 +56,7 @@ public final class ZombieTowering {
                 || zombie.isVehicle()
                 || zombie.isInWaterOrBubble()
                 || zombie.isInLava()) {
-            return;
+            return false;
         }
 
         if (!Config.COMMON.enableZombieTowering.get()
@@ -64,7 +64,7 @@ public final class ZombieTowering {
                         true,
                         DifficultyManager.getCurrentDay(level),
                         Config.COMMON.zombieToweringStartDay.get())) {
-            return;
+            return false;
         }
 
         long gameTime = level.getGameTime();
@@ -73,12 +73,12 @@ public final class ZombieTowering {
                 gameTime,
                 scheduleSalt,
                 Config.COMMON.zombieToweringInterval.get())) {
-            return;
+            return false;
         }
 
         LivingEntity target = getValidTarget(zombie);
         if (target == null) {
-            return;
+            return false;
         }
 
         Settings settings = Settings.capture();
@@ -86,7 +86,7 @@ public final class ZombieTowering {
                 || !isHeightAllowed(zombie.getY(), target.getY(), settings.maxHeightAboveTarget())
                 || settings.chance() <= 0.0
                 || zombie.getRandom().nextDouble() >= settings.chance()) {
-            return;
+            return false;
         }
 
         Vec3 direction = horizontalDirection(zombie, target);
@@ -102,18 +102,18 @@ public final class ZombieTowering {
                 hasForwardBarrier,
                 targetAbove,
                 hasLineOfSight)) {
-            return;
+            return false;
         }
 
         CrowdState crowd = inspectCrowd(level, zombie, settings.crowdRadius());
         if (!hasRequiredCrowd(crowd.nearbyZombies(), settings.minNearbyZombies())
                 || (!zombie.onGround() && !crowd.hasSupport())) {
-            return;
+            return false;
         }
 
         AABB raisedBounds = zombie.getBoundingBox().move(0.0, settings.verticalBoost() + 0.2, 0.0);
         if (hasBlockCollision(level, zombie, raisedBounds)) {
-            return;
+            return false;
         }
 
         Vec3 boostedMovement = computeBoostedMovement(
@@ -132,6 +132,7 @@ public final class ZombieTowering {
                     target.getType().getDescriptionId(),
                     crowd.nearbyZombies());
         }
+        return true;
     }
 
     static boolean isToweringActive(boolean enabled, long currentDay, int startDay) {

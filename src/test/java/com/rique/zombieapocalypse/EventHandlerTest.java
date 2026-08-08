@@ -54,6 +54,37 @@ class EventHandlerTest {
     }
 
     @Test
+    void mushroomSafeZoneDoesNotDependOnVariantBiomeModifiers() {
+        assertFalse(EventHandler.isBiomeSpawnAllowed(true, true));
+        assertTrue(EventHandler.isBiomeSpawnAllowed(false, true));
+        assertTrue(EventHandler.isBiomeSpawnAllowed(true, false));
+    }
+
+    @Test
+    void nightBoostOnlyAppliesToDimensionsWithARealNight() {
+        assertTrue(EventHandler.shouldApplyNightBoost(true, false, true));
+        assertFalse(EventHandler.shouldApplyNightBoost(true, true, true));
+        assertFalse(EventHandler.shouldApplyNightBoost(false, false, true));
+        assertFalse(EventHandler.shouldApplyNightBoost(true, false, false));
+    }
+
+    @Test
+    void disabledSiegeFeaturesUseTheFastPath() {
+        assertFalse(EventHandler.hasEnabledSiegeFeature(false, false, false));
+        assertTrue(EventHandler.hasEnabledSiegeFeature(true, false, false));
+        assertTrue(EventHandler.hasEnabledSiegeFeature(false, true, false));
+        assertTrue(EventHandler.hasEnabledSiegeFeature(false, false, true));
+    }
+
+    @Test
+    void customWavesIgnoreDeadAndNonSurvivalPlayers() {
+        assertTrue(EventHandler.isEligibleSpawnPlayer(true, false, false));
+        assertFalse(EventHandler.isEligibleSpawnPlayer(false, false, false));
+        assertFalse(EventHandler.isEligibleSpawnPlayer(true, true, false));
+        assertFalse(EventHandler.isEligibleSpawnPlayer(true, false, true));
+    }
+
+    @Test
     void maxBlockLightDebugTextShowsIgnoredOrClampedValue() {
         assertEquals("ignored", EventHandler.formatMaxBlockLight(-1));
         assertEquals("0", EventHandler.formatMaxBlockLight(0));

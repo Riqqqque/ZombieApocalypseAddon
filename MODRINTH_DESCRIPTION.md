@@ -35,7 +35,7 @@ For a fast setup, choose one gameplay preset:
 - **Standard:** recommended balance for most survival servers.
 - **Hardcore:** faster waves, larger events, and quicker difficulty growth.
 
-Presets never enable block breaking, block placing, or towering. They also leave advanced attribute values alone.
+Presets also restore a safe spawn range, minimum distance, attempt count, and open-sky rule, so an old impossible distance setup cannot break the selected preset. They never enable block breaking, block placing, or towering, and they leave advanced attribute values alone.
 
 Use `/za help` for short topic-based help instead of a wall of commands.
 
@@ -60,6 +60,8 @@ Use `/za help` for short topic-based help instead of a wall of commands.
 - Configurable bonus drops, including gunpowder
 - Spawn effects, debug logging, and live admin controls
 - Broad compatibility with zombie and spawn-control mods
+
+Mushroom-field safe zones remain active even if biome variant weighting is turned off. Night pressure only applies in dimensions with a real day/night cycle, so the Nether, End, and other fixed-time dimensions do not receive a permanent night boost. Bonus drops also respect the vanilla `doMobLoot` gamerule.
 
 ## What the Default Setup Does
 
@@ -119,17 +121,17 @@ Administrators can control:
 - night pressure
 - biome and dimension behavior
 
-Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks.
+Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
 ## Events and Progression
 
-Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings, and both can be triggered manually.
+Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 Basic day scaling is enough for most servers. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment.
 
 ## Optional Base Pressure
 
-Block breaking, block placing, and towering are independent and disabled by default.
+Block breaking, block placing, and towering are independent and disabled by default. No-AI zombies are ignored, and a zombie can complete at most one of these actions during the same tick.
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
@@ -175,7 +177,7 @@ The generated file begins with a **START HERE** section. For a normal setup, foc
 
 Leave `[compatibility]`, `[attributes]`, variant profiles, and context profiles at their defaults unless you specifically need deep tuning.
 
-Every setting includes a plain-language description, examples, safe ranges, and performance warnings where relevant. Remember that 20 ticks equals one second and chances use decimals from `0.0` to `1.0`.
+Every setting includes a plain-language description, examples, safe ranges, feature dependencies, and performance warnings where relevant. Remember that 20 ticks equals one second and chances use decimals from `0.0` to `1.0`.
 
 See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide) for practical examples.
 

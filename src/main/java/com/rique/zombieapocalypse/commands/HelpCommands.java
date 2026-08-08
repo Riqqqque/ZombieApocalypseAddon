@@ -86,7 +86,8 @@ public final class HelpCommands {
                         + "/zdayspawn horde <true|false> - enable scheduled hordes\n"
                         + "/zdayspawn hordechance <0.0-1.0> - scheduled horde chance\n"
                         + "/zdayspawn bloodmoon <true|false> - enable random blood moons\n"
-                        + "/zdayspawn daycounter <true|false> - toggle morning day titles",
+                        + "/zdayspawn daycounter <true|false> - toggle morning day titles\n"
+                        + "Hordes and blood moons need custom waves to be on.",
                 false);
         return 1;
     }
