@@ -103,9 +103,11 @@ public final class MainCommands {
         status.append("Nearby cap: ").append(Config.COMMON.maxDayZombiesPerPlayer.get())
                 .append(" per player | Daytime: ").append(daylight).append('\n');
         status.append("Base light protection: ").append(lightProtection).append('\n');
-        status.append("Events: horde ").append(eventState(Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level)))
+        status.append("Events: horde ").append(eventState(
+                Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level), spawningEnabled))
                 .append(" | blood moon ")
-                .append(eventState(Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level))).append('\n');
+                .append(eventState(
+                        Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level), spawningEnabled)).append('\n');
         status.append("Difficulty scaling: ").append(CommandUtil.onOff(Config.COMMON.enableDifficultyScaling.get()))
                 .append(" (").append(CommandUtil.percent(DifficultyManager.getScalingFactor(level))).append(")\n");
         status.append("World pressure: breaking ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockBreaking.get()))
@@ -123,9 +125,12 @@ public final class MainCommands {
         return 1;
     }
 
-    private static String eventState(boolean enabled, boolean active) {
+    private static String eventState(boolean enabled, boolean active, boolean customSpawningEnabled) {
         if (active) {
             return "ACTIVE";
+        }
+        if (!customSpawningEnabled) {
+            return "PAUSED";
         }
         return CommandUtil.onOff(enabled);
     }

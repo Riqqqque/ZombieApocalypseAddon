@@ -59,7 +59,7 @@ public final class DifficultyManager {
     }
 
     public static long getCurrentDay(ServerLevel level) {
-        return level.getDayTime() / 24000L;
+        return level.getServer().overworld().getDayTime() / 24000L;
     }
 
     public static double getScalingFactor(ServerLevel level) {
@@ -315,6 +315,7 @@ public final class DifficultyManager {
         }
 
         value = Math.max(minValue, Math.min(maxValue, value));
+        value = attribute.sanitizeValue(value);
         instance.setBaseValue(value);
     }
 

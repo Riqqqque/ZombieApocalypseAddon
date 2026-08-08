@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.30 | `zombieapocalypseaddon-2.2.30.jar` |
-| 1.20.1 | NeoForge | 1.5.24 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.24.jar` |
-| 1.20.1 | Forge | 1.5.24 | `zombieapocalypseaddon-forge-1.20.1-1.5.24.jar` |
+| 1.21.1 | NeoForge | 2.2.31 | `zombieapocalypseaddon-2.2.31.jar` |
+| 1.20.1 | NeoForge | 1.5.25 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.25.jar` |
+| 1.20.1 | Forge | 1.5.25 | `zombieapocalypseaddon-forge-1.20.1-1.5.25.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -41,7 +41,7 @@ That is enough for a normal server. You do not need to edit advanced attributes 
 
 ## Gameplay Presets
 
-Presets change the main spawning, event, and basic scaling settings. They never enable block breaking, block placing, towering, or overwrite advanced attribute values.
+Presets change the main spawning, event, and basic scaling settings. They also restore a safe spawn range, minimum distance, attempt count, and open-sky rule so an old impossible distance setup cannot break a preset. They never enable block breaking, block placing, towering, or overwrite advanced attribute values.
 
 | Command | Best for | Main behavior |
 |---|---|---|
@@ -107,7 +107,7 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 ### Custom Zombie Waves
 
-The mod performs bounded spawn checks around survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, daylight start day, open-sky rules, and block-light protection.
+The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
 Use `/zdayspawn status all` only when you need every related toggle. The normal `/zdayspawn` output stays short.
 
@@ -123,7 +123,7 @@ This checks block light, not sunlight, so daytime spawning still works.
 
 ### Hordes and Blood Moons
 
-Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls. Administrators can also start them manually.
+Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 ### Difficulty Progression
 
@@ -143,11 +143,11 @@ Each feature has a start day, live commands, conservative defaults, and protecti
 
 ### Variants, Biomes, and Dimensions
 
-Custom waves can contain Zombies, Husks, Drowned, and Zombie Villagers. Biomes can influence variant chances, mushroom fields can remain safe, and custom Nether or End spawning can be enabled separately.
+Custom waves can contain Zombies, Husks, Drowned, and Zombie Villagers. Biomes can influence variant chances, mushroom fields can remain safe even when biome variant weighting is disabled, and custom Nether or End spawning can be enabled separately. Night boost only applies in dimensions with a real day/night cycle, so fixed-time dimensions do not receive a permanent boost.
 
 ### Stats, Milestones, and Drops
 
-The mod tracks zombie kills and awards milestones at 250, 1,000, and 3,000 kills. Optional bonus drops include bones, string, gunpowder, ender pearls, and phantom membranes.
+The mod tracks zombie kills and awards milestones at 250, 1,000, and 3,000 kills. Optional bonus drops include bones, string, gunpowder, ender pearls, and phantom membranes. Bonus drops respect the vanilla `doMobLoot` gamerule.
 
 ## Mod Compatibility
 
@@ -219,9 +219,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.30 |
-| NeoForge | 1.20.1 | 1.5.24 |
-| Forge | 1.20.1 | 1.5.24 |
+| NeoForge | 1.21.1 | 2.2.31 |
+| NeoForge | 1.20.1 | 1.5.25 |
+| Forge | 1.20.1 | 1.5.25 |
 
 Build all targets on Windows with:
 

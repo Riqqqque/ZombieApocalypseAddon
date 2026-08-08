@@ -29,6 +29,7 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.NaturalSpawner;
@@ -187,10 +188,19 @@ public final class EventHandler {
             handleSunBurnTick(zombie);
         }
 
-        if (ZombieCompatibility.shouldUseAddonAi(zombie)) {
-            ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
-            ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
-            ZombieTowering.tick(zombie);
+        if (!zombie.isNoAi()
+                && hasEnabledSiegeFeature(
+                        Config.COMMON.enableZombieBlockBreaking.get(),
+                        Config.COMMON.enableZombieBlockPlacing.get(),
+                        Config.COMMON.enableZombieTowering.get())
+                && ZombieCompatibility.shouldUseAddonAi(zombie)) {
+            boolean acted = ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+            if (!acted) {
+                acted = ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
+            }
+            if (!acted) {
+                ZombieTowering.tick(zombie);
+            }
         }
     }
 
@@ -208,7 +218,9 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onLivingDrops(LivingDropsEvent event) {
-        if (!ZombieClassMobs.isZombieClass(event.getEntity()) || !Config.COMMON.enableExtraDrops.get()) {
+        if (!ZombieClassMobs.isZombieClass(event.getEntity())
+                || !Config.COMMON.enableExtraDrops.get()
+                || !event.getEntity().level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
             return;
         }
 
@@ -222,7 +234,7 @@ public final class EventHandler {
     }
 
     private static void addDrop(LivingDropsEvent event, Item item, double chance, RandomSource random) {
-        if (random.nextDouble() >= chance) {
+        if (chance <= 0.0 || random.nextDouble() >= chance) {
             return;
         }
 
@@ -320,7 +332,10 @@ public final class EventHandler {
         }
 
         double effectiveChance = ConfigValidator.probability(Config.COMMON.daySpawnChance.get());
-        if (!level.isDay() && Config.COMMON.enableNightBoost.get()) {
+        if (shouldApplyNightBoost(
+                !level.dimensionType().hasFixedTime(),
+                level.isDay(),
+                Config.COMMON.enableNightBoost.get())) {
             effectiveChance *= Config.COMMON.nightSpawnMultiplier.get();
         }
 
@@ -344,7 +359,7 @@ public final class EventHandler {
 
         StatisticsManager stats = settings.deathCooldownEnabled() ? StatisticsManager.get(level) : null;
         for (ServerPlayer player : level.players()) {
-            if (!player.isSpectator() && !player.isCreative()) {
+            if (isEligibleSpawnPlayer(player.isAlive(), player.isSpectator(), player.isCreative())) {
                 attemptSpawnZombie(level, player, effectiveChance, eventState, stats, settings, gameTime);
             }
         }
@@ -404,6 +419,7 @@ public final class EventHandler {
         int playerZ = playerPos.getZ();
         BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos();
         BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
+        BlockPos firstSpawnPos = null;
 
         int spawned = 0;
         for (int i = 0; i < maxAttempts && spawned < countToSpawn; i++) {
@@ -413,7 +429,7 @@ public final class EventHandler {
                 continue;
             }
 
-            int y = chooseSpawnY(level, playerY, random, x, z, scratchPos);
+            int y = chooseSpawnY(level, playerY, random, x, z, scratchPos, settings.requireOpenSky());
             spawnPos.set(x, y, z);
 
             if (horizontalDistanceSquared(spawnPos, playerPos) < minDistanceSq) {
@@ -467,9 +483,8 @@ public final class EventHandler {
                 continue;
             }
             spawned++;
-
-            if (settings.spawnEffectsEnabled()) {
-                playSpawnEffects(level, spawnPos, settings);
+            if (firstSpawnPos == null) {
+                firstSpawnPos = spawnPos.immutable();
             }
 
             if (settings.debugLogging()) {
@@ -480,6 +495,10 @@ public final class EventHandler {
                         level.getBrightness(LightLayer.BLOCK, spawnPos),
                         formatMaxBlockLight(settings.maxBlockLightForSpawning()));
             }
+        }
+
+        if (firstSpawnPos != null && settings.spawnEffectsEnabled()) {
+            playSpawnEffects(level, firstSpawnPos, settings);
         }
 
         if (settings.debugLogging() && spawned > 0) {
@@ -496,35 +515,73 @@ public final class EventHandler {
             RandomSource random,
             int x,
             int z,
-            BlockPos.MutableBlockPos scratchPos) {
+            BlockPos.MutableBlockPos scratchPos,
+            boolean requireOpenSky) {
         if (level.dimension() == Level.NETHER) {
-            int minY = Math.max(level.getMinBuildHeight() + 1, playerY - 16);
-            int maxY = Math.min(level.getMaxBuildHeight() - 2, playerY + 16);
-            if (minY >= maxY) {
-                return minY;
+            int nearbyY = chooseNearbySpawnY(level, playerY, random, x, z, scratchPos);
+            return nearbyY != Integer.MIN_VALUE
+                    ? nearbyY
+                    : Mth.clamp(playerY, level.getMinBuildHeight() + 1, level.getMaxBuildHeight() - 2);
+        }
+
+        if (level.dimension() == Level.OVERWORLD && !requireOpenSky) {
+            int nearbyY = chooseNearbySpawnY(level, playerY, random, x, z, scratchPos);
+            if (nearbyY != Integer.MIN_VALUE) {
+                return nearbyY;
             }
-
-            int startY = Mth.nextInt(random, minY, maxY);
-
-            for (int y = startY; y >= minY; y--) {
-                scratchPos.set(x, y, z);
-                if (level.getBlockState(scratchPos).isAir()) {
-                    scratchPos.set(x, y + 1, z);
-                    if (!level.getBlockState(scratchPos).isAir()) {
-                        continue;
-                    }
-
-                    scratchPos.set(x, y - 1, z);
-                    if (level.getBlockState(scratchPos).isFaceSturdy(level, scratchPos, Direction.UP)) {
-                        return y;
-                    }
-                }
-            }
-
-            return startY;
         }
 
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    }
+
+    private static int chooseNearbySpawnY(
+            ServerLevel level,
+            int playerY,
+            RandomSource random,
+            int x,
+            int z,
+            BlockPos.MutableBlockPos scratchPos) {
+        int minY = Math.max(level.getMinBuildHeight() + 1, playerY - 16);
+        int maxY = Math.min(level.getMaxBuildHeight() - 2, playerY + 16);
+        if (minY > maxY) {
+            return Integer.MIN_VALUE;
+        }
+
+        int startY = Mth.nextInt(random, minY, maxY);
+        int maxOffset = maxY - minY;
+        for (int offset = 0; offset <= maxOffset; offset++) {
+            int below = startY - offset;
+            if (below >= minY && hasStandingSpace(level, x, below, z, scratchPos)) {
+                return below;
+            }
+
+            int above = startY + offset;
+            if (offset > 0 && above <= maxY && hasStandingSpace(level, x, above, z, scratchPos)) {
+                return above;
+            }
+        }
+
+        return Integer.MIN_VALUE;
+    }
+
+    private static boolean hasStandingSpace(
+            ServerLevel level,
+            int x,
+            int y,
+            int z,
+            BlockPos.MutableBlockPos scratchPos) {
+        scratchPos.set(x, y, z);
+        if (!level.getBlockState(scratchPos).isAir()) {
+            return false;
+        }
+
+        scratchPos.set(x, y + 1, z);
+        if (!level.getBlockState(scratchPos).isAir()) {
+            return false;
+        }
+
+        scratchPos.set(x, y - 1, z);
+        return level.getBlockState(scratchPos).isFaceSturdy(level, scratchPos, Direction.UP);
     }
 
     static boolean isSpawnColumnLoaded(ServerLevel level, int x, int z) {
@@ -602,16 +659,27 @@ public final class EventHandler {
     }
 
     private static boolean canSpawnInBiome(ServerLevel level, BlockPos pos, SpawnRuntimeSettings settings) {
-        if (!settings.biomeModifiersEnabled()) {
+        if (!settings.mushroomSafeZone()) {
             return true;
         }
-
         Holder<Biome> biomeHolder = level.getBiome(pos);
-        if (settings.mushroomSafeZone() && biomeHolder.is(Biomes.MUSHROOM_FIELDS)) {
-            return false;
-        }
+        return isBiomeSpawnAllowed(true, biomeHolder.is(Biomes.MUSHROOM_FIELDS));
+    }
 
-        return true;
+    static boolean isBiomeSpawnAllowed(boolean mushroomSafeZone, boolean mushroomFieldsBiome) {
+        return !mushroomSafeZone || !mushroomFieldsBiome;
+    }
+
+    static boolean shouldApplyNightBoost(boolean hasDayNightCycle, boolean day, boolean enabled) {
+        return enabled && hasDayNightCycle && !day;
+    }
+
+    static boolean hasEnabledSiegeFeature(boolean breaking, boolean placing, boolean towering) {
+        return breaking || placing || towering;
+    }
+
+    static boolean isEligibleSpawnPlayer(boolean alive, boolean spectator, boolean creative) {
+        return alive && !spectator && !creative;
     }
 
     static int computeSpawnQuota(int nearbyZombies, int maxZombies, int requestedSpawns) {

@@ -83,20 +83,20 @@ public final class ZombieBlockPlacer {
     private ZombieBlockPlacer() {
     }
 
-    public static void tick(Zombie zombie, PlacePermission placePermission) {
-        if (!(zombie.level() instanceof ServerLevel level) || !zombie.isAlive()) {
-            return;
+    public static boolean tick(Zombie zombie, PlacePermission placePermission) {
+        if (!(zombie.level() instanceof ServerLevel level) || !zombie.isAlive() || zombie.isNoAi()) {
+            return false;
         }
 
         if (!Config.COMMON.enableZombieBlockPlacing.get()) {
-            return;
+            return false;
         }
 
         if (!isBlockPlacingActive(
                 true,
                 DifficultyManager.getCurrentDay(level),
                 Config.COMMON.zombieBlockPlacingStartDay.get())) {
-            return;
+            return false;
         }
 
         long gameTime = level.getGameTime();
@@ -105,44 +105,44 @@ public final class ZombieBlockPlacer {
                 gameTime,
                 scheduleSalt,
                 Config.COMMON.zombieBlockPlacingInterval.get())) {
-            return;
+            return false;
         }
 
         Block block = resolveConfiguredBlock(level, zombie.blockPosition());
         if (block == null) {
-            return;
+            return false;
         }
 
         Settings settings = Settings.capture(block);
         int placedCount = getPlacedCount(zombie);
         if (!hasPlacementBudget(placedCount, settings.maxPerZombie())) {
-            return;
+            return false;
         }
 
         LivingEntity target = getValidTarget(zombie);
         if (settings.requireTarget() && target == null) {
-            return;
+            return false;
         }
 
         if (target != null
                 && !isTargetDistanceAllowed(zombie.distanceToSqr(target), settings.maxTargetDistance())) {
-            return;
+            return false;
         }
 
         if (settings.chance() <= 0.0 || zombie.getRandom().nextDouble() >= settings.chance()) {
-            return;
+            return false;
         }
 
         Placement placement = findPlacement(level, zombie, target, settings);
         if (placement == null) {
-            return;
+            return false;
         }
 
         BlockState placedState = settings.block().defaultBlockState();
         if (!isSafePlacementMaterial(level, placement.pos(), placedState)) {
             cachedBlock = null;
             warnInvalidBlock(Config.COMMON.zombieBlockPlacingBlock.get());
-            return;
+            return false;
         }
 
         if (!placePermission.canPlace(
@@ -151,11 +151,11 @@ public final class ZombieBlockPlacer {
                 zombie,
                 settings.respectMobGriefing(),
                 placement.placementDirection())) {
-            return;
+            return false;
         }
 
         if (!level.setBlock(placement.pos(), placedState, 3)) {
-            return;
+            return false;
         }
 
         setPlacedCount(zombie, placedCount + 1);
@@ -170,6 +170,7 @@ public final class ZombieBlockPlacer {
                     placement.pos(),
                     placement.kind().name().toLowerCase());
         }
+        return true;
     }
 
     public static void clearRuntimeState() {
