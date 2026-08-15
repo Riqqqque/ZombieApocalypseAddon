@@ -49,7 +49,7 @@ public final class MainCommands {
         preset.apply();
         CommandUtil.feedback(source,
                 preset.displayName() + " preset applied. " + preset.description()
-                        + " Optional block breaking, block placing, towering, and advanced attribute values were not changed.",
+                        + " Daytime custom waves were turned on. Optional block breaking, block placing, towering, and advanced attribute values were not changed.",
                 true);
         return 1;
     }
@@ -63,7 +63,7 @@ public final class MainCommands {
                     .append(preset.description())
                     .append('\n');
         }
-        message.append("Applying a preset requires permission level 2. Presets change spawning, events, and basic scaling only. They never enable world-damaging features.");
+        message.append("Applying a preset requires permission level 2. Presets turn daytime custom waves on and change spawning, events, and basic scaling. They never enable world-damaging features.");
         CommandUtil.feedback(source, message.toString(), false);
         return 1;
     }
@@ -82,12 +82,16 @@ public final class MainCommands {
         ServerLevel level = source.getServer().overworld();
         long day = DifficultyManager.getCurrentDay(level);
         boolean spawningEnabled = Config.COMMON.enableDaySpawning.get();
+        boolean daytimeSpawningEnabled = Config.COMMON.enableDaytimeSpawning.get();
+        boolean hordePressureAvailable = spawningEnabled && (daytimeSpawningEnabled || !level.isDay());
         int daylightStart = Config.COMMON.daylightSpawnStartDay.get();
         int lightLimit = Config.COMMON.maxBlockLightForSpawning.get();
 
         String daylight = !spawningEnabled
                 ? "paused"
-                : day >= daylightStart ? "active" : "starts day " + daylightStart;
+                : !daytimeSpawningEnabled
+                        ? "OFF (night-only)"
+                        : day >= daylightStart ? "active" : "starts day " + daylightStart;
         String lightProtection = lightLimit < 0
                 ? "OFF (block light ignored)"
                 : "ON (spawns need light " + lightLimit + " or lower)";
@@ -104,7 +108,8 @@ public final class MainCommands {
                 .append(" per player | Daytime: ").append(daylight).append('\n');
         status.append("Base light protection: ").append(lightProtection).append('\n');
         status.append("Events: horde ").append(eventState(
-                Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level), spawningEnabled))
+                Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level),
+                hordePressureAvailable))
                 .append(" | blood moon ")
                 .append(eventState(
                         Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level), spawningEnabled)).append('\n');
@@ -127,11 +132,14 @@ public final class MainCommands {
 
     private static String eventState(boolean enabled, boolean active, boolean customSpawningEnabled) {
         if (active) {
-            return "ACTIVE";
+            return customSpawningEnabled ? "ACTIVE" : "ACTIVE (daytime blocked)";
+        }
+        if (!enabled) {
+            return "OFF";
         }
         if (!customSpawningEnabled) {
             return "PAUSED";
         }
-        return CommandUtil.onOff(enabled);
+        return "ON";
     }
 }

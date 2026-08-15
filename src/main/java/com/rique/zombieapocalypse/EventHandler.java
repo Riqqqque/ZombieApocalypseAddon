@@ -321,7 +321,7 @@ public final class EventHandler {
         }
 
         HordeManager.EventState eventState = HordeManager.getEventState(level);
-        if (isDaylightSpawnBlocked(level, eventState.hordeActive())) {
+        if (isDaytimeCustomSpawningBlocked(level, eventState.hordeActive())) {
             return;
         }
 
@@ -687,8 +687,20 @@ public final class EventHandler {
         return Math.min(Math.max(1, requestedSpawns), availableCapacity);
     }
 
-    static boolean isDaylightSpawnBlocked(boolean isDay, long currentDay, int daylightSpawnStartDay, boolean hordeActive) {
-        return isDay && !hordeActive && currentDay < Math.max(0, daylightSpawnStartDay);
+    static boolean isDaytimeCustomSpawningBlocked(
+            boolean hasDayNightCycle,
+            boolean isDay,
+            boolean daytimeSpawningEnabled,
+            long currentDay,
+            int daylightSpawnStartDay,
+            boolean hordeActive) {
+        if (!hasDayNightCycle || !isDay) {
+            return false;
+        }
+        if (!daytimeSpawningEnabled) {
+            return true;
+        }
+        return !hordeActive && currentDay < Math.max(0, daylightSpawnStartDay);
     }
 
     static boolean isBlockLightSpawnAllowed(int blockLight, int maxBlockLightForSpawning) {
@@ -722,9 +734,11 @@ public final class EventHandler {
         }
     }
 
-    private static boolean isDaylightSpawnBlocked(ServerLevel level, boolean hordeActive) {
-        return isDaylightSpawnBlocked(
+    private static boolean isDaytimeCustomSpawningBlocked(ServerLevel level, boolean hordeActive) {
+        return isDaytimeCustomSpawningBlocked(
+                !level.dimensionType().hasFixedTime(),
                 level.isDay(),
+                Config.COMMON.enableDaytimeSpawning.get(),
                 DifficultyManager.getCurrentDay(level),
                 Config.COMMON.daylightSpawnStartDay.get(),
                 hordeActive);

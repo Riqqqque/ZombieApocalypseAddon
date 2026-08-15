@@ -9,11 +9,20 @@ import org.junit.jupiter.api.Test;
 class HordeManagerTest {
 
     @Test
-    void scheduledHordesRespectGracePeriod() {
-        assertTrue(HordeManager.isScheduledHordeBlockedByGrace(0, 10));
-        assertTrue(HordeManager.isScheduledHordeBlockedByGrace(9, 10));
-        assertFalse(HordeManager.isScheduledHordeBlockedByGrace(10, 10));
-        assertFalse(HordeManager.isScheduledHordeBlockedByGrace(0, 0));
+    void scheduledHordesRespectNightOnlyModeAndGracePeriod() {
+        assertTrue(HordeManager.isScheduledHordeBlocked(false, 10, 0));
+        assertTrue(HordeManager.isScheduledHordeBlocked(true, 0, 10));
+        assertTrue(HordeManager.isScheduledHordeBlocked(true, 9, 10));
+        assertFalse(HordeManager.isScheduledHordeBlocked(true, 10, 10));
+        assertFalse(HordeManager.isScheduledHordeBlocked(true, 0, 0));
+    }
+
+    @Test
+    void manualHordesAreOnlyBlockedByNightOnlyModeDuringRealDaytime() {
+        assertTrue(HordeManager.isManualHordeBlockedByDaytime(true, true, false));
+        assertFalse(HordeManager.isManualHordeBlockedByDaytime(true, false, false));
+        assertFalse(HordeManager.isManualHordeBlockedByDaytime(true, true, true));
+        assertFalse(HordeManager.isManualHordeBlockedByDaytime(false, true, false));
     }
 
     @Test

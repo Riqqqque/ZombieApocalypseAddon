@@ -64,11 +64,12 @@ public final class HelpCommands {
                 "Spawning commands:\n"
                         + "/zdayspawn - show the important spawn settings\n"
                         + "/zdayspawn on|off - enable or pause custom waves\n"
+                        + "/zdayspawn daytime <true|false> - false makes custom spawning night-only\n"
                         + "/zdayspawn chance <0.0-1.0> - wave chance; 0.25 means 25%\n"
                         + "/zdayspawn interval <ticks> - time between checks; 20 ticks = 1 second\n"
                         + "/zdayspawn amount <1-50> - zombies attempted per wave\n"
                         + "/zdayspawn max <1-500> - nearby cap per player\n"
-                        + "/zdayspawn daylightstart <day> - delay daytime spawning\n"
+                        + "/zdayspawn daylightstart <day> - temporary daytime grace period\n"
                         + "/zdayspawn maxlight <-1-15> - -1 ignores lights; 7 lets bright bases block spawns\n"
                         + "/zdayspawn babychance <0.0-1.0> - use 0 to disable baby zombies\n"
                         + "/zdayspawn status all - show every live spawn-related setting",
@@ -87,7 +88,7 @@ public final class HelpCommands {
                         + "/zdayspawn hordechance <0.0-1.0> - scheduled horde chance\n"
                         + "/zdayspawn bloodmoon <true|false> - enable random blood moons\n"
                         + "/zdayspawn daycounter <true|false> - toggle morning day titles\n"
-                        + "Hordes and blood moons need custom waves to be on.",
+                        + "Hordes and blood moons need custom waves to be on. Night-only mode pauses scheduled dawn hordes.",
                 false);
         return 1;
     }

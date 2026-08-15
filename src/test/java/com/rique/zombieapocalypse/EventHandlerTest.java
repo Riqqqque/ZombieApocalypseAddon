@@ -19,13 +19,15 @@ class EventHandlerTest {
     }
 
     @Test
-    void daylightSpawnBlockUsesConfiguredStartDay() {
-        assertEquals(false, EventHandler.isDaylightSpawnBlocked(false, 0, 10, false));
-        assertEquals(true, EventHandler.isDaylightSpawnBlocked(true, 0, 10, false));
-        assertEquals(true, EventHandler.isDaylightSpawnBlocked(true, 9, 10, false));
-        assertEquals(false, EventHandler.isDaylightSpawnBlocked(true, 10, 10, false));
-        assertEquals(false, EventHandler.isDaylightSpawnBlocked(true, 0, 0, false));
-        assertEquals(false, EventHandler.isDaylightSpawnBlocked(true, 5, 10, true));
+    void daytimeSpawnGateHandlesNightOnlyGraceHordesAndFixedTimeDimensions() {
+        assertFalse(EventHandler.isDaytimeCustomSpawningBlocked(true, false, false, 0, 10, false));
+        assertTrue(EventHandler.isDaytimeCustomSpawningBlocked(true, true, false, 10, 0, false));
+        assertTrue(EventHandler.isDaytimeCustomSpawningBlocked(true, true, false, 10, 0, true));
+        assertTrue(EventHandler.isDaytimeCustomSpawningBlocked(true, true, true, 9, 10, false));
+        assertFalse(EventHandler.isDaytimeCustomSpawningBlocked(true, true, true, 10, 10, false));
+        assertFalse(EventHandler.isDaytimeCustomSpawningBlocked(true, true, true, 0, 0, false));
+        assertFalse(EventHandler.isDaytimeCustomSpawningBlocked(true, true, true, 5, 10, true));
+        assertFalse(EventHandler.isDaytimeCustomSpawningBlocked(false, true, false, 0, 10, false));
     }
 
     @Test

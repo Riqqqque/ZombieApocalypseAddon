@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.31 | `zombieapocalypseaddon-2.2.31.jar` |
-| 1.20.1 | NeoForge | 1.5.25 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.25.jar` |
-| 1.20.1 | Forge | 1.5.25 | `zombieapocalypseaddon-forge-1.20.1-1.5.25.jar` |
+| 1.21.1 | NeoForge | 2.2.32 | `zombieapocalypseaddon-2.2.32.jar` |
+| 1.20.1 | NeoForge | 1.5.26 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.26.jar` |
+| 1.20.1 | Forge | 1.5.26 | `zombieapocalypseaddon-forge-1.20.1-1.5.26.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -41,7 +41,7 @@ That is enough for a normal server. You do not need to edit advanced attributes 
 
 ## Gameplay Presets
 
-Presets change the main spawning, event, and basic scaling settings. They also restore a safe spawn range, minimum distance, attempt count, and open-sky rule so an old impossible distance setup cannot break a preset. They never enable block breaking, block placing, towering, or overwrite advanced attribute values.
+Presets turn daytime custom waves on and change the main spawning, event, and basic scaling settings. They also restore a safe spawn range, minimum distance, attempt count, and open-sky rule so an old impossible distance setup cannot break a preset. They never enable block breaking, block placing, towering, or overwrite advanced attribute values.
 
 | Command | Best for | Main behavior |
 |---|---|---|
@@ -79,6 +79,7 @@ Start with these:
 | `/za help` or `/zhelp` | Show quick help. |
 | `/za help <topic>` | Show focused help for one system. |
 | `/zdayspawn` | Show the important custom-spawn settings. |
+| `/zdayspawn daytime <true\|false>` | Use `false` for permanent night-only custom waves. |
 | `/zhorde` | Show current horde and blood moon status. |
 | `/zscaling` | Show current day-based difficulty progress. |
 
@@ -107,7 +108,9 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 ### Custom Zombie Waves
 
-The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
+The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, permanent daytime enablement, a temporary daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
+
+Use `/zdayspawn daytime false` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/zhorde start` must be used at night. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/zdayspawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
 
 Use `/zdayspawn status all` only when you need every related toggle. The normal `/zdayspawn` output stays short.
 
@@ -119,11 +122,11 @@ Use `/zdayspawn status all` only when you need every related toggle. The normal 
 - `0`: custom spawns require complete block darkness.
 - `7`: brighter areas block custom spawns.
 
-This checks block light, not sunlight, so daytime spawning still works.
+This setting checks block light, not sunlight. It does not disable daytime waves by itself; use `/zdayspawn daytime false` for that.
 
 ### Hordes and Blood Moons
 
-Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 ### Difficulty Progression
 
@@ -219,9 +222,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.31 |
-| NeoForge | 1.20.1 | 1.5.25 |
-| Forge | 1.20.1 | 1.5.25 |
+| NeoForge | 1.21.1 | 2.2.32 |
+| NeoForge | 1.20.1 | 1.5.26 |
+| Forge | 1.20.1 | 1.5.26 |
 
 Build all targets on Windows with:
 
