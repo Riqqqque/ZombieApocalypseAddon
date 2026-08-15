@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 
 import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.HordeManager;
+import com.rique.zombieapocalypse.HordeManager.HordeStartResult;
 
 public final class HordeCommands {
 
@@ -27,9 +28,15 @@ public final class HordeCommands {
                 .then(Commands.literal("start")
                         .executes(context -> {
                             ServerLevel level = context.getSource().getLevel();
-                            if (!HordeManager.startHorde(level)) {
+                            HordeStartResult result = HordeManager.startHorde(level);
+                            if (result == HordeStartResult.CUSTOM_SPAWNING_DISABLED) {
                                 context.getSource().sendFailure(Component.literal(
                                         "Custom zombie waves are off. Run /zdayspawn on before starting a horde."));
+                                return 0;
+                            }
+                            if (result == HordeStartResult.DAYTIME_SPAWNING_DISABLED) {
+                                context.getSource().sendFailure(Component.literal(
+                                        "Daytime custom waves are off. Wait until night or run /zdayspawn daytime true."));
                                 return 0;
                             }
                             CommandUtil.feedback(context.getSource(), "Horde event started.", true);
@@ -74,10 +81,23 @@ public final class HordeCommands {
         StringBuilder status = new StringBuilder("Event status:\n");
         status.append("Custom zombie waves: ")
                 .append(CommandUtil.onOff(Config.COMMON.enableDaySpawning.get())).append('\n');
-        status.append("Scheduled hordes: ").append(CommandUtil.onOff(Config.COMMON.enableHordeEvents.get()))
+        boolean daytimeSpawning = Config.COMMON.enableDaytimeSpawning.get();
+        String scheduledHordes = !Config.COMMON.enableHordeEvents.get()
+                ? "OFF"
+                : !Config.COMMON.enableDaySpawning.get()
+                ? "PAUSED (custom waves off)"
+                : !daytimeSpawning
+                        ? "PAUSED (night-only mode)"
+                        : "ON";
+        status.append("Daytime custom waves: ").append(CommandUtil.onOff(daytimeSpawning)).append('\n');
+        status.append("Scheduled hordes: ").append(scheduledHordes)
                 .append(" | Current horde: ").append(horde ? "ACTIVE" : "inactive");
         if (horde) {
             status.append(" (").append(HordeManager.getHordeRemainingSeconds(level)).append(" seconds left)");
+            ServerLevel overworld = source.getServer().overworld();
+            if (!daytimeSpawning && overworld.isDay()) {
+                status.append("; Overworld daytime waves are blocked");
+            }
         }
         status.append("\nRandom blood moons: ")
                 .append(CommandUtil.onOff(Config.COMMON.enableBloodMoon.get()))

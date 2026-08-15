@@ -110,6 +110,7 @@ public final class Config {
 
         // Day spawning core
         public final ForgeConfigSpec.BooleanValue enableDaySpawning;
+        public final ForgeConfigSpec.BooleanValue enableDaytimeSpawning;
         public final ForgeConfigSpec.IntValue daySpawnInterval;
         public final ForgeConfigSpec.DoubleValue daySpawnChance;
         public final ForgeConfigSpec.IntValue maxDayZombiesPerPlayer;
@@ -449,17 +450,29 @@ public final class Config {
                     "CUSTOM DAY/NIGHT SPAWNING",
                     "This is the main pressure system. It creates extra zombie waves around survival players.",
                     "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
+                    "Use enableDaytimeSpawning = false for permanent night-only custom waves.",
                     "Use maxBlockLightForSpawning if you want player-placed lights to protect bases from custom waves.",
                     "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
                     "Hardcore setup: increase chance/amount slowly, then test with multiple players before publishing a pack."))
                     .push("dayspawning");
             enableDaySpawning = builder
                     .comment(
-                            "Main on/off switch for the mod's custom zombie spawning.",
+                            "Main on/off switch for all custom zombie spawning added by this mod.",
                             "If false, the mod stops creating its own zombie waves around players.",
                             "Active or queued horde and blood moon pressure is canceled because those events use custom waves.",
                             "Difficulty, sunlight, drops, stats, optional siege AI, and the morning day counter stay independent.")
                     .define("enableDaySpawning", true);
+
+            enableDaytimeSpawning = builder
+                    .comment(
+                            "Controls custom waves during daytime in dimensions with a normal day/night cycle.",
+                            "true = custom waves can spawn during both day and night.",
+                            "false = night-only mode. Night waves and blood moons still work.",
+                            "Daytime horde waves are blocked, scheduled dawn hordes are paused, and /zhorde start is rejected during the day.",
+                            "The Nether, End, and other fixed-time dimensions still use their own dimension toggles.",
+                            "daylightSpawnStartDay is only used while this setting is true.",
+                            "Applying a gameplay preset turns daytime custom spawning back on.")
+                    .define("enableDaytimeSpawning", true);
 
             daySpawnInterval = builder
                     .comment(
@@ -534,9 +547,11 @@ public final class Config {
 
             daylightSpawnStartDay = builder
                     .comment(
-                            "Blocks daytime custom spawning until the world reaches this day number.",
+                            "Temporary grace period: blocks daytime custom spawning until the world reaches this day number.",
                             "0 = daytime spawning starts immediately.",
-                            "Nighttime custom spawning still works before this day.")
+                            "Nighttime custom spawning still works before this day.",
+                            "This value is kept but ignored while enableDaytimeSpawning is false.",
+                            "Use enableDaytimeSpawning = false for permanent night-only spawning.")
                     .defineInRange("daylightSpawnStartDay", 0, 0, 3650);
             builder.pop();
 

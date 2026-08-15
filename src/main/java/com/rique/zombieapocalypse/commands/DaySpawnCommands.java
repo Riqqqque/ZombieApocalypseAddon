@@ -34,6 +34,11 @@ public final class DaySpawnCommands {
                                     boolean enabled = BoolArgumentType.getBool(context, "value");
                                     return setSpawning(context.getSource(), enabled);
                                 })))
+                .then(Commands.literal("daytime")
+                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                .executes(context -> setDaytimeSpawning(
+                                        context.getSource(),
+                                        BoolArgumentType.getBool(context, "enabled")))))
                 .then(Commands.literal("chance")
                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
                                 .executes(context -> {
@@ -127,6 +132,9 @@ public final class DaySpawnCommands {
                                     String message = value <= 0
                                             ? "Daytime custom spawning starts immediately."
                                             : "Daytime custom spawning starts on day " + value + '.';
+                                    if (!Config.COMMON.enableDaytimeSpawning.get()) {
+                                        message += " This grace setting is saved but ignored while night-only mode is on.";
+                                    }
                                     CommandUtil.feedback(context.getSource(), message, true);
                                     return 1;
                                 })))
@@ -194,6 +202,16 @@ public final class DaySpawnCommands {
         return 1;
     }
 
+    private static int setDaytimeSpawning(CommandSourceStack source, boolean enabled) {
+        Config.set(Config.COMMON.enableDaytimeSpawning, enabled);
+        String message = enabled
+                ? "Daytime custom waves: ON. Temporary start day: "
+                        + Config.COMMON.daylightSpawnStartDay.get() + "."
+                : "Daytime custom waves: OFF (night-only). Night waves and blood moons still work; scheduled dawn hordes are paused.";
+        CommandUtil.feedback(source, message, true);
+        return 1;
+    }
+
     private static int showStatus(CommandSourceStack source, boolean detailed) {
         CommandUtil.feedback(source, detailed ? buildDetailedStatusMessage() : buildStatusMessage(), false);
         return 1;
@@ -210,7 +228,7 @@ public final class DaySpawnCommands {
                 .append(" per player | Spawn distance: ")
                 .append(Config.COMMON.minSpawnDistance.get()).append('-')
                 .append(Config.COMMON.spawnRange.get()).append(" blocks\n");
-        status.append("Daytime spawning: starts day ").append(Config.COMMON.daylightSpawnStartDay.get())
+        status.append("Daytime spawning: ").append(formatDaytimeSpawning())
                 .append(" | Open sky: ")
                 .append(CommandUtil.onOff(Config.COMMON.requireOpenSkyForOverworldSpawns.get())).append('\n');
         status.append("Base light protection: ")
@@ -228,6 +246,7 @@ public final class DaySpawnCommands {
         StringBuilder status = new StringBuilder();
         status.append("All spawn-related settings:\n");
         status.append("Enabled: ").append(CommandUtil.onOff(Config.COMMON.enableDaySpawning.get())).append('\n');
+        status.append("Daytime custom waves: ").append(formatDaytimeSpawning()).append('\n');
         status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.daySpawnInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.daySpawnChance.get())).append('\n');
         status.append("Max zombies/player: ").append(Config.COMMON.maxDayZombiesPerPlayer.get()).append('\n');
@@ -295,5 +314,12 @@ public final class DaySpawnCommands {
 
     private static String formatMaxBlockLight(int value) {
         return value < 0 ? "ignored" : Integer.toString(value);
+    }
+
+    private static String formatDaytimeSpawning() {
+        if (!Config.COMMON.enableDaytimeSpawning.get()) {
+            return "OFF (night-only; saved start day " + Config.COMMON.daylightSpawnStartDay.get() + ')';
+        }
+        return "ON (starts day " + Config.COMMON.daylightSpawnStartDay.get() + ')';
     }
 }

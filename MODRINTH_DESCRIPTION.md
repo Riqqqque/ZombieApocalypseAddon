@@ -35,13 +35,14 @@ For a fast setup, choose one gameplay preset:
 - **Standard:** recommended balance for most survival servers.
 - **Hardcore:** faster waves, larger events, and quicker difficulty growth.
 
-Presets also restore a safe spawn range, minimum distance, attempt count, and open-sky rule, so an old impossible distance setup cannot break the selected preset. They never enable block breaking, block placing, or towering, and they leave advanced attribute values alone.
+Presets turn daytime custom waves on and restore a safe spawn range, minimum distance, attempt count, and open-sky rule, so an old impossible distance setup cannot break the selected preset. They never enable block breaking, block placing, or towering, and they leave advanced attribute values alone.
 
 Use `/za help` for short topic-based help instead of a wall of commands.
 
 ## Main Features
 
 - Custom zombie waves around survival players during day and night
+- Permanent night-only custom spawning mode
 - Optional sunlight immunity
 - Optional torch and block-light spawn protection
 - Configurable baby zombie chance, including complete disablement
@@ -73,7 +74,7 @@ Player-built lights do not block the addon's custom waves by default. If you wan
 /zdayspawn maxlight 7
 ```
 
-This checks block light only. Sunlight remains ignored for custom daytime spawning.
+This checks block light only. It does not disable daytime waves by itself; use `/zdayspawn daytime false` for that.
 
 ## Essential Commands
 
@@ -84,6 +85,7 @@ This checks block light only. Sunlight remains ignored for custom daytime spawni
 | `/za config` | Show the config path and beginner sections. |
 | `/za help` or `/zhelp` | Show quick help and available topics. |
 | `/zdayspawn` | Show important custom-spawn settings. |
+| `/zdayspawn daytime <true\|false>` | Use `false` for permanent night-only custom waves. |
 | `/zdayspawn status all` | Show every spawn-related toggle. |
 | `/zhorde` | Show horde and blood moon status. |
 | `/zscaling` | Show day-based difficulty progress. |
@@ -114,6 +116,7 @@ Administrators can control:
 - nearby cap per player
 - minimum and maximum spawn distance
 - position attempts
+- permanent daytime spawning toggle
 - daylight start day
 - open-sky requirement
 - maximum allowed block light
@@ -123,9 +126,11 @@ Administrators can control:
 
 Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
+For night-only custom spawning, run `/zdayspawn daytime false`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
+
 ## Events and Progression
 
-Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 Basic day scaling is enough for most servers. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment.
 

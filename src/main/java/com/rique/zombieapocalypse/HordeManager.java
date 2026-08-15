@@ -34,6 +34,12 @@ public final class HordeManager {
         ENDED
     }
 
+    public enum HordeStartResult {
+        STARTED,
+        CUSTOM_SPAWNING_DISABLED,
+        DAYTIME_SPAWNING_DISABLED
+    }
+
     /**
      * Snapshot of event state for a single tick, avoiding repeated
      * {@link ApocalypseWorldData#get} lookups.
@@ -148,11 +154,14 @@ public final class HordeManager {
             return false;
         }
 
-        state.setLastHordeRollDay(currentDay);
-
-        if (isScheduledHordeBlockedByGrace(currentDay, Config.COMMON.daylightSpawnStartDay.get())) {
+        if (isScheduledHordeBlocked(
+                Config.COMMON.enableDaytimeSpawning.get(),
+                currentDay,
+                Config.COMMON.daylightSpawnStartDay.get())) {
             return false;
         }
+
+        state.setLastHordeRollDay(currentDay);
 
         int intervalDays = Math.max(1, Config.COMMON.hordeIntervalDays.get());
         if (!EventSchedule.shouldRollHorde(currentDay, dayTime, lastRollDay, intervalDays)) {
@@ -355,12 +364,19 @@ public final class HordeManager {
         state.setHordeEndGameTime(level.getGameTime() + (durationMinutes * 60L * 20L));
     }
 
-    public static boolean startHorde(ServerLevel level) {
+    public static HordeStartResult startHorde(ServerLevel level) {
         if (!Config.COMMON.enableDaySpawning.get()) {
-            return false;
+            return HordeStartResult.CUSTOM_SPAWNING_DISABLED;
         }
 
         ServerLevel eventLevel = eventLevel(level);
+        if (isManualHordeBlockedByDaytime(
+                !eventLevel.dimensionType().hasFixedTime(),
+                eventLevel.isDay(),
+                Config.COMMON.enableDaytimeSpawning.get())) {
+            return HordeStartResult.DAYTIME_SPAWNING_DISABLED;
+        }
+
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         int durationMinutes = Math.max(1, Config.COMMON.hordeDurationMinutes.get());
         long absoluteDayTime = eventLevel.getDayTime();
@@ -387,7 +403,7 @@ public final class HordeManager {
         if (Config.COMMON.enableDebugLogging.get()) {
             LOGGER.info("[ZombieApocalypse] Horde started; duration={} minutes", durationMinutes);
         }
-        return true;
+        return HordeStartResult.STARTED;
     }
 
     public static void stopHorde(ServerLevel level) {
@@ -512,8 +528,18 @@ public final class HordeManager {
         return Math.max(1, Config.COMMON.eventSpawnInterval.get());
     }
 
-    static boolean isScheduledHordeBlockedByGrace(long currentDay, int daylightSpawnStartDay) {
-        return currentDay < Math.max(0, daylightSpawnStartDay);
+    static boolean isScheduledHordeBlocked(
+            boolean daytimeSpawningEnabled,
+            long currentDay,
+            int daylightSpawnStartDay) {
+        return !daytimeSpawningEnabled || currentDay < Math.max(0, daylightSpawnStartDay);
+    }
+
+    static boolean isManualHordeBlockedByDaytime(
+            boolean hasDayNightCycle,
+            boolean isDay,
+            boolean daytimeSpawningEnabled) {
+        return hasDayNightCycle && isDay && !daytimeSpawningEnabled;
     }
 
     static boolean shouldConsumeScheduledHordeRollAfterEnd(long dayTime) {

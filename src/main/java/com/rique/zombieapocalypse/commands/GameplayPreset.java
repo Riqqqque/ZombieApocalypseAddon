@@ -126,6 +126,7 @@ public enum GameplayPreset {
         Config.Common config = Config.COMMON;
         Config.edit(() -> {
             Config.set(config.enableDaySpawning, true);
+            Config.set(config.enableDaytimeSpawning, true);
             Config.set(config.enableZombieVariants, true);
             Config.set(config.enableNightBoost, true);
             Config.set(config.enableHordeEvents, true);
@@ -168,6 +169,7 @@ public enum GameplayPreset {
     public boolean matchesCurrentSettings() {
         Config.Common config = Config.COMMON;
         return config.enableDaySpawning.get()
+                && config.enableDaytimeSpawning.get()
                 && config.enableZombieVariants.get()
                 && config.enableNightBoost.get()
                 && config.enableHordeEvents.get()
