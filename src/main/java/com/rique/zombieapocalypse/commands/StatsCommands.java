@@ -43,8 +43,7 @@ public final class StatsCommands {
                             showServerStats(context.getSource());
                             return 1;
                         }))
-                .then(Commands.literal("clear")
-                        .requires(source -> source.hasPermission(2))
+                .then(CommandUtil.admin(Commands.literal("clear")
                         .executes(context -> {
                             MinecraftServer server = context.getSource().getServer();
                             ServerLevel level = context.getSource().getLevel();
@@ -68,7 +67,7 @@ public final class StatsCommands {
                                     "All statistics, milestone progress, and cooldowns were cleared.",
                                     true);
                             return 1;
-                        })));
+                        }))));
     }
 
     private static void showPlayerStats(CommandSourceStack source, ServerPlayer player) {

@@ -9,7 +9,7 @@ Zombie Apocalypse Addon adds custom zombie waves, hordes, blood moons, day-based
 - **Multiplayer:** install on the server only. Players can join without the mod.
 - **Singleplayer:** install on the client because singleplayer runs a local server.
 - **Current targets:** NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1.
-- **Commands:** anyone can view `/za`, `/zhelp`, and `/zstats`; changing settings requires permission level 2.
+- **Commands:** anyone can read dashboards, help, stats, status pages, and current setting values. Changes require permission level 2.
 - **Config:** `config/zombieapocalypseaddon-common.toml`.
 - **Safe defaults:** block breaking, block placing, and zombie towering are off.
 
@@ -37,7 +37,7 @@ For a fast setup, choose one gameplay preset:
 
 Presets turn daytime custom waves on and restore a safe spawn range, minimum distance, attempt count, and open-sky rule, so an old impossible distance setup cannot break the selected preset. They never enable block breaking, block placing, or towering, and they leave advanced attribute values alone.
 
-Use `/za help` for short topic-based help instead of a wall of commands.
+Use `/za help` for short topic-based help instead of a wall of commands. Press Tab after `/za` to browse every system and get suggestions for states, values, players, attribute keys, and blocks.
 
 ## Main Features
 
@@ -71,10 +71,10 @@ The standard setup attempts two zombies with a 50% wave chance every six seconds
 Player-built lights do not block the addon's custom waves by default. If you want torches and similar blocks to protect bases, use the Casual preset or set:
 
 ```mcfunction
-/zdayspawn maxlight 7
+/za spawn maxlight 7
 ```
 
-This checks block light only. It does not disable daytime waves by itself; use `/zdayspawn daytime false` for that.
+This checks block light only. It does not disable daytime waves by itself; use `/za spawn daytime off` for that.
 
 ## Essential Commands
 
@@ -84,26 +84,26 @@ This checks block light only. It does not disable daytime waves by itself; use `
 | `/za preset <casual\|standard\|hardcore>` | Apply a safe gameplay preset. |
 | `/za config` | Show the config path and beginner sections. |
 | `/za help` or `/zhelp` | Show quick help and available topics. |
-| `/zdayspawn` | Show important custom-spawn settings. |
-| `/zdayspawn daytime <true\|false>` | Use `false` for permanent night-only custom waves. |
-| `/zdayspawn status all` | Show every spawn-related toggle. |
-| `/zhorde` | Show horde and blood moon status. |
-| `/zscaling` | Show day-based difficulty progress. |
-| `/zcompat` | Show mixed-mod compatibility safeguards. |
-| `/zcleanup uninstall` | Prepare a world before removing the mod. |
+| `/za spawn` | Show important custom-spawn settings. |
+| `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
+| `/za spawn status all` | Show every spawn-related toggle. |
+| `/za events` | Show horde and blood moon status. |
+| `/za scaling` | Show day-based difficulty progress. |
+| `/za compatibility` | Show mixed-mod compatibility safeguards. |
+| `/za cleanup uninstall` | Prepare a world before removing the mod. |
 
-Detailed command families remain available:
+Every system is available below `/za`:
 
-- `/zdayspawn` for spawning and main toggles
-- `/zhorde` and `/zbloodmoon` for events
-- `/zday` and `/zscaling` for progression
-- `/zblockbreak`, `/zblockplace`, and `/ztower` for optional base pressure
-- `/zstats` for kills and milestone reset
-- `/zattr` for advanced attributes
-- `/zcompat` for mixed-mod behavior
-- `/zburn`, `/zkill`, and `/zcleanup` for utilities
+- `/za spawn` for spawning and main toggles
+- `/za events` and `/za bloodmoon` for events
+- `/za day` and `/za scaling` for progression
+- `/za breaking`, `/za placing`, and `/za towering` for optional base pressure
+- `/za stats` for kills and milestone reset
+- `/za attributes` for advanced attributes
+- `/za compatibility` for mixed-mod behavior
+- `/za burn`, `/za kill`, and `/za cleanup` for utilities
 
-Bare status commands now show their current settings. Optional siege commands accept simple `on` and `off` forms.
+Run any setting name without a value to read its current value. Use `on` and `off` for switches; `true` and `false` still work for existing command blocks and scripts. All original `/z...` command roots remain supported.
 
 See the [full command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) for every subcommand and range.
 
@@ -126,7 +126,7 @@ Administrators can control:
 
 Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-For night-only custom spawning, run `/zdayspawn daytime false`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
+For night-only custom spawning, run `/za spawn daytime off`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
 
 ## Events and Progression
 
@@ -191,7 +191,7 @@ See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Co
 Run this before temporarily or permanently removing the mod:
 
 ```mcfunction
-/zcleanup uninstall
+/za cleanup uninstall
 ```
 
 Then stop the server and remove the jar. The command removes loaded zombie-class mobs, resets event state, and disables active addon systems.

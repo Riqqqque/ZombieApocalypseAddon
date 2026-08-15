@@ -10,7 +10,6 @@ public final class CommandRegistrar {
     }
 
     public static void registerAll(CommandDispatcher<CommandSourceStack> dispatcher) {
-        MainCommands.register(dispatcher);
         HelpCommands.register(dispatcher);
         CompatibilityCommands.register(dispatcher);
         UtilityCommands.register(dispatcher);
@@ -23,5 +22,6 @@ public final class CommandRegistrar {
         BlockPlaceCommands.register(dispatcher);
         TowerCommands.register(dispatcher);
         AttributeCommands.register(dispatcher);
+        MainCommands.register(dispatcher);
     }
 }
