@@ -2,6 +2,8 @@ package com.rique.zombieapocalypse.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -18,12 +20,13 @@ public final class MainCommands {
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(buildRoot("zombieapocalypse"));
-        dispatcher.register(buildRoot("za"));
+        LiteralCommandNode<CommandSourceStack> root = dispatcher.register(buildRoot(dispatcher));
+        dispatcher.register(Commands.literal("zombieapocalypse").redirect(root));
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> buildRoot(String name) {
-        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(name)
+    private static LiteralArgumentBuilder<CommandSourceStack> buildRoot(
+            CommandDispatcher<CommandSourceStack> dispatcher) {
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("za")
                 .executes(context -> showStatus(context.getSource()));
 
         root.then(Commands.literal("status")
@@ -37,12 +40,40 @@ public final class MainCommands {
         LiteralArgumentBuilder<CommandSourceStack> presets = Commands.literal("preset")
                 .executes(context -> showPresets(context.getSource()));
         for (GameplayPreset preset : GameplayPreset.values()) {
-            presets.then(Commands.literal(preset.name().toLowerCase(java.util.Locale.ROOT))
-                    .requires(source -> source.hasPermission(2))
-                    .executes(context -> applyPreset(context.getSource(), preset)));
+            presets.then(CommandUtil.admin(Commands.literal(preset.name().toLowerCase(java.util.Locale.ROOT))
+                    .executes(context -> applyPreset(context.getSource(), preset))));
         }
         root.then(presets);
+
+        addRedirect(root, dispatcher, "spawn", "zdayspawn");
+        addRedirect(root, dispatcher, "events", "zhorde");
+        addRedirect(root, dispatcher, "bloodmoon", "zbloodmoon");
+        addRedirect(root, dispatcher, "day", "zday");
+        addRedirect(root, dispatcher, "scaling", "zscaling");
+        addRedirect(root, dispatcher, "stats", "zstats");
+        addRedirect(root, dispatcher, "breaking", "zblockbreak");
+        addRedirect(root, dispatcher, "placing", "zblockplace");
+        addRedirect(root, dispatcher, "towering", "ztower");
+        addRedirect(root, dispatcher, "attributes", "zattr");
+        addRedirect(root, dispatcher, "compatibility", "zcompat");
+        addRedirect(root, dispatcher, "burn", "zburn");
+        addRedirect(root, dispatcher, "kill", "zkill");
+        addRedirect(root, dispatcher, "cleanup", "zcleanup");
         return root;
+    }
+
+    private static void addRedirect(
+            LiteralArgumentBuilder<CommandSourceStack> root,
+            CommandDispatcher<CommandSourceStack> dispatcher,
+            String alias,
+            String targetName) {
+        CommandNode<CommandSourceStack> target = dispatcher.getRoot().getChild(targetName);
+        if (target == null) {
+            throw new IllegalStateException("Command target was not registered: " + targetName);
+        }
+        root.then(Commands.literal(alias)
+                .requires(target.getRequirement())
+                .redirect(target));
     }
 
     private static int applyPreset(CommandSourceStack source, GameplayPreset preset) {
@@ -124,7 +155,7 @@ public final class MainCommands {
                 Config.COMMON.spawnRange.get())) {
             status.append("WARNING: Spawn range is too small for the minimum distance. Custom waves are paused.\n");
         }
-        status.append("Use /za preset for quick setup or /za help for command topics.");
+        status.append("Use /za preset for quick setup, /za help for guidance, or press Tab after /za.");
 
         CommandUtil.feedback(source, status.toString(), false);
         return 1;

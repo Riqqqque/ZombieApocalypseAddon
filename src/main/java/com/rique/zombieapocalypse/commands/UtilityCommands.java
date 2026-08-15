@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -30,21 +29,31 @@ public final class UtilityCommands {
 
     private static void registerZBurn(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zburn")
-                .requires(source -> source.hasPermission(2))
-                .then(Commands.argument("enabled", BoolArgumentType.bool())
-                        .executes(context -> {
-                            boolean enableBurning = BoolArgumentType.getBool(context, "enabled");
-                            Config.set(Config.COMMON.preventSunBurn, !enableBurning);
-                            CommandUtil.feedback(context.getSource(),
-                                    "Zombie daylight burning: " + CommandUtil.onOff(enableBurning),
-                                    true);
-                            return 1;
-                        })));
+                .executes(context -> showBurning(context.getSource()))
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setBurning(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setBurning(context.getSource(), false))))
+                .then(CommandUtil.admin(CommandUtil.toggleArgument("state")
+                        .executes(context -> setBurning(
+                                context.getSource(),
+                                CommandUtil.getToggle(context, "state"))))));
+    }
+
+    private static int showBurning(CommandSourceStack source) {
+        boolean burning = !Config.COMMON.preventSunBurn.get();
+        CommandUtil.feedback(source, "Zombie daylight burning: " + CommandUtil.onOff(burning), false);
+        return 1;
+    }
+
+    private static int setBurning(CommandSourceStack source, boolean burning) {
+        Config.set(Config.COMMON.preventSunBurn, !burning);
+        CommandUtil.feedback(source, "Zombie daylight burning: " + CommandUtil.onOff(burning), true);
+        return 1;
     }
 
     private static void registerZKill(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("zkill")
-                .requires(source -> source.hasPermission(2))
+        dispatcher.register(CommandUtil.admin(Commands.literal("zkill")
                 .executes(context -> {
                     int removed = removeZombieClassEntities(context.getSource().getServer());
 
@@ -52,15 +61,14 @@ public final class UtilityCommands {
                             "Removed " + removed + " zombie-class entities.",
                             true);
                     return removed;
-                }));
+                })));
     }
 
     private static void registerZCleanup(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("zcleanup")
-                .requires(source -> source.hasPermission(2))
+        dispatcher.register(CommandUtil.admin(Commands.literal("zcleanup")
                 .executes(context -> runCleanup(context.getSource(), false))
                 .then(Commands.literal("uninstall")
-                        .executes(context -> runCleanup(context.getSource(), true))));
+                        .executes(context -> runCleanup(context.getSource(), true)))));
     }
 
     private static int runCleanup(CommandSourceStack source, boolean uninstallPrep) {

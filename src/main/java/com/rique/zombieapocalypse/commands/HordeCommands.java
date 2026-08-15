@@ -23,53 +23,59 @@ public final class HordeCommands {
 
     private static void registerZHorde(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zhorde")
-                .requires(source -> source.hasPermission(2))
                 .executes(context -> showStatus(context.getSource()))
-                .then(Commands.literal("start")
-                        .executes(context -> {
-                            ServerLevel level = context.getSource().getLevel();
-                            HordeStartResult result = HordeManager.startHorde(level);
-                            if (result == HordeStartResult.CUSTOM_SPAWNING_DISABLED) {
-                                context.getSource().sendFailure(Component.literal(
-                                        "Custom zombie waves are off. Run /zdayspawn on before starting a horde."));
-                                return 0;
-                            }
-                            if (result == HordeStartResult.DAYTIME_SPAWNING_DISABLED) {
-                                context.getSource().sendFailure(Component.literal(
-                                        "Daytime custom waves are off. Wait until night or run /zdayspawn daytime true."));
-                                return 0;
-                            }
-                            CommandUtil.feedback(context.getSource(), "Horde event started.", true);
-                            return 1;
-                        }))
-                .then(Commands.literal("stop")
+                .then(CommandUtil.admin(Commands.literal("start")
+                        .executes(context -> startHorde(context.getSource()))))
+                .then(CommandUtil.admin(Commands.literal("stop")
                         .executes(context -> {
                             ServerLevel level = context.getSource().getLevel();
                             HordeManager.stopHorde(level);
                             CommandUtil.feedback(context.getSource(), "Horde event stopped.", true);
                             return 1;
-                        }))
+                        })))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource()))));
     }
 
     private static void registerZBloodMoon(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("zbloodmoon")
-                .requires(source -> source.hasPermission(2))
-                .executes(context -> {
-                    if (!Config.COMMON.enableDaySpawning.get()) {
-                        context.getSource().sendFailure(Component.literal(
-                                "Custom zombie waves are off. Run /zdayspawn on before forcing a blood moon."));
-                        return 0;
-                    }
-                    ServerLevel level = context.getSource().getLevel();
-                    boolean activeNow = HordeManager.triggerBloodMoon(level);
-                    CommandUtil.feedback(
-                            context.getSource(),
-                            activeNow ? "Blood moon is active now." : "Blood moon queued for tonight.",
-                            true);
-                    return 1;
-                }));
+        dispatcher.register(CommandUtil.admin(Commands.literal("zbloodmoon")
+                .executes(context -> startBloodMoon(context.getSource()))
+                .then(Commands.literal("start")
+                        .executes(context -> startBloodMoon(context.getSource())))
+                .then(Commands.literal("status")
+                        .executes(context -> showStatus(context.getSource())))));
+    }
+
+    private static int startHorde(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        HordeStartResult result = HordeManager.startHorde(level);
+        if (result == HordeStartResult.CUSTOM_SPAWNING_DISABLED) {
+            source.sendFailure(Component.literal(
+                    "Custom zombie waves are off. Run /za spawn on before starting a horde."));
+            return 0;
+        }
+        if (result == HordeStartResult.DAYTIME_SPAWNING_DISABLED) {
+            source.sendFailure(Component.literal(
+                    "Daytime custom waves are off. Wait until night or run /za spawn daytime on."));
+            return 0;
+        }
+        CommandUtil.feedback(source, "Horde event started.", true);
+        return 1;
+    }
+
+    private static int startBloodMoon(CommandSourceStack source) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            source.sendFailure(Component.literal(
+                    "Custom zombie waves are off. Run /za spawn on before forcing a blood moon."));
+            return 0;
+        }
+        ServerLevel level = source.getLevel();
+        boolean activeNow = HordeManager.triggerBloodMoon(level);
+        CommandUtil.feedback(
+                source,
+                activeNow ? "Blood moon is active now." : "Blood moon queued for tonight.",
+                true);
+        return 1;
     }
 
     private static int showStatus(CommandSourceStack source) {

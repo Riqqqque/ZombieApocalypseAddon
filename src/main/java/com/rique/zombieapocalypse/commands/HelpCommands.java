@@ -36,12 +36,11 @@ public final class HelpCommands {
                 "Zombie Apocalypse quick help:\n"
                         + "/za - show the main dashboard\n"
                         + "/za preset - compare the three gameplay presets\n"
-                        + "/zdayspawn - show the main spawn settings\n"
-                        + "/zhorde - show active event status\n"
-                        + "/zstats - show your zombie kills\n"
-                        + "/zblockbreak, /zblockplace, /ztower - optional base-pressure features\n"
-                        + "/zcleanup uninstall - prepare a world before removing the mod\n"
-                        + "More help: /za help <start|spawning|events|difficulty|bases|admin|advanced|all>",
+                        + "/za spawn - show the main spawn settings\n"
+                        + "/za events - show horde and blood moon status\n"
+                        + "/za stats - show your zombie kills\n"
+                        + "/za help <topic> - focused examples for one system\n"
+                        + "Press Tab after /za to see every command family. Existing /z... commands still work.",
                 false);
         return 1;
     }
@@ -52,9 +51,9 @@ public final class HelpCommands {
                         + "1. Run /za status to see what is active.\n"
                         + "2. An admin can run /za preset standard for the recommended balance.\n"
                         + "3. Use casual for a slower start or hardcore for more pressure.\n"
-                        + "4. Run /zdayspawn if you only want to tune spawning.\n"
+                        + "4. Run /za spawn if you only want to tune spawning.\n"
                         + "5. Run /za config to find the config and beginner sections.\n"
-                        + "Presets never enable block breaking, block placing, or towering.",
+                        + "Presets never enable block breaking, block placing, or towering. Press Tab at any step for choices.",
                 false);
         return 1;
     }
@@ -62,17 +61,17 @@ public final class HelpCommands {
     private static int showSpawningHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Spawning commands:\n"
-                        + "/zdayspawn - show the important spawn settings\n"
-                        + "/zdayspawn on|off - enable or pause custom waves\n"
-                        + "/zdayspawn daytime <true|false> - false makes custom spawning night-only\n"
-                        + "/zdayspawn chance <0.0-1.0> - wave chance; 0.25 means 25%\n"
-                        + "/zdayspawn interval <ticks> - time between checks; 20 ticks = 1 second\n"
-                        + "/zdayspawn amount <1-50> - zombies attempted per wave\n"
-                        + "/zdayspawn max <1-500> - nearby cap per player\n"
-                        + "/zdayspawn daylightstart <day> - temporary daytime grace period\n"
-                        + "/zdayspawn maxlight <-1-15> - -1 ignores lights; 7 lets bright bases block spawns\n"
-                        + "/zdayspawn babychance <0.0-1.0> - use 0 to disable baby zombies\n"
-                        + "/zdayspawn status all - show every live spawn-related setting",
+                        + "/za spawn - show the important spawn settings\n"
+                        + "/za spawn on|off - enable or pause custom waves\n"
+                        + "/za spawn daytime on|off - off makes custom spawning night-only\n"
+                        + "/za spawn chance <0.0-1.0> - wave chance; 0.25 means 25%\n"
+                        + "/za spawn interval <ticks> - time between checks; 20 ticks = 1 second\n"
+                        + "/za spawn amount <1-50> - zombies attempted per wave\n"
+                        + "/za spawn max <1-500> - nearby cap per player\n"
+                        + "/za spawn daylightstart <day> - temporary daytime grace period\n"
+                        + "/za spawn maxlight <-1-15> - -1 ignores lights; 7 protects bright bases\n"
+                        + "/za spawn babychance <0.0-1.0> - use 0 to disable baby zombies\n"
+                        + "Run a setting without a value to see its current value. Tab suggests useful values.",
                 false);
         return 1;
     }
@@ -80,14 +79,13 @@ public final class HelpCommands {
     private static int showEventHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Event commands:\n"
-                        + "/zhorde - show horde and blood moon status\n"
-                        + "/zhorde start - start a horde now\n"
-                        + "/zhorde stop - stop the active horde\n"
-                        + "/zbloodmoon - start a blood moon now or queue it for tonight\n"
-                        + "/zdayspawn horde <true|false> - enable scheduled hordes\n"
-                        + "/zdayspawn hordechance <0.0-1.0> - scheduled horde chance\n"
-                        + "/zdayspawn bloodmoon <true|false> - enable random blood moons\n"
-                        + "/zdayspawn daycounter <true|false> - toggle morning day titles\n"
+                        + "/za events - show horde and blood moon status\n"
+                        + "/za events start|stop - control a horde\n"
+                        + "/za bloodmoon start - start one now or queue it for tonight\n"
+                        + "/za spawn horde on|off - enable scheduled hordes\n"
+                        + "/za spawn hordechance <0.0-1.0> - scheduled horde chance\n"
+                        + "/za spawn bloodmoon on|off - enable random blood moons\n"
+                        + "/za spawn daycounter on|off - toggle morning day titles\n"
                         + "Hordes and blood moons need custom waves to be on. Night-only mode pauses scheduled dawn hordes.",
                 false);
         return 1;
@@ -96,11 +94,11 @@ public final class HelpCommands {
     private static int showDifficultyHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Difficulty commands:\n"
-                        + "/zscaling - show current day-based scaling\n"
-                        + "/zday - show the apocalypse day\n"
-                        + "/zday set <day> - change the apocalypse day safely\n"
-                        + "/zdayspawn scaling <true|false> - toggle day-based scaling\n"
-                        + "/zdayspawn attributes <true|false> - toggle advanced attribute tuning\n"
+                        + "/za scaling - show current day-based scaling\n"
+                        + "/za day - show the apocalypse day\n"
+                        + "/za day set <day> - change the apocalypse day safely\n"
+                        + "/za spawn scaling on|off - toggle day-based scaling\n"
+                        + "/za spawn attributes on|off - toggle advanced attribute tuning\n"
                         + "Use /za help advanced only if you need exact stat profiles.",
                 false);
         return 1;
@@ -109,9 +107,9 @@ public final class HelpCommands {
     private static int showBaseHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Base-pressure commands (all OFF by default):\n"
-                        + "/zblockbreak [on|off|status] - let zombies damage allowed blocks\n"
-                        + "/zblockplace [on|off|status] - let zombies build limited steps and bridges\n"
-                        + "/ztower [on|off|status] - let zombie crowds climb over each other\n"
+                        + "/za breaking [on|off|status] - let zombies damage allowed blocks\n"
+                        + "/za placing [on|off|status] - let zombies build limited steps and bridges\n"
+                        + "/za towering [on|off|status] - let zombie crowds climb over each other\n"
                         + "Use <command> startday <day> to delay a feature.\n"
                         + "Use <command> dayone to enable it immediately.\n"
                         + "Block breaking and placing respect mobGriefing by default.",
@@ -122,13 +120,13 @@ public final class HelpCommands {
     private static int showAdminHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Stats and maintenance commands:\n"
-                        + "/zstats [player|all] - view kill totals\n"
-                        + "/zstats clear - admin-only reset for stats, cooldowns, and milestones\n"
-                        + "/zkill - remove loaded zombie-class mobs\n"
-                        + "/zcleanup - remove loaded zombies and reset event state\n"
-                        + "/zcleanup uninstall - disable gameplay systems before removing the mod\n"
-                        + "/zburn <true|false> - choose whether zombies burn in daylight\n"
-                        + "/zcompat - show mod compatibility safeguards",
+                        + "/za stats [player|all] - view kill totals\n"
+                        + "/za stats clear - admin-only reset for stats, cooldowns, and milestones\n"
+                        + "/za kill - remove loaded zombie-class mobs\n"
+                        + "/za cleanup - remove loaded zombies and reset event state\n"
+                        + "/za cleanup uninstall - disable gameplay systems before removing the mod\n"
+                        + "/za burn [on|off] - view or change daylight burning\n"
+                        + "/za compatibility - show mod compatibility safeguards",
                 false);
         return 1;
     }
@@ -136,13 +134,12 @@ public final class HelpCommands {
     private static int showAdvancedHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Advanced tuning:\n"
-                        + "/zattr status - show attribute system state\n"
-                        + "/zattr keys - explain key format\n"
-                        + "/zattr keys all - print every available key\n"
-                        + "/zattr get <key> - read one value\n"
-                        + "/zattr set <key> <value> - change one numeric value\n"
-                        + "/zattr toggle <key> <true|false> - change an attribute toggle\n"
-                        + "/zcompat status - inspect mixed-mod safeguards\n"
+                        + "/za attributes - show attribute system state\n"
+                        + "/za attributes keys [all] - explain or list keys\n"
+                        + "/za attributes get <key> - read one value\n"
+                        + "/za attributes set <key> <value> - change one numeric value\n"
+                        + "/za attributes toggle <key> <on|off> - change an attribute toggle\n"
+                        + "/za compatibility - inspect mixed-mod safeguards\n"
                         + "Most servers should leave advanced attributes and compatibility at their defaults.",
                 false);
         return 1;
@@ -151,16 +148,14 @@ public final class HelpCommands {
     static int showAllHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Command families:\n"
-                        + "/za - dashboard, presets, config help, and command overview\n"
-                        + "/zdayspawn - custom spawning and main feature toggles\n"
-                        + "/zhorde, /zbloodmoon - event controls\n"
-                        + "/zday, /zscaling - day counter and difficulty\n"
-                        + "/zblockbreak, /zblockplace, /ztower - optional base pressure\n"
-                        + "/zstats - kill totals and milestone reset\n"
-                        + "/zattr - advanced numeric attributes\n"
-                        + "/zcompat - mixed-mod compatibility\n"
-                        + "/zburn, /zkill, /zcleanup - utilities and removal\n"
-                        + "Use /za help <topic> for examples. Full reference: github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands",
+                        + "/za spawn - spawning and main feature toggles\n"
+                        + "/za events, /za bloodmoon - event controls\n"
+                        + "/za day, /za scaling - day counter and difficulty\n"
+                        + "/za breaking, /za placing, /za towering - optional base pressure\n"
+                        + "/za stats - kill totals and milestone reset\n"
+                        + "/za attributes, /za compatibility - advanced controls\n"
+                        + "/za burn, /za kill, /za cleanup - utilities and removal\n"
+                        + "Existing /z... roots remain compatible. Press Tab after /za or use /za help <topic>.",
                 false);
         return 1;
     }

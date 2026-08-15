@@ -14,7 +14,7 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 - **Multiplayer:** install the mod on the server only. Players can join without it.
 - **Singleplayer:** install it on the client because singleplayer runs a local server.
-- **Permissions:** anyone can use `/za`, `/zhelp`, and `/zstats`; changing settings and admin actions require permission level 2.
+- **Permissions:** anyone can read dashboards, help, stats, status pages, and current setting values. Changes and admin actions require permission level 2.
 - **Minecraft targets:** NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1.
 - **Config:** `config/zombieapocalypseaddon-common.toml`.
 - **Safe defaults:** block breaking, block placing, and zombie towering are disabled.
@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.32 | `zombieapocalypseaddon-2.2.32.jar` |
-| 1.20.1 | NeoForge | 1.5.26 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.26.jar` |
-| 1.20.1 | Forge | 1.5.26 | `zombieapocalypseaddon-forge-1.20.1-1.5.26.jar` |
+| 1.21.1 | NeoForge | 2.2.33 | `zombieapocalypseaddon-2.2.33.jar` |
+| 1.20.1 | NeoForge | 1.5.27 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.27.jar` |
+| 1.20.1 | Forge | 1.5.27 | `zombieapocalypseaddon-forge-1.20.1-1.5.27.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -78,10 +78,10 @@ Start with these:
 | `/za config` | Show the config path and beginner sections. |
 | `/za help` or `/zhelp` | Show quick help. |
 | `/za help <topic>` | Show focused help for one system. |
-| `/zdayspawn` | Show the important custom-spawn settings. |
-| `/zdayspawn daytime <true\|false>` | Use `false` for permanent night-only custom waves. |
-| `/zhorde` | Show current horde and blood moon status. |
-| `/zscaling` | Show current day-based difficulty progress. |
+| `/za spawn` | Show the important custom-spawn settings. |
+| `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
+| `/za events` | Show current horde and blood moon status. |
+| `/za scaling` | Show current day-based difficulty progress. |
 
 Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `advanced`, and `all`.
 
@@ -89,18 +89,18 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 
 | Command | Controls |
 |---|---|
-| `/zdayspawn` | Custom waves, variants, dimensions, effects, and main system toggles. |
-| `/zhorde` and `/zbloodmoon` | Horde and blood moon events. |
-| `/zday` and `/zscaling` | World day and difficulty progression. |
-| `/zblockbreak` | Optional zombie block breaking. |
-| `/zblockplace` | Optional limited bridges and steps. |
-| `/ztower` | Optional crowd-based zombie climbing. |
-| `/zstats` | Kill totals, cooldowns, and milestone reset. |
-| `/zcompat` | Mixed-mod compatibility safeguards. |
-| `/zattr` | Advanced numeric attribute tuning. |
-| `/zburn`, `/zkill`, `/zcleanup` | Sunlight, cleanup, and safe removal utilities. |
+| `/za spawn` | Custom waves, variants, dimensions, effects, and main system toggles. |
+| `/za events` and `/za bloodmoon` | Horde and blood moon events. |
+| `/za day` and `/za scaling` | World day and difficulty progression. |
+| `/za breaking` | Optional zombie block breaking. |
+| `/za placing` | Optional limited bridges and steps. |
+| `/za towering` | Optional crowd-based zombie climbing. |
+| `/za stats` | Kill totals, cooldowns, and milestone reset. |
+| `/za compatibility` | Mixed-mod compatibility safeguards. |
+| `/za attributes` | Advanced attribute tuning. |
+| `/za burn`, `/za kill`, `/za cleanup` | Sunlight, cleanup, and safe removal utilities. |
 
-Bare `/zdayspawn`, `/zhorde`, `/zscaling`, `/zblockbreak`, `/zblockplace`, and `/ztower` commands show status. Optional siege features also accept simple `on` and `off` forms.
+Press Tab after `/za` to see every command family. Tab completion also suggests on/off states, current and common numeric values, attribute keys, online players, and registered block IDs. Running a setting without a value shows its current value. The original `/z...` commands remain fully supported for existing servers and command blocks.
 
 The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) includes every subcommand and range.
 
@@ -110,9 +110,9 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, permanent daytime enablement, a temporary daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-Use `/zdayspawn daytime false` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/zhorde start` must be used at night. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/zdayspawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
+Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/za events start` must be used at night. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
 
-Use `/zdayspawn status all` only when you need every related toggle. The normal `/zdayspawn` output stays short.
+Use `/za spawn status all` only when you need every related toggle. The normal `/za spawn` output stays short.
 
 ### Light Protection
 
@@ -122,7 +122,7 @@ Use `/zdayspawn status all` only when you need every related toggle. The normal 
 - `0`: custom spawns require complete block darkness.
 - `7`: brighter areas block custom spawns.
 
-This setting checks block light, not sunlight. It does not disable daytime waves by itself; use `/zdayspawn daytime false` for that.
+This setting checks block light, not sunlight. It does not disable daytime waves by itself; use `/za spawn daytime off` for that.
 
 ### Hordes and Blood Moons
 
@@ -166,7 +166,7 @@ Compatibility safeguards can:
 
 Built-in handling covers Zombie Awareness, Zombie Horse Spawn, Mo' Zombies Wave, More Zombie Villagers, Zombies Reworked, Zombie Villagers From Spawner, Zombie Variants, Zombies+, Zombie Proof Doors, Undead Nights, The Hordes, Improved Mobs, In Control!, Bad Mobs, and Giant Spawn.
 
-Run `/zcompat status` to inspect the live safeguards. See the [compatibility guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Compatibility) for exact behavior.
+Run `/za compatibility status` to inspect the live safeguards. See the [compatibility guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Compatibility) for exact behavior.
 
 ## Config Guide
 
@@ -222,9 +222,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.32 |
-| NeoForge | 1.20.1 | 1.5.26 |
-| Forge | 1.20.1 | 1.5.26 |
+| NeoForge | 1.21.1 | 2.2.33 |
+| NeoForge | 1.20.1 | 1.5.27 |
+| Forge | 1.20.1 | 1.5.27 |
 
 Build all targets on Windows with:
 
@@ -235,6 +235,8 @@ Build all targets on Windows with:
 Release jars are collected in `build/modrinth`.
 
 Java 21 is required for the aggregate build. The project compiles the Minecraft 1.20.1 targets with Java 17 toolchains. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+Maintainers should use the [release checklist](RELEASE_CHECKLIST.md) for every public build.
 
 ## More Help
 
