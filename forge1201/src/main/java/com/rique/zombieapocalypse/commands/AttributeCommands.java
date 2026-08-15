@@ -2,13 +2,14 @@ package com.rique.zombieapocalypse.commands;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -36,6 +37,7 @@ public final class AttributeCommands {
 
     private static final Map<String, NumericSetting> NUMERIC_SETTINGS = createNumericSettings();
     private static final Map<String, ForgeConfigSpec.BooleanValue> BOOLEAN_SETTINGS = createBooleanSettings();
+    private static final Set<String> READABLE_KEYS = createReadableKeys();
 
     private AttributeCommands() {
     }
@@ -43,7 +45,10 @@ public final class AttributeCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("zattr")
-                        .requires(source -> source.hasPermission(2))
+                        .executes(context -> {
+                            CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource()), false);
+                            return 1;
+                        })
                         .then(Commands.literal("status")
                                 .executes(context -> {
                                     CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource()), false);
@@ -61,26 +66,15 @@ public final class AttributeCommands {
                                         })))
                         .then(Commands.literal("get")
                                 .then(Commands.argument("key", StringArgumentType.word())
-                                        .suggests((context, builder) -> suggestKeys(builder, NUMERIC_SETTINGS.keySet()))
-                                        .executes(context -> {
-                                            String key = StringArgumentType.getString(context, "key");
-                                            NumericSetting setting = NUMERIC_SETTINGS.get(key);
-                                            if (setting == null) {
-                                                CommandUtil.feedback(context.getSource(), "Unknown numeric key: " + key, false);
-                                                return 0;
-                                            }
-
-                                            double current = setting.get();
-                                            String value = setting.integer()
-                                                    ? Integer.toString((int) Math.round(current))
-                                                    : CommandUtil.number(current);
-                                            CommandUtil.feedback(context.getSource(), key + " = " + value, false);
-                                            return 1;
-                                        })))
-                        .then(Commands.literal("set")
+                                        .suggests((context, builder) -> suggestKeys(builder, READABLE_KEYS))
+                                        .executes(context -> showValue(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "key")))))
+                        .then(CommandUtil.admin(Commands.literal("set")
                                 .then(Commands.argument("key", StringArgumentType.word())
                                         .suggests((context, builder) -> suggestKeys(builder, NUMERIC_SETTINGS.keySet()))
                                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(-10000.0, 10000.0))
+                                                .suggests(AttributeCommands::suggestCurrentNumericValue)
                                                 .executes(context -> {
                                                     String key = StringArgumentType.getString(context, "key");
                                                     double value = DoubleArgumentType.getDouble(context, "value");
@@ -112,14 +106,14 @@ public final class AttributeCommands {
                                                                 false);
                                                         return 0;
                                                     }
-                                                }))))
-                        .then(Commands.literal("toggle")
+                                                })))))
+                        .then(CommandUtil.admin(Commands.literal("toggle")
                                 .then(Commands.argument("key", StringArgumentType.word())
                                         .suggests((context, builder) -> suggestKeys(builder, BOOLEAN_SETTINGS.keySet()))
-                                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .then(CommandUtil.toggleArgument("state")
                                                 .executes(context -> {
                                                     String key = StringArgumentType.getString(context, "key");
-                                                    boolean enabled = BoolArgumentType.getBool(context, "enabled");
+                                                    boolean enabled = CommandUtil.getToggle(context, "state");
                                                     ForgeConfigSpec.BooleanValue setting = BOOLEAN_SETTINGS.get(key);
                                                     if (setting == null) {
                                                         CommandUtil.feedback(context.getSource(),
@@ -132,17 +126,58 @@ public final class AttributeCommands {
                                                             "Set " + key + " = " + CommandUtil.onOff(enabled),
                                                             true);
                                                     return 1;
-                                                })))));
+                                                }))))));
     }
 
     private static CompletableFuture<Suggestions> suggestKeys(SuggestionsBuilder builder, Collection<String> keys) {
         return SharedSuggestionProvider.suggest(keys, builder);
     }
 
+    private static Set<String> createReadableKeys() {
+        LinkedHashSet<String> keys = new LinkedHashSet<>(NUMERIC_SETTINGS.keySet());
+        keys.addAll(BOOLEAN_SETTINGS.keySet());
+        return Set.copyOf(keys);
+    }
+
+    private static int showValue(CommandSourceStack source, String key) {
+        NumericSetting numeric = NUMERIC_SETTINGS.get(key);
+        if (numeric != null) {
+            double current = numeric.get();
+            String value = numeric.integer()
+                    ? Integer.toString((int) Math.round(current))
+                    : CommandUtil.number(current);
+            CommandUtil.feedback(source, key + " = " + value, false);
+            return 1;
+        }
+
+        ForgeConfigSpec.BooleanValue toggle = BOOLEAN_SETTINGS.get(key);
+        if (toggle != null) {
+            CommandUtil.feedback(source, key + " = " + CommandUtil.onOff(toggle.get()), false);
+            return 1;
+        }
+
+        CommandUtil.feedback(source, "Unknown attribute key: " + key, false);
+        return 0;
+    }
+
+    private static CompletableFuture<Suggestions> suggestCurrentNumericValue(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            SuggestionsBuilder builder) {
+        NumericSetting setting = NUMERIC_SETTINGS.get(StringArgumentType.getString(context, "key"));
+        if (setting == null) {
+            return Suggestions.empty();
+        }
+        double current = setting.get();
+        String value = setting.integer()
+                ? Integer.toString((int) Math.round(current))
+                : CommandUtil.number(current);
+        return CommandSuggestions.suggest(builder, value, "0", "1");
+    }
+
     private static String buildStatusMessage(CommandSourceStack source) {
         return "Attribute tuning command status:\n"
                 + DifficultyManager.getScalingStatus(source.getLevel()) + "\n"
-                + "Use /zattr keys for key groups, or /zattr keys all for all keys.";
+                + "Use /za attributes keys for key groups, or /za attributes keys all for all keys.";
     }
 
     private static String buildKeySummary() {

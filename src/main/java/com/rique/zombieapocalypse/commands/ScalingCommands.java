@@ -15,7 +15,6 @@ public final class ScalingCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zscaling")
-                .requires(source -> source.hasPermission(2))
                 .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource()))));

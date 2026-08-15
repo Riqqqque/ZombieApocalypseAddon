@@ -1,12 +1,6 @@
 package com.rique.zombieapocalypse.commands;
 
-import java.util.function.Consumer;
-
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -21,15 +15,14 @@ public final class TowerCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("ztower")
-                .requires(source -> source.hasPermission(2))
                 .executes(context -> showStatus(context.getSource()))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
-                .then(Commands.literal("on")
-                        .executes(context -> setEnabled(context.getSource(), true)))
-                .then(Commands.literal("off")
-                        .executes(context -> setEnabled(context.getSource(), false)))
-                .then(Commands.literal("dayone")
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false))))
+                .then(CommandUtil.admin(Commands.literal("dayone")
                         .executes(context -> {
                             Config.edit(() -> {
                                 Config.set(Config.COMMON.enableZombieTowering, true);
@@ -38,108 +31,59 @@ public final class TowerCommands {
                             CommandUtil.feedback(context.getSource(),
                                     "Zombie towering enabled and set to start immediately.", true);
                             return 1;
-                        }))
-                .then(toggleBoolNode("enabled", value -> Config.set(Config.COMMON.enableZombieTowering, value),
-                        "Zombie towering"))
-                .then(Commands.literal("startday")
-                        .then(Commands.argument("day", IntegerArgumentType.integer(0, 3650))
-                                .executes(context -> {
-                                    int value = IntegerArgumentType.getInteger(context, "day");
-                                    Config.set(Config.COMMON.zombieToweringStartDay, value);
-                                    String message = value == 0
-                                            ? "Zombie towering can start immediately when enabled."
-                                            : "Zombie towering starts on day " + value + '.';
-                                    CommandUtil.feedback(context.getSource(), message, true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("interval")
-                        .then(Commands.argument("ticks", IntegerArgumentType.integer(5, 72000))
-                                .executes(context -> {
-                                    int value = IntegerArgumentType.getInteger(context, "ticks");
-                                    Config.set(Config.COMMON.zombieToweringInterval, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering interval: " + CommandUtil.ticks(value), true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("chance")
-                        .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0, 1.0))
-                                .executes(context -> {
-                                    double value = DoubleArgumentType.getDouble(context, "value");
-                                    Config.set(Config.COMMON.zombieToweringChance, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering chance: " + CommandUtil.percent(value), true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("distance")
-                        .then(Commands.argument("blocks", IntegerArgumentType.integer(4, 128))
-                                .executes(context -> {
-                                    int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.set(Config.COMMON.zombieToweringMaxTargetDistance, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering target distance: " + value + " blocks", true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("crowd")
-                        .then(Commands.argument("zombies", IntegerArgumentType.integer(1, 16))
-                                .executes(context -> {
-                                    int value = IntegerArgumentType.getInteger(context, "zombies");
-                                    Config.set(Config.COMMON.zombieToweringMinNearbyZombies, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Nearby zombies required for towering: " + value, true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("radius")
-                        .then(Commands.argument("blocks", DoubleArgumentType.doubleArg(0.75, 6.0))
-                                .executes(context -> {
-                                    double value = DoubleArgumentType.getDouble(context, "blocks");
-                                    Config.set(Config.COMMON.zombieToweringCrowdRadius, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering crowd radius: " + value + " blocks", true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("vertical")
-                        .then(Commands.argument("velocity", DoubleArgumentType.doubleArg(0.1, 1.0))
-                                .executes(context -> {
-                                    double value = DoubleArgumentType.getDouble(context, "velocity");
-                                    Config.set(Config.COMMON.zombieToweringVerticalBoost, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering vertical boost: " + value, true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("forward")
-                        .then(Commands.argument("velocity", DoubleArgumentType.doubleArg(0.0, 0.6))
-                                .executes(context -> {
-                                    double value = DoubleArgumentType.getDouble(context, "velocity");
-                                    Config.set(Config.COMMON.zombieToweringForwardBoost, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering forward boost: " + value, true);
-                                    return 1;
-                                })))
-                .then(Commands.literal("height")
-                        .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 32))
-                                .executes(context -> {
-                                    int value = IntegerArgumentType.getInteger(context, "blocks");
-                                    Config.set(Config.COMMON.zombieToweringMaxHeightAboveTarget, value);
-                                    CommandUtil.feedback(context.getSource(),
-                                            "Zombie towering height above target: " + value + " blocks", true);
-                                    return 1;
-                                })))
-                .then(toggleBoolNode("obstacle", value -> Config.set(Config.COMMON.zombieToweringRequireObstacle, value),
+                        })))
+                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieTowering::get,
+                        value -> Config.set(Config.COMMON.enableZombieTowering, value), "Zombie towering"))
+                .then(CommandUtil.intSetting("startday", "day", 0, 3650,
+                        Config.COMMON.zombieToweringStartDay::get,
+                        value -> Config.set(Config.COMMON.zombieToweringStartDay, value),
+                        value -> value == 0
+                                ? "Zombie towering can start immediately when enabled."
+                                : "Zombie towering starts on day " + value + '.',
+                        0, 1, 5, 10, 15, 30, 50, 100))
+                .then(CommandUtil.intSetting("interval", "ticks", 5, 72000,
+                        Config.COMMON.zombieToweringInterval::get,
+                        value -> Config.set(Config.COMMON.zombieToweringInterval, value),
+                        value -> "Zombie towering interval: " + CommandUtil.ticks(value),
+                        5, 10, 20, 40, 100, 200, 600))
+                .then(CommandUtil.doubleSetting("chance", "chance", 0.0, 1.0,
+                        Config.COMMON.zombieToweringChance::get,
+                        value -> Config.set(Config.COMMON.zombieToweringChance, value),
+                        value -> "Zombie towering chance: " + CommandUtil.percent(value),
+                        0.0, 0.1, 0.25, 0.5, 0.75, 1.0))
+                .then(CommandUtil.intSetting("distance", "blocks", 4, 128,
+                        Config.COMMON.zombieToweringMaxTargetDistance::get,
+                        value -> Config.set(Config.COMMON.zombieToweringMaxTargetDistance, value),
+                        value -> "Zombie towering target distance: " + value + " blocks",
+                        4, 8, 16, 24, 32, 64, 128))
+                .then(CommandUtil.intSetting("crowd", "zombies", 1, 16,
+                        Config.COMMON.zombieToweringMinNearbyZombies::get,
+                        value -> Config.set(Config.COMMON.zombieToweringMinNearbyZombies, value),
+                        value -> "Nearby zombies required for towering: " + value,
+                        1, 2, 3, 4, 6, 8, 12, 16))
+                .then(CommandUtil.doubleSetting("radius", "blocks", 0.75, 6.0,
+                        Config.COMMON.zombieToweringCrowdRadius::get,
+                        value -> Config.set(Config.COMMON.zombieToweringCrowdRadius, value),
+                        value -> "Zombie towering crowd radius: " + CommandUtil.number(value) + " blocks",
+                        0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0))
+                .then(CommandUtil.doubleSetting("vertical", "velocity", 0.1, 1.0,
+                        Config.COMMON.zombieToweringVerticalBoost::get,
+                        value -> Config.set(Config.COMMON.zombieToweringVerticalBoost, value),
+                        value -> "Zombie towering vertical boost: " + CommandUtil.number(value),
+                        0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0))
+                .then(CommandUtil.doubleSetting("forward", "velocity", 0.0, 0.6,
+                        Config.COMMON.zombieToweringForwardBoost::get,
+                        value -> Config.set(Config.COMMON.zombieToweringForwardBoost, value),
+                        value -> "Zombie towering forward boost: " + CommandUtil.number(value),
+                        0.0, 0.1, 0.2, 0.3, 0.4, 0.6))
+                .then(CommandUtil.intSetting("height", "blocks", 1, 32,
+                        Config.COMMON.zombieToweringMaxHeightAboveTarget::get,
+                        value -> Config.set(Config.COMMON.zombieToweringMaxHeightAboveTarget, value),
+                        value -> "Zombie towering height above target: " + value + " blocks",
+                        1, 2, 3, 4, 6, 8, 12, 16, 24, 32))
+                .then(CommandUtil.toggleSetting("obstacle", Config.COMMON.zombieToweringRequireObstacle::get,
+                        value -> Config.set(Config.COMMON.zombieToweringRequireObstacle, value),
                         "Require obstacle or raised/covered target")));
-    }
-
-    private static ArgumentBuilder<CommandSourceStack, ?> toggleBoolNode(
-            String literal,
-            Consumer<Boolean> setter,
-            String label) {
-        return Commands.literal(literal)
-                .then(Commands.argument("enabled", BoolArgumentType.bool())
-                        .executes(context -> {
-                            boolean enabled = BoolArgumentType.getBool(context, "enabled");
-                            setter.accept(enabled);
-                            CommandUtil.feedback(context.getSource(), label + ": " + CommandUtil.onOff(enabled), true);
-                            return 1;
-                        }));
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {

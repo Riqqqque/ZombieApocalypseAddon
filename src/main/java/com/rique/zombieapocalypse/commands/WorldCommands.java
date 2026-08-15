@@ -17,7 +17,6 @@ public final class WorldCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zday")
-                .requires(source -> source.hasPermission(2))
                 .executes(context -> {
                     CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource().getServer()), false);
                     return 1;
@@ -27,8 +26,9 @@ public final class WorldCommands {
                             CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource().getServer()), false);
                             return 1;
                         }))
-                .then(Commands.literal("set")
+                .then(CommandUtil.admin(Commands.literal("set")
                         .then(Commands.argument("day", LongArgumentType.longArg(0L, 1_000_000L))
+                                .suggests(CommandSuggestions.fixed(CommandSuggestions.DAYS))
                                 .executes(context -> {
                                     long day = LongArgumentType.getLong(context, "day");
                                     boolean resetEvents = setDayCounter(context.getSource().getServer(), day);
@@ -40,7 +40,7 @@ public final class WorldCommands {
                                                     : "Set world day counter to " + day + ".",
                                             true);
                                     return 1;
-                                }))));
+                                })))));
     }
 
     private static String buildStatusMessage(MinecraftServer server) {
