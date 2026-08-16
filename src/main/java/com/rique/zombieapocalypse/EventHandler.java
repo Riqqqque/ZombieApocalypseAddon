@@ -144,6 +144,7 @@ public final class EventHandler {
         lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
         lastWarnedSpawnRange = Integer.MIN_VALUE;
         ZombieBlockPlacer.clearRuntimeState();
+        ZombieTowering.clearRuntimeState();
     }
 
     @SubscribeEvent

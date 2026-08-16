@@ -667,12 +667,22 @@ public final class DifficultyManager {
         String contextProfiles = Config.COMMON.enableBiomeDimensionAttributeMultipliers.get() ? "ON" : "OFF";
 
         return String.format(
-                "Day %d | Difficulty scaling %s (%d%%) | Legacy Speed +%d%% | Legacy Health +%d | Attr %s | Attr scaling %s | Variant profiles %s | Context profiles %s | Base H x%.2f ATK x%.2f SPD x%.2f",
-                currentDay,
+                "Difficulty scaling status:\n"
+                        + "Enabled: %s | Current day: %d | Current strength: %d%%\n"
+                        + "Progression: starts day %d, full strength day %d\n"
+                        + "Current legacy bonuses: speed +%d%%, health +%d\n"
+                        + "Full-strength gear chances: armor %.0f%%, weapon %.0f%%\n"
+                        + "Advanced attributes: %s | Day scaling: %s | Variant profiles: %s | Context profiles: %s\n"
+                        + "Base multipliers: health x%.2f, attack x%.2f, speed x%.2f",
                 scalingEnabled,
+                currentDay,
                 percentage,
+                Config.COMMON.scalingStartDay.get(),
+                Config.COMMON.maxScalingDay.get(),
                 speedBonusPercent,
                 healthBonus,
+                Config.COMMON.maxArmorChance.get() * 100.0,
+                Config.COMMON.maxWeaponChance.get() * 100.0,
                 attrs,
                 attrScaling,
                 variantProfiles,

@@ -144,6 +144,7 @@ public final class EventHandler {
         lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
         lastWarnedSpawnRange = Integer.MIN_VALUE;
         ZombieBlockPlacer.clearRuntimeState();
+        ZombieTowering.clearRuntimeState();
     }
 
     @SubscribeEvent
@@ -188,18 +189,23 @@ public final class EventHandler {
             handleSunBurnTick(zombie);
         }
 
+        if (ZombieTowering.needsMaintenance(zombie)) {
+            ZombieTowering.tick(zombie);
+            return;
+        }
+
         if (!zombie.isNoAi()
                 && hasEnabledSiegeFeature(
                         Config.COMMON.enableZombieBlockBreaking.get(),
                         Config.COMMON.enableZombieBlockPlacing.get(),
                         Config.COMMON.enableZombieTowering.get())
                 && ZombieCompatibility.shouldUseAddonAi(zombie)) {
-            boolean acted = ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
+            boolean acted = ZombieTowering.tick(zombie);
             if (!acted) {
-                acted = ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
+                acted = ZombieBlockBreaker.tick(zombie, EventHandler::canZombieDestroyBlock);
             }
             if (!acted) {
-                ZombieTowering.tick(zombie);
+                ZombieBlockPlacer.tick(zombie, EventHandler::canZombiePlaceBlock);
             }
         }
     }

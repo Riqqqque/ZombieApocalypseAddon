@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.DifficultyManager;
 import com.rique.zombieapocalypse.ZombieTowering;
 
@@ -27,18 +28,18 @@ public final class TowerCommands {
                         .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieTowering::get,
                         TowerCommands::setEnabledValue, "Zombie towering"))
-                .then(CommandUtil.intSetting("startday", "day", 0, 3650,
+                .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.zombieToweringStartDay::get,
                         value -> Config.set(Config.COMMON.zombieToweringStartDay, value),
                         value -> value == 0
                                 ? "Zombie towering can start immediately when enabled."
                                 : "Zombie towering starts on day " + value + '.',
                         0, 1, 5, 10, 15, 30, 50, 100))
-                .then(CommandUtil.intSetting("interval", "ticks", 5, 72000,
+                .then(CommandUtil.intSetting("interval", "ticks", 1, 72000,
                         Config.COMMON.zombieToweringInterval::get,
                         value -> Config.set(Config.COMMON.zombieToweringInterval, value),
                         value -> "Zombie towering interval: " + CommandUtil.ticks(value),
-                        5, 10, 20, 40, 100, 200, 600))
+                        1, 5, 10, 20, 40, 100, 200, 600))
                 .then(CommandUtil.doubleSetting("chance", "chance", 0.0, 1.0,
                         Config.COMMON.zombieToweringChance::get,
                         value -> Config.set(Config.COMMON.zombieToweringChance, value),
@@ -59,11 +60,24 @@ public final class TowerCommands {
                         value -> Config.set(Config.COMMON.zombieToweringCrowdRadius, value),
                         value -> "Zombie towering crowd radius: " + CommandUtil.number(value) + " blocks",
                         0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0))
-                .then(CommandUtil.intSetting("stacksize", "zombies", 2, 8,
+                .then(CommandUtil.intSetting("stacksize", "zombies", 2, ConfigLimits.MAX_TOWER_STACK_SIZE,
                         Config.COMMON.zombieToweringMaxStackSize::get,
-                        value -> Config.set(Config.COMMON.zombieToweringMaxStackSize, value),
+                        TowerCommands::setMaximumStackSize,
                         value -> "Maximum zombie tower size: " + value,
-                        2, 3, 4, 5, 6, 8))
+                        2, 3, 4, 5, 8, 16, 32, 64, 128))
+                .then(CommandUtil.intSetting("maxperplayer", "towers", 0, ConfigLimits.MAX_TOWERS_PER_PLAYER,
+                        Config.COMMON.zombieToweringMaxTowersPerPlayer::get,
+                        TowerCommands::setMaximumTowersPerPlayer,
+                        value -> "Maximum towers targeting each player: " + (value == 0 ? "unlimited" : value),
+                        0, 1, 2, 3, 4, 5, 8, 10, 16, 32))
+                .then(CommandUtil.toggleSetting("jumping", Config.COMMON.zombieToweringJumpingEnabled::get,
+                        value -> Config.set(Config.COMMON.zombieToweringJumpingEnabled, value),
+                        "Top-zombie jump attacks"))
+                .then(CommandUtil.intSetting("jumpcooldown", "ticks", 1, 1200,
+                        Config.COMMON.zombieToweringJumpCooldownTicks::get,
+                        value -> Config.set(Config.COMMON.zombieToweringJumpCooldownTicks, value),
+                        value -> "Delay between jumps from one tower: " + CommandUtil.ticks(value),
+                        1, 5, 10, 20, 40, 100, 200, 600, 1200))
                 .then(CommandUtil.doubleSetting("dismount", "blocks", 1.0, 8.0,
                         Config.COMMON.zombieToweringDismountDistance::get,
                         value -> Config.set(Config.COMMON.zombieToweringDismountDistance, value),
@@ -116,6 +130,28 @@ public final class TowerCommands {
         }
     }
 
+    private static void setMaximumStackSize(CommandSourceStack source, int value) {
+        Config.set(Config.COMMON.zombieToweringMaxStackSize, value);
+        int released = ZombieTowering.trimLoadedTowers(source.getServer(), value);
+        if (released > 0) {
+            CommandUtil.feedback(source,
+                    "Trimmed " + released + " loaded tower " + (released == 1 ? "rider" : "riders")
+                            + " to enforce the new stack size.",
+                    true);
+        }
+    }
+
+    private static void setMaximumTowersPerPlayer(CommandSourceStack source, int value) {
+        Config.set(Config.COMMON.zombieToweringMaxTowersPerPlayer, value);
+        int released = ZombieTowering.enforcePerPlayerLimit(source.getServer(), value);
+        if (released > 0) {
+            CommandUtil.feedback(source,
+                    "Released " + released + " loaded tower " + (released == 1 ? "rider" : "riders")
+                            + " to enforce the new per-player limit.",
+                    true);
+        }
+    }
+
     private static int showStatus(CommandSourceStack source) {
         long currentDay = DifficultyManager.getCurrentDay(source.getLevel());
         int startDay = Config.COMMON.zombieToweringStartDay.get();
@@ -136,6 +172,14 @@ public final class TowerCommands {
                 .append(Config.COMMON.zombieToweringMinNearbyZombies.get()).append('\n');
         status.append("Crowd radius: ").append(Config.COMMON.zombieToweringCrowdRadius.get()).append(" blocks\n");
         status.append("Maximum stack size: ").append(Config.COMMON.zombieToweringMaxStackSize.get()).append(" zombies\n");
+        int maximumTowers = Config.COMMON.zombieToweringMaxTowersPerPlayer.get();
+        status.append("Maximum towers per player: ")
+                .append(maximumTowers == 0 ? "unlimited" : maximumTowers).append('\n');
+        status.append("Loaded active towers: ").append(ZombieTowering.countLoadedTowers(source.getServer())).append('\n');
+        status.append("Top zombies jump toward target: ")
+                .append(CommandUtil.onOff(Config.COMMON.zombieToweringJumpingEnabled.get())).append('\n');
+        status.append("Delay between tower jumps: ")
+                .append(CommandUtil.ticks(Config.COMMON.zombieToweringJumpCooldownTicks.get())).append('\n');
         status.append("Dismount distance: ").append(Config.COMMON.zombieToweringDismountDistance.get()).append(" blocks\n");
         status.append("Dismount vertical boost: ").append(Config.COMMON.zombieToweringVerticalBoost.get()).append('\n');
         status.append("Dismount forward boost: ").append(Config.COMMON.zombieToweringForwardBoost.get()).append('\n');
