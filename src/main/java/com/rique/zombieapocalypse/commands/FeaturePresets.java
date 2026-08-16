@@ -117,6 +117,14 @@ final class FeaturePresets {
     }
 
     static void enableTowering() {
+        configureTowering(false);
+    }
+
+    static void enableUnlimitedTowering() {
+        configureTowering(true);
+    }
+
+    private static void configureTowering(boolean unlimited) {
         Config.Common config = Config.COMMON;
         Config.edit(() -> {
             Config.set(config.enableZombieTowering, true);
@@ -126,14 +134,17 @@ final class FeaturePresets {
             Config.set(config.zombieToweringMaxTargetDistance, 32);
             Config.set(config.zombieToweringMinNearbyZombies, 2);
             Config.set(config.zombieToweringCrowdRadius, 2.25);
-            Config.set(config.zombieToweringMaxStackSize, 4);
+            Config.set(config.zombieToweringMaxStackSize, 0);
             Config.set(config.zombieToweringMaxTowersPerPlayer, 3);
-            Config.set(config.zombieToweringJumpingEnabled, true);
+            Config.set(config.zombieToweringDynamicHeightEnabled, !unlimited);
+            Config.set(config.zombieToweringTargetHeightOffset, 1);
+            Config.set(config.zombieToweringSmartDismountEnabled, !unlimited);
+            Config.set(config.zombieToweringJumpingEnabled, false);
             Config.set(config.zombieToweringJumpCooldownTicks, 10);
             Config.set(config.zombieToweringDismountDistance, 2.75);
             Config.set(config.zombieToweringVerticalBoost, 0.48);
             Config.set(config.zombieToweringForwardBoost, 0.18);
-            Config.set(config.zombieToweringMaxHeightAboveTarget, 8);
+            Config.set(config.zombieToweringMaxHeightAboveTarget, unlimited ? 0 : 8);
             Config.set(config.zombieToweringRequireObstacle, true);
         });
     }

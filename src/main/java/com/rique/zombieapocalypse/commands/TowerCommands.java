@@ -26,6 +26,8 @@ public final class TowerCommands {
                         .executes(context -> setEnabled(context.getSource(), false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
                         .executes(context -> setEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("unlimited")
+                        .executes(context -> enableUnlimited(context.getSource()))))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieTowering::get,
                         TowerCommands::setEnabledValue, "Zombie towering"))
                 .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
@@ -60,11 +62,11 @@ public final class TowerCommands {
                         value -> Config.set(Config.COMMON.zombieToweringCrowdRadius, value),
                         value -> "Zombie towering crowd radius: " + CommandUtil.number(value) + " blocks",
                         0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0))
-                .then(CommandUtil.intSetting("stacksize", "zombies", 2, ConfigLimits.MAX_TOWER_STACK_SIZE,
+                .then(CommandUtil.intSetting("stacksize", "zombies", 0, ConfigLimits.MAX_TOWER_STACK_SIZE,
                         Config.COMMON.zombieToweringMaxStackSize::get,
                         TowerCommands::setMaximumStackSize,
-                        value -> "Maximum zombie tower size: " + value,
-                        2, 3, 4, 5, 8, 16, 32, 64, 128))
+                        value -> "Maximum zombie tower size: " + (value == 0 ? "unlimited" : value),
+                        0, 1, 2, 3, 4, 5, 8, 16, 32, 64, 128, 256, 1000))
                 .then(CommandUtil.intSetting("maxperplayer", "towers", 0, ConfigLimits.MAX_TOWERS_PER_PLAYER,
                         Config.COMMON.zombieToweringMaxTowersPerPlayer::get,
                         TowerCommands::setMaximumTowersPerPlayer,
@@ -73,6 +75,17 @@ public final class TowerCommands {
                 .then(CommandUtil.toggleSetting("jumping", Config.COMMON.zombieToweringJumpingEnabled::get,
                         value -> Config.set(Config.COMMON.zombieToweringJumpingEnabled, value),
                         "Top-zombie jump attacks"))
+                .then(CommandUtil.toggleSetting("dynamic", Config.COMMON.zombieToweringDynamicHeightEnabled::get,
+                        value -> Config.set(Config.COMMON.zombieToweringDynamicHeightEnabled, value),
+                        "Dynamic target-height limit"))
+                .then(CommandUtil.intSetting("offset", "blocks", 0, ConfigLimits.MAX_TOWER_HEIGHT_OFFSET,
+                        Config.COMMON.zombieToweringTargetHeightOffset::get,
+                        value -> Config.set(Config.COMMON.zombieToweringTargetHeightOffset, value),
+                        value -> "Dynamic tower height: target block Y + " + value,
+                        0, 1, 2, 3, 4, 8, 16, 32, 64, 128))
+                .then(CommandUtil.toggleSetting("smartdismount", Config.COMMON.zombieToweringSmartDismountEnabled::get,
+                        value -> Config.set(Config.COMMON.zombieToweringSmartDismountEnabled, value),
+                        "Smart gradual tower dismounting"))
                 .then(CommandUtil.intSetting("jumpcooldown", "ticks", 1, 1200,
                         Config.COMMON.zombieToweringJumpCooldownTicks::get,
                         value -> Config.set(Config.COMMON.zombieToweringJumpCooldownTicks, value),
@@ -93,11 +106,13 @@ public final class TowerCommands {
                         value -> Config.set(Config.COMMON.zombieToweringForwardBoost, value),
                         value -> "Zombie towering forward boost: " + CommandUtil.number(value),
                         0.0, 0.1, 0.2, 0.3, 0.4, 0.6))
-                .then(CommandUtil.intSetting("height", "blocks", 1, 32,
+                .then(CommandUtil.intSetting("height", "blocks", 0, ConfigLimits.MAX_TOWER_HEIGHT_LIMIT,
                         Config.COMMON.zombieToweringMaxHeightAboveTarget::get,
                         value -> Config.set(Config.COMMON.zombieToweringMaxHeightAboveTarget, value),
-                        value -> "Zombie towering height above target: " + value + " blocks",
-                        1, 2, 3, 4, 6, 8, 12, 16, 24, 32))
+                        value -> value == 0
+                                ? "Fallback tower height: unlimited"
+                                : "Fallback tower height above target: " + value + " blocks",
+                        0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64, 128, 256, 1000))
                 .then(CommandUtil.toggleSetting("obstacle", Config.COMMON.zombieToweringRequireObstacle::get,
                         value -> Config.set(Config.COMMON.zombieToweringRequireObstacle, value),
                         "Require obstacle or raised/covered target")));
@@ -107,7 +122,7 @@ public final class TowerCommands {
         if (enabled) {
             FeaturePresets.enableTowering();
             CommandUtil.feedback(source,
-                    "Zombie towering: ON\nBalanced preset loaded: real stacks up to 4 zombies, active immediately, with obstacle and crowd safeguards.",
+                    "Zombie towering: ON\nSmart preset loaded: towers grow to the target's block Y + 1, then dismount safely when the target returns to reachable ground.",
                     true);
             return 1;
         }
@@ -128,6 +143,14 @@ public final class TowerCommands {
             Config.set(Config.COMMON.enableZombieTowering, false);
             ZombieTowering.releaseAll(source.getServer());
         }
+    }
+
+    private static int enableUnlimited(CommandSourceStack source) {
+        FeaturePresets.enableUnlimitedTowering();
+        CommandUtil.feedback(source,
+                "Zombie towering: UNLIMITED\nCount and height caps are off. Smart dismounting and jump attacks are off. Very tall towers can affect server performance.",
+                true);
+        return 1;
     }
 
     private static void setMaximumStackSize(CommandSourceStack source, int value) {
@@ -171,11 +194,19 @@ public final class TowerCommands {
         status.append("Nearby zombies required: ")
                 .append(Config.COMMON.zombieToweringMinNearbyZombies.get()).append('\n');
         status.append("Crowd radius: ").append(Config.COMMON.zombieToweringCrowdRadius.get()).append(" blocks\n");
-        status.append("Maximum stack size: ").append(Config.COMMON.zombieToweringMaxStackSize.get()).append(" zombies\n");
+        int maximumStackSize = Config.COMMON.zombieToweringMaxStackSize.get();
+        status.append("Maximum stack size: ")
+                .append(maximumStackSize == 0 ? "unlimited" : maximumStackSize + " zombies").append('\n');
         int maximumTowers = Config.COMMON.zombieToweringMaxTowersPerPlayer.get();
         status.append("Maximum towers per player: ")
                 .append(maximumTowers == 0 ? "unlimited" : maximumTowers).append('\n');
         status.append("Loaded active towers: ").append(ZombieTowering.countLoadedTowers(source.getServer())).append('\n');
+        status.append("Dynamic target height: ")
+                .append(CommandUtil.onOff(Config.COMMON.zombieToweringDynamicHeightEnabled.get())).append('\n');
+        status.append("Dynamic height target: player block Y + ")
+                .append(Config.COMMON.zombieToweringTargetHeightOffset.get()).append('\n');
+        status.append("Smart gradual dismount: ")
+                .append(CommandUtil.onOff(Config.COMMON.zombieToweringSmartDismountEnabled.get())).append('\n');
         status.append("Top zombies jump toward target: ")
                 .append(CommandUtil.onOff(Config.COMMON.zombieToweringJumpingEnabled.get())).append('\n');
         status.append("Delay between tower jumps: ")
@@ -183,8 +214,9 @@ public final class TowerCommands {
         status.append("Dismount distance: ").append(Config.COMMON.zombieToweringDismountDistance.get()).append(" blocks\n");
         status.append("Dismount vertical boost: ").append(Config.COMMON.zombieToweringVerticalBoost.get()).append('\n');
         status.append("Dismount forward boost: ").append(Config.COMMON.zombieToweringForwardBoost.get()).append('\n');
-        status.append("Max height above target: ")
-                .append(Config.COMMON.zombieToweringMaxHeightAboveTarget.get()).append(" blocks\n");
+        int fallbackHeight = Config.COMMON.zombieToweringMaxHeightAboveTarget.get();
+        status.append("Fallback height above target: ")
+                .append(fallbackHeight == 0 ? "unlimited" : fallbackHeight + " blocks").append('\n');
         status.append("Require obstacle/raised target: ")
                 .append(CommandUtil.onOff(Config.COMMON.zombieToweringRequireObstacle.get()));
         CommandUtil.feedback(source, status.toString(), false);

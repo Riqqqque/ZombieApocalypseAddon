@@ -142,11 +142,11 @@ Block breaking, block placing, and towering are independent and disabled by defa
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
-- Towering grows the deepest nearby moving passenger stack toward a configurable maximum of 128 zombies. Brief AI target loss no longer collapses valid towers, separate towers can be capped per player, and top zombies jump off one at a time using a configurable cooldown. Jump attacks can also be disabled so zombies remain stacked. No blocks are placed or broken.
+- Towering forms real moving passenger stacks when a wall or raised target blocks a zombie crowd. The normal preset grows only through the target's block Y level plus one, then safely releases one top rider at a time when the target returns to reachable ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken.
 
 Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. The older `dayone` aliases remain supported.
 
-Tower controls include `/za towering stacksize <2-128>`, `/za towering maxperplayer <count>` (`0` means unlimited), `/za towering jumping <on|off>`, and `/za towering jumpcooldown <ticks>`. The stack size is a maximum; a tower can stop earlier when it reaches its target or another safety condition.
+Tower controls include `/za towering stacksize <count>` (`0` means no count cap), `/za towering maxperplayer <count>`, `/za towering dynamic <on|off>`, `/za towering offset <blocks>`, `/za towering smartdismount <on|off>`, and optional jump controls. `/za towering unlimited` removes both count and height caps and disables automatic collapse; very tall passenger chains can affect server performance.
 
 ## Mod Compatibility
 

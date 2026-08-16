@@ -13,16 +13,25 @@ class ConfigSpecTest {
 
     @Test
     void toweringDefaultsAreBalancedAndReviewedRangesAreAccepted() {
-        assertEquals(4, defaultValue(Config.COMMON.zombieToweringMaxStackSize));
+        assertEquals(0, defaultValue(Config.COMMON.zombieToweringMaxStackSize));
         assertEquals(3, defaultValue(Config.COMMON.zombieToweringMaxTowersPerPlayer));
-        assertEquals(true, defaultValue(Config.COMMON.zombieToweringJumpingEnabled));
+        assertEquals(true, defaultValue(Config.COMMON.zombieToweringDynamicHeightEnabled));
+        assertEquals(1, defaultValue(Config.COMMON.zombieToweringTargetHeightOffset));
+        assertEquals(true, defaultValue(Config.COMMON.zombieToweringSmartDismountEnabled));
+        assertEquals(false, defaultValue(Config.COMMON.zombieToweringJumpingEnabled));
         assertEquals(10, defaultValue(Config.COMMON.zombieToweringJumpCooldownTicks));
 
+        assertAccepts(Config.COMMON.zombieToweringMaxStackSize, 0);
         assertAccepts(Config.COMMON.zombieToweringMaxStackSize, ConfigLimits.MAX_TOWER_STACK_SIZE);
         assertRejects(Config.COMMON.zombieToweringMaxStackSize, ConfigLimits.MAX_TOWER_STACK_SIZE + 1);
         assertAccepts(Config.COMMON.zombieToweringMaxTowersPerPlayer, 0);
         assertAccepts(Config.COMMON.zombieToweringMaxTowersPerPlayer, ConfigLimits.MAX_TOWERS_PER_PLAYER);
         assertRejects(Config.COMMON.zombieToweringMaxTowersPerPlayer, ConfigLimits.MAX_TOWERS_PER_PLAYER + 1);
+        assertAccepts(Config.COMMON.zombieToweringTargetHeightOffset, ConfigLimits.MAX_TOWER_HEIGHT_OFFSET);
+        assertRejects(Config.COMMON.zombieToweringTargetHeightOffset, ConfigLimits.MAX_TOWER_HEIGHT_OFFSET + 1);
+        assertAccepts(Config.COMMON.zombieToweringMaxHeightAboveTarget, 0);
+        assertAccepts(Config.COMMON.zombieToweringMaxHeightAboveTarget, ConfigLimits.MAX_TOWER_HEIGHT_LIMIT);
+        assertRejects(Config.COMMON.zombieToweringMaxHeightAboveTarget, ConfigLimits.MAX_TOWER_HEIGHT_LIMIT + 1);
         assertAccepts(Config.COMMON.zombieToweringInterval, 1);
     }
 

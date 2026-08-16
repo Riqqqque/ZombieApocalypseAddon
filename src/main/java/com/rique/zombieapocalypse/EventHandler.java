@@ -59,6 +59,7 @@ public final class EventHandler {
     private static final long FIRE_STATE_PRUNE_INTERVAL_TICKS = 20L;
     private static final long COOLDOWN_PRUNE_INTERVAL_TICKS = 60L * 20L;
     private static final Map<UUID, Long> EXTERNAL_FIRE_UNTIL = new HashMap<>();
+    private static final Map<UUID, Zombie> SUN_BURN_CANDIDATES = new HashMap<>();
     private static int lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
     private static int lastWarnedSpawnRange = Integer.MIN_VALUE;
 
@@ -141,6 +142,7 @@ public final class EventHandler {
 
     public static void clearRuntimeState() {
         EXTERNAL_FIRE_UNTIL.clear();
+        SUN_BURN_CANDIDATES.clear();
         lastWarnedMinSpawnDistance = Integer.MIN_VALUE;
         lastWarnedSpawnRange = Integer.MIN_VALUE;
         ZombieBlockPlacer.clearRuntimeState();
@@ -186,7 +188,9 @@ public final class EventHandler {
         }
 
         if (Config.COMMON.preventSunBurn.get()) {
-            handleSunBurnTick(zombie);
+            prepareSunBurnTick(zombie);
+        } else {
+            SUN_BURN_CANDIDATES.remove(zombie.getUUID());
         }
 
         if (ZombieTowering.needsMaintenance(zombie)) {
@@ -210,9 +214,41 @@ public final class EventHandler {
         }
     }
 
-    private static void handleSunBurnTick(Zombie zombie) {
+    @SubscribeEvent
+    public static void onEntityTickComplete(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof Zombie zombie && !zombie.level().isClientSide) {
+            finishSunBurnTick(zombie);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelTickComplete(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel level && !SUN_BURN_CANDIDATES.isEmpty()) {
+            SUN_BURN_CANDIDATES.entrySet().removeIf(entry -> entry.getValue().level() == level);
+        }
+    }
+
+    private static void prepareSunBurnTick(Zombie zombie) {
         if (!zombie.isOnFire()) {
             clearExpiredExternalFire(zombie);
+        }
+
+        long gameTime = zombie.level().getGameTime();
+        if (shouldTrackPotentialSunIgnition(
+                Config.COMMON.preventSunBurn.get(),
+                zombie.isOnFire(),
+                isLikelySunBurnContext(zombie),
+                hasRecentExternalFire(zombie, gameTime))) {
+            SUN_BURN_CANDIDATES.put(zombie.getUUID(), zombie);
+        } else {
+            SUN_BURN_CANDIDATES.remove(zombie.getUUID());
+        }
+    }
+
+    private static void finishSunBurnTick(Zombie zombie) {
+        if (!SUN_BURN_CANDIDATES.remove(zombie.getUUID(), zombie)
+                || !Config.COMMON.preventSunBurn.get()
+                || !zombie.isOnFire()) {
             return;
         }
 
@@ -276,6 +312,7 @@ public final class EventHandler {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (ZombieClassMobs.isZombieClass(event.getEntity()) && event.getEntity().level() instanceof ServerLevel serverLevel) {
             EXTERNAL_FIRE_UNTIL.remove(event.getEntity().getUUID());
+            SUN_BURN_CANDIDATES.remove(event.getEntity().getUUID());
             if (event.getSource().getEntity() instanceof ServerPlayer player) {
                 StatisticsManager.KillUpdate killUpdate = StatisticsManager.get(serverLevel)
                         .recordZombieClassKill(player.getUUID());
@@ -827,6 +864,14 @@ public final class EventHandler {
             boolean likelySunBurnContext,
             boolean recentExternalFire) {
         return onFireDamage && likelySunBurnContext && !recentExternalFire;
+    }
+
+    static boolean shouldTrackPotentialSunIgnition(
+            boolean preventSunBurn,
+            boolean currentlyOnFire,
+            boolean likelySunBurnContext,
+            boolean recentExternalFire) {
+        return preventSunBurn && !currentlyOnFire && likelySunBurnContext && !recentExternalFire;
     }
 
     private static void rememberExternalFire(Zombie zombie, long gameTime) {
