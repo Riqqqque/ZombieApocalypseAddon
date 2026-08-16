@@ -30,13 +30,19 @@ class ZombieToweringTest {
     }
 
     @Test
-    void obstacleRuleAllowsWallsCollisionsAndRaisedOrCoveredTargets() {
-        assertTrue(ZombieTowering.shouldAttemptTower(false, false, false, false, true));
-        assertTrue(ZombieTowering.shouldAttemptTower(true, true, false, false, true));
-        assertTrue(ZombieTowering.shouldAttemptTower(true, false, true, false, true));
-        assertTrue(ZombieTowering.shouldAttemptTower(true, false, false, true, true));
-        assertTrue(ZombieTowering.shouldAttemptTower(true, false, false, false, false));
-        assertFalse(ZombieTowering.shouldAttemptTower(true, false, false, false, true));
+    void obstacleRuleIgnoresGroundCombatAndNormalPlayerJumps() {
+        assertTrue(ZombieTowering.shouldAttemptTower(false, true, 64.0, 64.0, false, true, true));
+        assertFalse(ZombieTowering.shouldAttemptTower(true, true, 64.0, 64.0, false, true, true));
+        assertFalse(ZombieTowering.shouldAttemptTower(true, false, 64.0, 65.49, false, true, false));
+        assertFalse(ZombieTowering.shouldAttemptTower(true, false, 64.0, 65.49, false, false, false));
+    }
+
+    @Test
+    void obstacleRuleAllowsRealHeightAndBlockedRoutes() {
+        assertTrue(ZombieTowering.shouldAttemptTower(true, true, 64.0, 66.0, false, true, false));
+        assertTrue(ZombieTowering.shouldAttemptTower(true, true, 64.0, 64.0, true, true, false));
+        assertTrue(ZombieTowering.shouldAttemptTower(true, true, 64.0, 64.0, false, false, false));
+        assertFalse(ZombieTowering.shouldAttemptTower(true, true, 64.0, 64.0, false, true, false));
     }
 
     @Test
@@ -77,10 +83,10 @@ class ZombieToweringTest {
     }
 
     @Test
-    void jumpCooldownPreventsWholeTowerFromDismountingTogether() {
-        assertTrue(ZombieTowering.canJumpFromTower(1_000L, -1L, 10));
-        assertFalse(ZombieTowering.canJumpFromTower(1_009L, 1_000L, 10));
-        assertTrue(ZombieTowering.canJumpFromTower(1_010L, 1_000L, 10));
+    void actionCooldownSpacesOutTowerGrowthDismountsAndJumps() {
+        assertTrue(ZombieTowering.canPerformTowerAction(1_000L, -1L, 10));
+        assertFalse(ZombieTowering.canPerformTowerAction(1_009L, 1_000L, 10));
+        assertTrue(ZombieTowering.canPerformTowerAction(1_010L, 1_000L, 10));
     }
 
     @Test
@@ -94,13 +100,20 @@ class ZombieToweringTest {
 
     @Test
     void smartDismountRequiresReachableGround() {
+        assertTrue(ZombieTowering.shouldSmartDismount(true, true, 64.0, 64.0, true, true, false));
         assertTrue(ZombieTowering.shouldSmartDismount(true, true, 64.0, 64.0, false, false, true));
-        assertFalse(ZombieTowering.shouldSmartDismount(false, true, 64.0, 64.0, false, false, true));
-        assertFalse(ZombieTowering.shouldSmartDismount(true, false, 64.0, 64.0, false, false, true));
-        assertFalse(ZombieTowering.shouldSmartDismount(true, true, 64.0, 66.0, false, false, true));
-        assertFalse(ZombieTowering.shouldSmartDismount(true, true, 64.0, 64.0, true, false, true));
+        assertFalse(ZombieTowering.shouldSmartDismount(false, true, 64.0, 64.0, true, false, true));
+        assertFalse(ZombieTowering.shouldSmartDismount(true, false, 64.0, 64.0, true, false, true));
+        assertFalse(ZombieTowering.shouldSmartDismount(true, true, 64.0, 66.0, true, false, true));
         assertFalse(ZombieTowering.shouldSmartDismount(true, true, 64.0, 64.0, false, true, true));
         assertFalse(ZombieTowering.shouldSmartDismount(true, true, 64.0, 64.0, false, false, false));
+    }
+
+    @Test
+    void reachableGroundMustStayStableBeforeTowerCollapses() {
+        assertFalse(ZombieTowering.isReachableGroundStable(-1L, 1_000L));
+        assertFalse(ZombieTowering.isReachableGroundStable(1_000L, 1_009L));
+        assertTrue(ZombieTowering.isReachableGroundStable(1_000L, 1_010L));
     }
 
     @Test

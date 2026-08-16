@@ -124,7 +124,7 @@ public final class HelpCommands {
                         + "/za towering offset <blocks> - extra levels above the target in dynamic mode\n"
                         + "/za towering smartdismount on|off - safely collapse towers on reachable ground\n"
                         + "/za towering jumping on|off - control whether top zombies leap to attack\n"
-                        + "/za towering jumpcooldown <ticks> - delay between jump attacks\n"
+                        + "/za towering pace <ticks> - delay between tower growth, dismounts, and jumps\n"
                         + "Each on command loads safe, usable defaults and starts on the current day.\n"
                         + "Use <command> startday <day> to delay a feature.\n"
                         + "Use <command> dayone to enable it immediately.\n"

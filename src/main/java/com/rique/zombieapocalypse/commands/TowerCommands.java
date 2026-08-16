@@ -89,7 +89,12 @@ public final class TowerCommands {
                 .then(CommandUtil.intSetting("jumpcooldown", "ticks", 1, 1200,
                         Config.COMMON.zombieToweringJumpCooldownTicks::get,
                         value -> Config.set(Config.COMMON.zombieToweringJumpCooldownTicks, value),
-                        value -> "Delay between jumps from one tower: " + CommandUtil.ticks(value),
+                        value -> "Delay between changes to one tower: " + CommandUtil.ticks(value),
+                        1, 5, 10, 20, 40, 100, 200, 600, 1200))
+                .then(CommandUtil.intSetting("pace", "ticks", 1, 1200,
+                        Config.COMMON.zombieToweringJumpCooldownTicks::get,
+                        value -> Config.set(Config.COMMON.zombieToweringJumpCooldownTicks, value),
+                        value -> "Delay between changes to one tower: " + CommandUtil.ticks(value),
                         1, 5, 10, 20, 40, 100, 200, 600, 1200))
                 .then(CommandUtil.doubleSetting("dismount", "blocks", 1.0, 8.0,
                         Config.COMMON.zombieToweringDismountDistance::get,
@@ -122,7 +127,7 @@ public final class TowerCommands {
         if (enabled) {
             FeaturePresets.enableTowering();
             CommandUtil.feedback(source,
-                    "Zombie towering: ON\nSmart preset loaded: towers grow to the target's block Y + 1, then dismount safely when the target returns to reachable ground.",
+                    "Zombie towering: ON\nSmart preset loaded: towers only form for useful obstacles or raised targets, grow to target Y + 1, and separate onto safe ground.",
                     true);
             return 1;
         }
@@ -209,7 +214,7 @@ public final class TowerCommands {
                 .append(CommandUtil.onOff(Config.COMMON.zombieToweringSmartDismountEnabled.get())).append('\n');
         status.append("Top zombies jump toward target: ")
                 .append(CommandUtil.onOff(Config.COMMON.zombieToweringJumpingEnabled.get())).append('\n');
-        status.append("Delay between tower jumps: ")
+        status.append("Delay between tower changes: ")
                 .append(CommandUtil.ticks(Config.COMMON.zombieToweringJumpCooldownTicks.get())).append('\n');
         status.append("Dismount distance: ").append(Config.COMMON.zombieToweringDismountDistance.get()).append(" blocks\n");
         status.append("Dismount vertical boost: ").append(Config.COMMON.zombieToweringVerticalBoost.get()).append('\n');
