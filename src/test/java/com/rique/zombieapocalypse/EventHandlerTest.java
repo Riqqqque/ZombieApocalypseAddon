@@ -110,6 +110,15 @@ class EventHandlerTest {
     }
 
     @Test
+    void sunIgnitionTrackingNeverClaimsExistingOrExternalFire() {
+        assertTrue(EventHandler.shouldTrackPotentialSunIgnition(true, false, true, false));
+        assertFalse(EventHandler.shouldTrackPotentialSunIgnition(false, false, true, false));
+        assertFalse(EventHandler.shouldTrackPotentialSunIgnition(true, true, true, false));
+        assertFalse(EventHandler.shouldTrackPotentialSunIgnition(true, false, false, false));
+        assertFalse(EventHandler.shouldTrackPotentialSunIgnition(true, false, true, true));
+    }
+
+    @Test
     void sunlightThresholdMatchesVanillaBrightnessCurve() {
         assertFalse(EventHandler.hasStrongSunlight(0, 0.0F));
         assertFalse(EventHandler.hasStrongSunlight(11, 0.0F));

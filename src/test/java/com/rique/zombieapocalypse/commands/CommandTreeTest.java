@@ -116,10 +116,15 @@ class CommandTreeTest {
         assertAdmin("zblockbreak", "dayone");
         assertAdmin("zblockplace", "block", "id");
         assertAdmin("ztower", "enabled", "state");
+        assertAdmin("ztower", "unlimited");
         assertAdmin("ztower", "stacksize", "zombies");
         assertAdmin("ztower", "maxperplayer", "towers");
+        assertAdmin("ztower", "dynamic", "state");
+        assertAdmin("ztower", "offset", "blocks");
+        assertAdmin("ztower", "smartdismount", "state");
         assertAdmin("ztower", "jumping", "state");
         assertAdmin("ztower", "jumpcooldown", "ticks");
+        assertAdmin("ztower", "height", "blocks");
         assertAdmin("zattr", "set");
         assertAdmin("zattr", "toggle");
         assertAdmin("zburn", "state");
@@ -136,8 +141,10 @@ class CommandTreeTest {
     @Test
     void towerAndDayArgumentsExposeTheReviewedRanges() {
         assertIntegerRange(1, 72_000, "ztower", "interval", "ticks");
-        assertIntegerRange(2, ConfigLimits.MAX_TOWER_STACK_SIZE, "ztower", "stacksize", "zombies");
+        assertIntegerRange(0, ConfigLimits.MAX_TOWER_STACK_SIZE, "ztower", "stacksize", "zombies");
         assertIntegerRange(0, ConfigLimits.MAX_TOWERS_PER_PLAYER, "ztower", "maxperplayer", "towers");
+        assertIntegerRange(0, ConfigLimits.MAX_TOWER_HEIGHT_OFFSET, "ztower", "offset", "blocks");
+        assertIntegerRange(0, ConfigLimits.MAX_TOWER_HEIGHT_LIMIT, "ztower", "height", "blocks");
         assertIntegerRange(1, 1_200, "ztower", "jumpcooldown", "ticks");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "ztower", "startday", "day");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zblockbreak", "startday", "day");

@@ -32,6 +32,9 @@ public final class ZombieTowering {
             double crowdRadius,
             int maxStackSize,
             int maxTowersPerPlayer,
+            boolean dynamicHeightEnabled,
+            int targetHeightOffset,
+            boolean smartDismountEnabled,
             boolean jumpingEnabled,
             int jumpCooldownTicks,
             double dismountDistance,
@@ -47,15 +50,17 @@ public final class ZombieTowering {
                     Math.max(1, Config.COMMON.zombieToweringMaxTargetDistance.get()),
                     Math.max(1, Config.COMMON.zombieToweringMinNearbyZombies.get()),
                     Math.max(0.5, Config.COMMON.zombieToweringCrowdRadius.get()),
-                    Math.min(ConfigLimits.MAX_TOWER_STACK_SIZE,
-                            Math.max(2, Config.COMMON.zombieToweringMaxStackSize.get())),
+                    Math.max(0, Config.COMMON.zombieToweringMaxStackSize.get()),
                     Math.max(0, Config.COMMON.zombieToweringMaxTowersPerPlayer.get()),
+                    Config.COMMON.zombieToweringDynamicHeightEnabled.get(),
+                    Math.max(0, Config.COMMON.zombieToweringTargetHeightOffset.get()),
+                    Config.COMMON.zombieToweringSmartDismountEnabled.get(),
                     Config.COMMON.zombieToweringJumpingEnabled.get(),
                     Math.max(1, Config.COMMON.zombieToweringJumpCooldownTicks.get()),
                     Math.max(1.0, Config.COMMON.zombieToweringDismountDistance.get()),
                     Math.max(0.1, Config.COMMON.zombieToweringVerticalBoost.get()),
                     Math.max(0.0, Config.COMMON.zombieToweringForwardBoost.get()),
-                    Math.max(1, Config.COMMON.zombieToweringMaxHeightAboveTarget.get()),
+                    Math.max(0, Config.COMMON.zombieToweringMaxHeightAboveTarget.get()),
                     Config.COMMON.zombieToweringRequireObstacle.get());
         }
     }
@@ -120,7 +125,12 @@ public final class ZombieTowering {
 
         Settings settings = Settings.capture();
         if (!isTargetDistanceAllowed(zombie.distanceToSqr(target), settings.maxTargetDistance())
-                || !isHeightAllowed(zombie.getY(), target.getY(), settings.maxHeightAboveTarget())
+                || !isHeightAllowed(
+                        zombie.getY(),
+                        target.getY(),
+                        settings.dynamicHeightEnabled(),
+                        settings.targetHeightOffset(),
+                        settings.maxHeightAboveTarget())
                 || settings.chance() <= 0.0
                 || zombie.getRandom().nextDouble() >= settings.chance()) {
             return false;
@@ -206,8 +216,11 @@ public final class ZombieTowering {
     }
 
     public static int trimLoadedTowers(MinecraftServer server, int maximumStackSize) {
+        if (maximumStackSize <= 0) {
+            return 0;
+        }
         int released = 0;
-        int safeMaximum = Math.min(ConfigLimits.MAX_TOWER_STACK_SIZE, Math.max(2, maximumStackSize));
+        int safeMaximum = Math.min(ConfigLimits.MAX_TOWER_STACK_SIZE, Math.max(1, maximumStackSize));
         for (ServerLevel level : server.getAllLevels()) {
             for (Zombie root : loadedTowerRoots(level)) {
                 released += trimTower(root, safeMaximum);
@@ -274,8 +287,17 @@ public final class ZombieTowering {
         return distanceSquared <= safeDistance * safeDistance;
     }
 
-    static boolean isHeightAllowed(double zombieY, double targetY, int maxHeightAboveTarget) {
-        return zombieY <= targetY + Math.max(1, maxHeightAboveTarget);
+    static boolean isHeightAllowed(
+            double zombieY,
+            double targetY,
+            boolean dynamicHeightEnabled,
+            int targetHeightOffset,
+            int maxHeightAboveTarget) {
+        if (dynamicHeightEnabled) {
+            double maximumBlockLevel = Math.floor(targetY) + Math.max(0, targetHeightOffset);
+            return Math.floor(zombieY) <= maximumBlockLevel;
+        }
+        return maxHeightAboveTarget <= 0 || zombieY <= targetY + maxHeightAboveTarget;
     }
 
     static boolean shouldAttemptTower(
@@ -303,7 +325,7 @@ public final class ZombieTowering {
     }
 
     static boolean canGrowStack(int currentStackSize, int maximumStackSize) {
-        return Math.max(1, currentStackSize) < Math.max(2, maximumStackSize);
+        return maximumStackSize <= 0 || Math.max(1, currentStackSize) < maximumStackSize;
     }
 
     static boolean hasTowerSlot(int activeTowers, int maximumTowersPerPlayer) {
@@ -325,25 +347,44 @@ public final class ZombieTowering {
             double dismountDistance,
             boolean hasLineOfSight) {
         double safeDistance = Math.max(1.0, dismountDistance);
-        boolean veryClose = horizontalDistanceSquared <= 2.25;
-        return horizontalDistanceSquared <= safeDistance * safeDistance
+        return horizontalDistanceSquared >= 1.0
+                && horizontalDistanceSquared <= safeDistance * safeDistance
                 && zombieY >= targetY - 0.75
-                && (hasLineOfSight || veryClose);
+                && hasLineOfSight;
+    }
+
+    static boolean shouldSmartDismount(
+            boolean enabled,
+            boolean targetOnGround,
+            double rootY,
+            double targetY,
+            boolean horizontalCollision,
+            boolean hasForwardBarrier,
+            boolean hasLineOfSight) {
+        return enabled
+                && targetOnGround
+                && targetY <= rootY + 1.0
+                && !horizontalCollision
+                && !hasForwardBarrier
+                && hasLineOfSight;
     }
 
     static Vec3 computeBoostedMovement(
-            Vec3 currentMovement,
             Vec3 horizontalDirection,
             double verticalBoost,
             double forwardBoost) {
         double safeVerticalBoost = Math.max(0.1, verticalBoost);
         double safeForwardBoost = Math.max(0.0, forwardBoost);
-        double horizontalCap = Math.max(0.1, safeForwardBoost * 1.5);
-        double x = clamp(currentMovement.x * 0.5 + horizontalDirection.x * safeForwardBoost,
-                -horizontalCap, horizontalCap);
-        double z = clamp(currentMovement.z * 0.5 + horizontalDirection.z * safeForwardBoost,
-                -horizontalCap, horizontalCap);
-        return new Vec3(x, Math.max(currentMovement.y, safeVerticalBoost), z);
+        double horizontalCap = Math.max(0.1, safeForwardBoost);
+        double x = clamp(horizontalDirection.x * safeForwardBoost, -horizontalCap, horizontalCap);
+        double z = clamp(horizontalDirection.z * safeForwardBoost, -horizontalCap, horizontalCap);
+        return new Vec3(x, safeVerticalBoost, z);
+    }
+
+    static Vec3 computeSafeDismountMovement(Vec3 rootMovement, Vec3 awayFromTarget) {
+        double x = clamp(rootMovement.x * 0.25 + awayFromTarget.x * 0.05, -0.12, 0.12);
+        double z = clamp(rootMovement.z * 0.25 + awayFromTarget.z * 0.05, -0.12, 0.12);
+        return new Vec3(x, 0.0, z);
     }
 
     private static boolean maintainStack(ServerLevel level, Zombie zombie) {
@@ -372,7 +413,7 @@ public final class ZombieTowering {
             return true;
         }
 
-        if (towerSize(root) > settings.maxStackSize()) {
+        if (settings.maxStackSize() > 0 && towerSize(root) > settings.maxStackSize()) {
             trimTower(root, settings.maxStackSize());
             return true;
         }
@@ -392,14 +433,42 @@ public final class ZombieTowering {
             releaseTower(root);
             return true;
         }
-        if (!isHeightAllowed(top.getY(), target.getY(), settings.maxHeightAboveTarget())) {
-            trimTowerToHeight(root, target, settings.maxHeightAboveTarget());
+        TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
+        long gameTime = level.getGameTime();
+        boolean actionReady = memory == null
+                || canJumpFromTower(gameTime, memory.lastJumpTick(), settings.jumpCooldownTicks());
+        if (!isHeightAllowed(
+                top.getY(),
+                target.getY(),
+                settings.dynamicHeightEnabled(),
+                settings.targetHeightOffset(),
+                settings.maxHeightAboveTarget())) {
+            if (actionReady) {
+                releaseTopSafely(root, target, gameTime, settings, "height limit");
+            }
             return true;
         }
-        TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
-        if (!settings.jumpingEnabled()
-                || (memory != null
-                        && !canJumpFromTower(level.getGameTime(), memory.lastJumpTick(), settings.jumpCooldownTicks()))) {
+
+        if (settings.smartDismountEnabled() && actionReady && target.onGround()) {
+            Vec3 rootDirection = horizontalDirection(root, target);
+            boolean hasForwardBarrier = hasBlockCollision(
+                    level,
+                    root,
+                    root.getBoundingBox().move(rootDirection.x * 0.35, 0.0, rootDirection.z * 0.35));
+            if (shouldSmartDismount(
+                    true,
+                    true,
+                    root.getY(),
+                    target.getY(),
+                    root.horizontalCollision,
+                    hasForwardBarrier,
+                    root.hasLineOfSight(target))) {
+                releaseTopSafely(root, target, gameTime, settings, "reachable ground");
+                return true;
+            }
+        }
+
+        if (!settings.jumpingEnabled() || !actionReady) {
             return true;
         }
 
@@ -420,9 +489,8 @@ public final class ZombieTowering {
         if (!releaseStackRider(top)) {
             return true;
         }
-        rememberJump(root, target, level.getGameTime());
+        rememberAction(root, target, gameTime);
         top.setDeltaMovement(computeBoostedMovement(
-                top.getDeltaMovement(),
                 direction,
                 settings.verticalBoost(),
                 settings.forwardBoost()));
@@ -477,7 +545,12 @@ public final class ZombieTowering {
                     Math.min(1.35, settings.crowdRadius()))
                     || !isValidSupport(root, support, settings.maxStackSize())
                     || !isTowerTargetCompatible(root, target)
-                    || !isHeightAllowed(predictedY, target.getY(), settings.maxHeightAboveTarget())) {
+                    || !isHeightAllowed(
+                            predictedY,
+                            target.getY(),
+                            settings.dynamicHeightEnabled(),
+                            settings.targetHeightOffset(),
+                            settings.maxHeightAboveTarget())) {
                 continue;
             }
 
@@ -633,7 +706,7 @@ public final class ZombieTowering {
         TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(target.getUUID(), gameTime, lastJumpTick));
     }
 
-    private static void rememberJump(Zombie root, LivingEntity target, long gameTime) {
+    private static void rememberAction(Zombie root, LivingEntity target, long gameTime) {
         TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(target.getUUID(), gameTime, gameTime));
     }
 
@@ -715,20 +788,41 @@ public final class ZombieTowering {
         return released;
     }
 
-    private static int trimTowerToHeight(Zombie root, LivingEntity target, int maximumHeightAboveTarget) {
-        int released = 0;
+    private static boolean releaseTopSafely(
+            Zombie root,
+            LivingEntity target,
+            long gameTime,
+            Settings settings,
+            String reason) {
         Zombie top = towerTop(root);
-        while (top != root && !isHeightAllowed(top.getY(), target.getY(), maximumHeightAboveTarget)) {
-            if (!releaseStackRider(top)) {
-                break;
-            }
-            released++;
-            top = towerTop(root);
-        }
         if (top == root) {
             TOWER_MEMORIES.remove(root.getUUID());
+            return false;
         }
-        return released;
+
+        int formerStackSize = towerSize(root);
+        Vec3 awayFromTarget = horizontalDirectionAway(top, target);
+        if (!releaseStackRider(top)) {
+            return false;
+        }
+
+        top.setTarget(target);
+        top.setDeltaMovement(computeSafeDismountMovement(root.getDeltaMovement(), awayFromTarget));
+        top.hasImpulse = true;
+        if (towerSize(root) <= 1) {
+            TOWER_MEMORIES.remove(root.getUUID());
+        } else {
+            rememberAction(root, target, gameTime);
+        }
+
+        if (settings.debugLogging()) {
+            LOGGER.info(
+                    "[ZombieApocalypse] Safely released {} from a {}-zombie tower ({})",
+                    top.getType().getDescriptionId(),
+                    formerStackSize,
+                    reason);
+        }
+        return true;
     }
 
     private static int releaseTower(Zombie root) {
@@ -761,13 +855,17 @@ public final class ZombieTowering {
         if (!isAddonStackRider(zombie)) {
             return false;
         }
-        if (zombie.getVehicle() instanceof Zombie) {
+        Vec3 supportMovement = Vec3.ZERO;
+        if (zombie.getVehicle() instanceof Zombie support) {
+            supportMovement = support.getDeltaMovement();
             zombie.stopRiding();
             if (zombie.getVehicle() instanceof Zombie) {
                 return false;
             }
         }
         zombie.removeTag(STACK_RIDER_TAG);
+        zombie.setDeltaMovement(computeSafeDismountMovement(supportMovement, Vec3.ZERO));
+        zombie.hasImpulse = true;
         return true;
     }
 
@@ -802,6 +900,11 @@ public final class ZombieTowering {
 
         double inverseLength = 1.0 / Math.sqrt(lengthSquared);
         return new Vec3(dx * inverseLength, 0.0, dz * inverseLength);
+    }
+
+    private static Vec3 horizontalDirectionAway(Zombie zombie, LivingEntity target) {
+        Vec3 towardTarget = horizontalDirection(zombie, target);
+        return new Vec3(-towardTarget.x, 0.0, -towardTarget.z);
     }
 
     private static double clamp(double value, double min, double max) {
