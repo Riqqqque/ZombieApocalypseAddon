@@ -144,6 +144,7 @@ tasks.named('compileJava', JavaCompile).configure {
         exclude 'com/rique/zombieapocalypse/ModCommands.java'
         exclude 'com/rique/zombieapocalypse/SpawnCompatibilityHooks.java'
         exclude 'com/rique/zombieapocalypse/StatisticsManager.java'
+        exclude 'com/rique/zombieapocalypse/TowerRiderPosition.java'
         exclude 'com/rique/zombieapocalypse/ZombieApocalypseAddon.java'
         exclude 'com/rique/zombieapocalypse/ZombieKillAdvancements.java'
         exclude 'com/rique/zombieapocalypse/commands/AttributeCommands.java'
