@@ -17,7 +17,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 
 final class CommandSuggestions {
 
-    static final String[] TOGGLE = { "on", "off", "true", "false" };
+    static final String[] TOGGLE = { "on", "off" };
     static final String[] DAYS = { "0", "1", "5", "10", "15", "30", "50", "100" };
 
     private CommandSuggestions() {

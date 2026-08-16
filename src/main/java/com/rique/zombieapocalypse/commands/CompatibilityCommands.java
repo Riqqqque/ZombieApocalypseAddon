@@ -18,10 +18,14 @@ public final class CompatibilityCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zcompat")
                 .executes(context -> showStatus(context.getSource()))
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false))))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
                 .then(CommandUtil.toggleSetting("modded", Config.COMMON.enableModdedZombieCompatibility::get,
-                        value -> Config.set(Config.COMMON.enableModdedZombieCompatibility, value), "Automatic modded zombie recognition"))
+                        CompatibilityCommands::setEnabledValue, "Automatic modded zombie recognition"))
                 .then(CommandUtil.toggleSetting("difficulty", Config.COMMON.applyDifficultyToModdedZombies::get,
                         value -> Config.set(Config.COMMON.applyDifficultyToModdedZombies, value), "Addon difficulty for modded zombies"))
                 .then(CommandUtil.toggleSetting("ai", Config.COMMON.applyAiFeaturesToModdedZombies::get,
@@ -36,6 +40,27 @@ public final class CompatibilityCommands {
                         value -> Config.set(Config.COMMON.respectZombieDoorBreakingAbility, value), "Zombie door protection"))
                 .then(CommandUtil.toggleSetting("equipment", Config.COMMON.preserveExistingZombieEquipment::get,
                         value -> Config.set(Config.COMMON.preserveExistingZombieEquipment, value), "Preserve existing zombie equipment")));
+    }
+
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableCompatibility();
+            CommandUtil.feedback(source,
+                    "Mod compatibility: ON\nRecommended conflict protection, equipment preservation, and external-rule safeguards were enabled.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableModdedZombieCompatibility, false);
+            CommandUtil.feedback(source, "Mod compatibility: OFF", true);
+        }
+        return 1;
+    }
+
+    private static void setEnabledValue(boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableCompatibility();
+        } else {
+            Config.set(Config.COMMON.enableModdedZombieCompatibility, false);
+        }
     }
 
     private static int showStatus(CommandSourceStack source) {
