@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.35 | `zombieapocalypseaddon-2.2.35.jar` |
-| 1.20.1 | NeoForge | 1.5.29 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.29.jar` |
-| 1.20.1 | Forge | 1.5.29 | `zombieapocalypseaddon-forge-1.20.1-1.5.29.jar` |
+| 1.21.1 | NeoForge | 2.2.36 | `zombieapocalypseaddon-2.2.36.jar` |
+| 1.20.1 | NeoForge | 1.5.30 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.30.jar` |
+| 1.20.1 | Forge | 1.5.30 | `zombieapocalypseaddon-forge-1.20.1-1.5.30.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -142,7 +142,7 @@ All three systems are disabled by default:
 
 - **Block breaking:** bounded attempts with hardness, safety, target, obstacle, drop, and `mobGriefing` controls.
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
-- **Towering:** crowded zombies grow the deepest nearby moving passenger stack toward its configured size. Target memory prevents brief AI target loss from collapsing a valid tower, and a per-tower cooldown lets top zombies jump toward a reachable target one at a time instead of dismounting the whole stack together. No blocks are changed.
+- **Towering:** crowded zombies form real moving passenger stacks when a wall or raised target blocks them. The default smart limit follows the target's block Y level plus one, then releases riders one at a time without launch velocity when the target returns to reachable ground. No blocks are changed.
 
 Each feature has a start day, live commands, conservative defaults, and protection checks. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
 
@@ -150,12 +150,16 @@ Useful tower controls:
 
 | Command | Purpose |
 |---|---|
-| `/za towering stacksize <2-128>` | Set the maximum zombies in one tower. The 128 safety ceiling protects passenger save/network depth. |
+| `/za towering unlimited` | Turn on intentionally unrestricted towers: no count cap, no height cap, and no automatic collapse. Use carefully. |
+| `/za towering stacksize <count>` | Set a count cap. `0` means no count cap and `1` prevents a stack. |
 | `/za towering maxperplayer <count>` | Limit separate loaded towers targeting one player. `0` means unlimited. |
-| `/za towering jumping <on/off>` | Let top zombies leave the tower to attack, or keep towers stacked. |
+| `/za towering dynamic <on/off>` | Make the height limit follow the target's current block Y level. |
+| `/za towering offset <blocks>` | Set extra block levels above the target in dynamic mode. Default is `1`. |
+| `/za towering smartdismount <on/off>` | Gradually return towers to normal when the target is on reachable ground. |
+| `/za towering jumping <on/off>` | Enable optional top-zombie jump attacks. This is off in the normal preset. |
 | `/za towering jumpcooldown <ticks>` | Set the delay between jump attacks from the same tower. |
 
-`stacksize` is a maximum, not a forced height. A tower can stop earlier when it has already reached the target, runs out of nearby zombies, loses vertical space, or hits another configured safety rule.
+The normal `/za towering on` preset has no fixed zombie-count cap because dynamic height already stops the stack at the useful level. `/za towering stacksize 0` removes only the count cap; `/za towering unlimited` also removes the height cap and smart collapse. Extremely tall passenger chains can hurt performance and should be enabled deliberately.
 
 ### Variants, Biomes, and Dimensions
 
@@ -235,9 +239,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.35 |
-| NeoForge | 1.20.1 | 1.5.29 |
-| Forge | 1.20.1 | 1.5.29 |
+| NeoForge | 1.21.1 | 2.2.36 |
+| NeoForge | 1.20.1 | 1.5.30 |
+| Forge | 1.20.1 | 1.5.30 |
 
 Build all targets on Windows with:
 

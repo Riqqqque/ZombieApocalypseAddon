@@ -170,6 +170,9 @@ public final class Config {
         public final ForgeConfigSpec.DoubleValue zombieToweringCrowdRadius;
         public final ForgeConfigSpec.IntValue zombieToweringMaxStackSize;
         public final ForgeConfigSpec.IntValue zombieToweringMaxTowersPerPlayer;
+        public final ForgeConfigSpec.BooleanValue zombieToweringDynamicHeightEnabled;
+        public final ForgeConfigSpec.IntValue zombieToweringTargetHeightOffset;
+        public final ForgeConfigSpec.BooleanValue zombieToweringSmartDismountEnabled;
         public final ForgeConfigSpec.BooleanValue zombieToweringJumpingEnabled;
         public final ForgeConfigSpec.IntValue zombieToweringJumpCooldownTicks;
         public final ForgeConfigSpec.DoubleValue zombieToweringDismountDistance;
@@ -862,10 +865,10 @@ public final class Config {
             zombieToweringMaxStackSize = builder
                     .comment(
                             "Maximum number of zombies allowed in one vertical stack, including the bottom zombie.",
-                            "Default 4 can reach common walls without creating extreme entity towers.",
-                            "Range 2-128. The upper safety limit avoids unsafe passenger save/network depth.",
-                            "Very tall values are intentionally possible, but they need enough zombies and vertical space.")
-                    .defineInRange("zombieToweringMaxStackSize", 4, 2, ConfigLimits.MAX_TOWER_STACK_SIZE);
+                            "Default 0 means no configured zombie-count limit; dynamic target height stops normal towers.",
+                            "1 prevents a stack from forming. Values 2 and higher set an exact per-tower cap.",
+                            "Unlimited mode still needs enough zombies, loaded space, and valid collision-free positions.")
+                    .defineInRange("zombieToweringMaxStackSize", 0, 0, ConfigLimits.MAX_TOWER_STACK_SIZE);
 
             zombieToweringMaxTowersPerPlayer = builder
                     .comment(
@@ -874,11 +877,36 @@ public final class Config {
                             "0 = unlimited. Lowering this live releases extra loaded towers cleanly.")
                     .defineInRange("zombieToweringMaxTowersPerPlayer", 3, 0, ConfigLimits.MAX_TOWERS_PER_PLAYER);
 
+            zombieToweringDynamicHeightEnabled = builder
+                    .comment(
+                            "Smart height limit for normal zombie towers.",
+                            "true = grow only through the target's block Y level plus zombieToweringTargetHeightOffset.",
+                            "false = use zombieToweringMaxHeightAboveTarget instead.",
+                            "Default true keeps stacks useful without letting them grow above a grounded player.")
+                    .define("zombieToweringDynamicHeightEnabled", true);
+
+            zombieToweringTargetHeightOffset = builder
+                    .comment(
+                            "Extra block levels allowed above the target while dynamic height is enabled.",
+                            "Default 1 means the top zombie may occupy the block level at player Y + 1.",
+                            "This uses block Y levels, so normal passenger spacing does not stop one level too early.")
+                    .defineInRange("zombieToweringTargetHeightOffset", 1, 0,
+                            ConfigLimits.MAX_TOWER_HEIGHT_OFFSET);
+
+            zombieToweringSmartDismountEnabled = builder
+                    .comment(
+                            "Let towers return to normal zombies when stacking is no longer useful.",
+                            "When a target is back on reachable ground with no wall in the way, riders dismount gradually.",
+                            "Dynamic height reductions also release one top rider at a time without launch velocity.",
+                            "Disable this only for intentionally permanent or unlimited towers.")
+                    .define("zombieToweringSmartDismountEnabled", true);
+
             zombieToweringJumpingEnabled = builder
                     .comment(
                             "Controls whether the top zombie can jump off a tall-enough tower toward its target.",
-                            "true = towers deliver attackers one at a time. false = zombies remain stacked.")
-                    .define("zombieToweringJumpingEnabled", true);
+                            "Default false keeps normal towers stable and lets smart dismounting handle grounded targets.",
+                            "When enabled, inherited hit/knockback velocity is discarded so riders cannot be launched.")
+                    .define("zombieToweringJumpingEnabled", false);
 
             zombieToweringJumpCooldownTicks = builder
                     .comment(
@@ -907,9 +935,11 @@ public final class Config {
 
             zombieToweringMaxHeightAboveTarget = builder
                     .comment(
-                            "Maximum height a towering zombie may reach above its target.",
-                            "This prevents a blocked swarm from climbing indefinitely into the sky.")
-                    .defineInRange("zombieToweringMaxHeightAboveTarget", 8, 1, 32);
+                            "Fallback height above the target when dynamic height is disabled.",
+                            "0 = no configured height cap. Values 1 and higher set the maximum blocks above the target.",
+                            "Use 0 with max stack size 0 only when intentionally allowing unrestricted towers.")
+                    .defineInRange("zombieToweringMaxHeightAboveTarget", 8, 0,
+                            ConfigLimits.MAX_TOWER_HEIGHT_LIMIT);
 
             zombieToweringRequireObstacle = builder
                     .comment(
