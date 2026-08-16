@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.33 | `zombieapocalypseaddon-2.2.33.jar` |
-| 1.20.1 | NeoForge | 1.5.27 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.27.jar` |
-| 1.20.1 | Forge | 1.5.27 | `zombieapocalypseaddon-forge-1.20.1-1.5.27.jar` |
+| 1.21.1 | NeoForge | 2.2.34 | `zombieapocalypseaddon-2.2.34.jar` |
+| 1.20.1 | NeoForge | 1.5.28 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.28.jar` |
+| 1.20.1 | Forge | 1.5.28 | `zombieapocalypseaddon-forge-1.20.1-1.5.28.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -94,13 +94,15 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 | `/za day` and `/za scaling` | World day and difficulty progression. |
 | `/za breaking` | Optional zombie block breaking. |
 | `/za placing` | Optional limited bridges and steps. |
-| `/za towering` | Optional crowd-based zombie climbing. |
+| `/za towering` | Optional moving zombie stacks for climbing defenses. |
 | `/za stats` | Kill totals, cooldowns, and milestone reset. |
 | `/za compatibility` | Mixed-mod compatibility safeguards. |
 | `/za attributes` | Advanced attribute tuning. |
 | `/za burn`, `/za kill`, `/za cleanup` | Sunlight, cleanup, and safe removal utilities. |
 
-Press Tab after `/za` to see every command family. Tab completion also suggests on/off states, current and common numeric values, attribute keys, online players, and registered block IDs. Running a setting without a value shows its current value. The original `/z...` commands remain fully supported for existing servers and command blocks.
+Press Tab after `/za` to see every command family. Tab completion suggests only the clear `on` and `off` states, plus current and common numeric values, attribute keys, online players, and registered block IDs. Existing `true` and `false` inputs still work in old scripts. Running a setting without a value shows its current value. The original `/z...` commands remain supported.
+
+Feature-level `on` commands load safe defaults so the feature works immediately instead of inheriting a zero chance, future start day, or broken dependency. This includes `/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, and `/za compatibility on`.
 
 The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) includes every subcommand and range.
 
@@ -140,9 +142,9 @@ All three systems are disabled by default:
 
 - **Block breaking:** bounded attempts with hardness, safety, target, obstacle, drop, and `mobGriefing` controls.
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
-- **Towering:** crowded zombies can climb over each other without changing blocks.
+- **Towering:** crowded zombies form bounded moving passenger stacks, then the top zombie dismounts toward a reachable target. No blocks are changed.
 
-Each feature has a start day, live commands, conservative defaults, and protection checks.
+Each feature has a start day, live commands, conservative defaults, and protection checks. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
 
 ### Variants, Biomes, and Dimensions
 
@@ -222,9 +224,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.33 |
-| NeoForge | 1.20.1 | 1.5.27 |
-| Forge | 1.20.1 | 1.5.27 |
+| NeoForge | 1.21.1 | 2.2.34 |
+| NeoForge | 1.20.1 | 1.5.28 |
+| Forge | 1.20.1 | 1.5.28 |
 
 Build all targets on Windows with:
 

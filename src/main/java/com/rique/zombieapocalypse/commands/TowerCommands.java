@@ -7,6 +7,7 @@ import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.DifficultyManager;
+import com.rique.zombieapocalypse.ZombieTowering;
 
 public final class TowerCommands {
 
@@ -23,17 +24,9 @@ public final class TowerCommands {
                 .then(CommandUtil.admin(Commands.literal("off")
                         .executes(context -> setEnabled(context.getSource(), false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
-                        .executes(context -> {
-                            Config.edit(() -> {
-                                Config.set(Config.COMMON.enableZombieTowering, true);
-                                Config.set(Config.COMMON.zombieToweringStartDay, 0);
-                            });
-                            CommandUtil.feedback(context.getSource(),
-                                    "Zombie towering enabled and set to start immediately.", true);
-                            return 1;
-                        })))
+                        .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieTowering::get,
-                        value -> Config.set(Config.COMMON.enableZombieTowering, value), "Zombie towering"))
+                        TowerCommands::setEnabledValue, "Zombie towering"))
                 .then(CommandUtil.intSetting("startday", "day", 0, 3650,
                         Config.COMMON.zombieToweringStartDay::get,
                         value -> Config.set(Config.COMMON.zombieToweringStartDay, value),
@@ -66,6 +59,16 @@ public final class TowerCommands {
                         value -> Config.set(Config.COMMON.zombieToweringCrowdRadius, value),
                         value -> "Zombie towering crowd radius: " + CommandUtil.number(value) + " blocks",
                         0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0))
+                .then(CommandUtil.intSetting("stacksize", "zombies", 2, 8,
+                        Config.COMMON.zombieToweringMaxStackSize::get,
+                        value -> Config.set(Config.COMMON.zombieToweringMaxStackSize, value),
+                        value -> "Maximum zombie tower size: " + value,
+                        2, 3, 4, 5, 6, 8))
+                .then(CommandUtil.doubleSetting("dismount", "blocks", 1.0, 8.0,
+                        Config.COMMON.zombieToweringDismountDistance::get,
+                        value -> Config.set(Config.COMMON.zombieToweringDismountDistance, value),
+                        value -> "Tower dismount distance: " + CommandUtil.number(value) + " blocks",
+                        1.0, 1.5, 2.0, 2.75, 3.0, 4.0, 6.0, 8.0))
                 .then(CommandUtil.doubleSetting("vertical", "velocity", 0.1, 1.0,
                         Config.COMMON.zombieToweringVerticalBoost::get,
                         value -> Config.set(Config.COMMON.zombieToweringVerticalBoost, value),
@@ -87,9 +90,30 @@ public final class TowerCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        Config.set(Config.COMMON.enableZombieTowering, enabled);
-        CommandUtil.feedback(source, "Zombie towering: " + CommandUtil.onOff(enabled), true);
+        if (enabled) {
+            FeaturePresets.enableTowering();
+            CommandUtil.feedback(source,
+                    "Zombie towering: ON\nBalanced preset loaded: real stacks up to 4 zombies, active immediately, with obstacle and crowd safeguards.",
+                    true);
+            return 1;
+        }
+
+        Config.set(Config.COMMON.enableZombieTowering, false);
+        int released = ZombieTowering.releaseAll(source.getServer());
+        CommandUtil.feedback(source,
+                "Zombie towering: OFF\nReleased " + released + " loaded stack "
+                        + (released == 1 ? "rider." : "riders."),
+                true);
         return 1;
+    }
+
+    private static void setEnabledValue(CommandSourceStack source, boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableTowering();
+        } else {
+            Config.set(Config.COMMON.enableZombieTowering, false);
+            ZombieTowering.releaseAll(source.getServer());
+        }
     }
 
     private static int showStatus(CommandSourceStack source) {
@@ -111,8 +135,10 @@ public final class TowerCommands {
         status.append("Nearby zombies required: ")
                 .append(Config.COMMON.zombieToweringMinNearbyZombies.get()).append('\n');
         status.append("Crowd radius: ").append(Config.COMMON.zombieToweringCrowdRadius.get()).append(" blocks\n");
-        status.append("Vertical boost: ").append(Config.COMMON.zombieToweringVerticalBoost.get()).append('\n');
-        status.append("Forward boost: ").append(Config.COMMON.zombieToweringForwardBoost.get()).append('\n');
+        status.append("Maximum stack size: ").append(Config.COMMON.zombieToweringMaxStackSize.get()).append(" zombies\n");
+        status.append("Dismount distance: ").append(Config.COMMON.zombieToweringDismountDistance.get()).append(" blocks\n");
+        status.append("Dismount vertical boost: ").append(Config.COMMON.zombieToweringVerticalBoost.get()).append('\n');
+        status.append("Dismount forward boost: ").append(Config.COMMON.zombieToweringForwardBoost.get()).append('\n');
         status.append("Max height above target: ")
                 .append(Config.COMMON.zombieToweringMaxHeightAboveTarget.get()).append(" blocks\n");
         status.append("Require obstacle/raised target: ")

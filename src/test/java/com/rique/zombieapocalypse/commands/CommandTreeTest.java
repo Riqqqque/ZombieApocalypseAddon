@@ -86,6 +86,7 @@ class CommandTreeTest {
         assertPublic("zattr");
         assertPublic("zcompat");
         assertPublic("zburn");
+        assertPublic("zbloodmoon");
         assertPublic("zdayspawn", "chance");
         assertPublic("zdayspawn", "daytime");
         assertPublic("zblockplace", "block");
@@ -93,7 +94,9 @@ class CommandTreeTest {
 
         assertAdmin("zkill");
         assertAdmin("zcleanup");
-        assertAdmin("zbloodmoon");
+        assertAdmin("zbloodmoon", "start");
+        assertAdmin("zbloodmoon", "on");
+        assertAdmin("zbloodmoon", "off");
         assertAdmin("zdayspawn", "on");
         assertAdmin("zdayspawn", "off");
         assertAdmin("zdayspawn", "daytime", "state");
@@ -109,6 +112,13 @@ class CommandTreeTest {
         assertAdmin("zattr", "toggle");
         assertAdmin("zburn", "state");
         assertAdmin("za", "preset", "casual");
+
+        for (String command : List.of(
+                "zdayspawn", "zhorde", "zbloodmoon", "zstats", "zscaling",
+                "zblockbreak", "zblockplace", "ztower", "zattr", "zcompat")) {
+            assertAdmin(command, "on");
+            assertAdmin(command, "off");
+        }
     }
 
     @Test

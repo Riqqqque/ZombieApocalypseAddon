@@ -49,6 +49,10 @@ public final class AttributeCommands {
                             CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource()), false);
                             return 1;
                         })
+                        .then(CommandUtil.admin(Commands.literal("on")
+                                .executes(context -> setEnabled(context.getSource(), true))))
+                        .then(CommandUtil.admin(Commands.literal("off")
+                                .executes(context -> setEnabled(context.getSource(), false))))
                         .then(Commands.literal("status")
                                 .executes(context -> {
                                     CommandUtil.feedback(context.getSource(), buildStatusMessage(context.getSource()), false);
@@ -121,12 +125,35 @@ public final class AttributeCommands {
                                                                 false);
                                                         return 0;
                                                     }
-                                                    Config.set(setting, enabled);
+                                                    setBooleanSetting(key, setting, enabled);
                                                     CommandUtil.feedback(context.getSource(),
                                                             "Set " + key + " = " + CommandUtil.onOff(enabled),
                                                             true);
                                                     return 1;
                                                 }))))));
+    }
+
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableAttributes();
+            CommandUtil.feedback(source,
+                    "Advanced attributes: ON\nBalanced health, attack, armor, follow-range, and knockback scaling preset loaded. Speed scaling stays conservative.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableAttributeModifiers, false);
+            CommandUtil.feedback(source, "Advanced attributes: OFF", true);
+        }
+        return 1;
+    }
+
+    private static void setBooleanSetting(
+            String key,
+            ModConfigSpec.BooleanValue setting,
+            boolean enabled) {
+        if (enabled && BOOLEAN_SETTINGS.containsKey(key)) {
+            FeaturePresets.enableAttributes();
+        }
+        Config.set(setting, enabled);
     }
 
     private static CompletableFuture<Suggestions> suggestKeys(SuggestionsBuilder builder, Collection<String> keys) {

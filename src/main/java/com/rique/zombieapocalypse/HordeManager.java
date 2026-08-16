@@ -443,6 +443,24 @@ public final class HordeManager {
         return false;
     }
 
+    public static void stopBloodMoon(ServerLevel level) {
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
+        state.setBloodMoonActive(false);
+        state.setForcedBloodMoonPending(false);
+
+        if (Config.COMMON.enableDebugLogging.get()) {
+            LOGGER.info("[ZombieApocalypse] Blood moon stopped by command");
+        }
+    }
+
+    public static void stopAllEvents(ServerLevel level) {
+        ServerLevel eventLevel = eventLevel(level);
+        ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
+        long absoluteDayTime = eventLevel.getDayTime();
+        stopSpawnEvents(state, absoluteDayTime / 24000L, absoluteDayTime % 24000L);
+    }
+
     public static boolean isHordeActive(ServerLevel level) {
         return Config.COMMON.enableDaySpawning.get()
                 && ApocalypseWorldData.get(level.getServer()).isHordeActive();

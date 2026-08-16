@@ -53,7 +53,7 @@ Use `/za help` for short topic-based help instead of a wall of commands. Press T
 - Advanced per-attribute, per-variant, biome, and dimension tuning
 - Optional zombie block breaking with conservative safety rules
 - Optional limited block placing for steps and one-block gaps
-- Optional crowd-based zombie towering without block changes
+- Optional moving zombie stacks that climb defenses without changing blocks
 - Biome-aware Husk and Drowned spawning
 - Optional Nether and End custom spawning
 - Death cooldown protection after a player dies
@@ -105,6 +105,8 @@ Every system is available below `/za`:
 
 Run any setting name without a value to read its current value. Use `on` and `off` for switches; `true` and `false` still work for existing command blocks and scripts. All original `/z...` command roots remain supported.
 
+Feature-level `on` commands load balanced working defaults automatically. You can enable spawning, events, blood moons, scaling, attributes, compatibility, block breaking, block placing, or towering without first repairing old chances, day gates, or dependent settings.
+
 See the [full command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) for every subcommand and range.
 
 ## Custom Spawning
@@ -140,9 +142,9 @@ Block breaking, block placing, and towering are independent and disabled by defa
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
-- Towering lets a blocked zombie crowd climb without placing or breaking anything.
+- Towering forms bounded moving passenger stacks. The top zombie dismounts toward the target once the stack is high and close enough, without placing or breaking blocks.
 
-Administrators can enable each feature immediately with `dayone`, use `on` while preserving its configured start day, or use `off` at any time.
+Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. The older `dayone` aliases remain supported.
 
 ## Mod Compatibility
 

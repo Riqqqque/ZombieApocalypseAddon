@@ -8,7 +8,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Zombie;
@@ -33,17 +32,9 @@ public final class BlockPlaceCommands {
                 .then(CommandUtil.admin(Commands.literal("off")
                         .executes(context -> setEnabled(context.getSource(), false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
-                        .executes(context -> {
-                            Config.edit(() -> {
-                                Config.set(Config.COMMON.enableZombieBlockPlacing, true);
-                                Config.set(Config.COMMON.zombieBlockPlacingStartDay, 0);
-                            });
-                            CommandUtil.feedback(context.getSource(),
-                                    "Zombie block placing enabled and set to start immediately.", true);
-                            return 1;
-                        })))
+                        .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieBlockPlacing::get,
-                        value -> Config.set(Config.COMMON.enableZombieBlockPlacing, value), "Zombie block placing"))
+                        BlockPlaceCommands::setEnabledValue, "Zombie block placing"))
                 .then(CommandUtil.intSetting("startday", "day", 0, 3650,
                         Config.COMMON.zombieBlockPlacingStartDay::get,
                         value -> Config.set(Config.COMMON.zombieBlockPlacingStartDay, value),
@@ -118,7 +109,7 @@ public final class BlockPlaceCommands {
                 BlockPos.containing(source.getPosition()),
                 blockId);
         if (error != null) {
-            source.sendFailure(Component.literal(error));
+            CommandUtil.failure(source, error);
             return 0;
         }
 
@@ -129,9 +120,26 @@ public final class BlockPlaceCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        Config.set(Config.COMMON.enableZombieBlockPlacing, enabled);
-        CommandUtil.feedback(source, "Zombie block placing: " + CommandUtil.onOff(enabled), true);
+        if (enabled) {
+            FeaturePresets.enableBlockPlacing();
+            ZombieBlockPlacer.clearRuntimeState();
+            CommandUtil.feedback(source,
+                    "Zombie block placing: ON\nBalanced cobblestone step/bridge preset loaded and active immediately. mobGriefing and protection events are respected.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableZombieBlockPlacing, false);
+            CommandUtil.feedback(source, "Zombie block placing: OFF", true);
+        }
         return 1;
+    }
+
+    private static void setEnabledValue(boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableBlockPlacing();
+            ZombieBlockPlacer.clearRuntimeState();
+        } else {
+            Config.set(Config.COMMON.enableZombieBlockPlacing, false);
+        }
     }
 
     private static int showStatus(CommandSourceStack source) {

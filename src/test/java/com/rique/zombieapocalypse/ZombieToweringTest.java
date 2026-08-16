@@ -41,9 +41,28 @@ class ZombieToweringTest {
         assertFalse(ZombieTowering.hasRequiredCrowd(1, 2));
         assertTrue(ZombieTowering.hasRequiredCrowd(2, 2));
         assertTrue(ZombieTowering.isSupportPosition(1.0, 0.0, 1.35));
-        assertTrue(ZombieTowering.isSupportPosition(1.0, 1.75, 1.35));
+        assertTrue(ZombieTowering.isSupportPosition(1.0, -2.5, 1.35));
+        assertTrue(ZombieTowering.isSupportPosition(1.0, 1.0, 1.35));
         assertFalse(ZombieTowering.isSupportPosition(2.0, 0.0, 1.35));
-        assertFalse(ZombieTowering.isSupportPosition(1.0, 1.76, 1.35));
+        assertFalse(ZombieTowering.isSupportPosition(1.0, -2.51, 1.35));
+        assertFalse(ZombieTowering.isSupportPosition(1.0, 1.01, 1.35));
+    }
+
+    @Test
+    void stackSizeIsStrictlyBounded() {
+        assertTrue(ZombieTowering.canGrowStack(1, 4));
+        assertTrue(ZombieTowering.canGrowStack(3, 4));
+        assertFalse(ZombieTowering.canGrowStack(4, 4));
+        assertFalse(ZombieTowering.canGrowStack(8, 4));
+    }
+
+    @Test
+    void topZombieDismountsOnlyWhenItCanReachTheTarget() {
+        assertTrue(ZombieTowering.shouldDismount(4.0, 10.0, 10.0, 2.75, true));
+        assertTrue(ZombieTowering.shouldDismount(1.0, 9.5, 10.0, 2.75, false));
+        assertFalse(ZombieTowering.shouldDismount(4.0, 8.0, 10.0, 2.75, true));
+        assertFalse(ZombieTowering.shouldDismount(9.0, 10.0, 10.0, 2.75, true));
+        assertFalse(ZombieTowering.shouldDismount(4.0, 10.0, 10.0, 2.75, false));
     }
 
     @Test

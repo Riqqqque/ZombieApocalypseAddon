@@ -29,18 +29,10 @@ public final class BlockBreakCommands {
                 .then(CommandUtil.admin(Commands.literal("off")
                         .executes(context -> setEnabled(context.getSource(), false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
-                        .executes(context -> {
-                            Config.edit(() -> {
-                                Config.set(Config.COMMON.enableZombieBlockBreaking, true);
-                                Config.set(Config.COMMON.zombieBlockBreakingStartDay, 0);
-                            });
-                            CommandUtil.feedback(context.getSource(),
-                                    "Zombie block breaking enabled and set to start immediately.", true);
-                            return 1;
-                        })))
+                        .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.toggleSetting("enabled",
                         Config.COMMON.enableZombieBlockBreaking::get,
-                        value -> Config.set(Config.COMMON.enableZombieBlockBreaking, value),
+                        BlockBreakCommands::setEnabledValue,
                         "Zombie block breaking"))
                 .then(CommandUtil.intSetting("startday", "day", 0, 3650,
                         Config.COMMON.zombieBlockBreakingStartDay::get,
@@ -86,9 +78,24 @@ public final class BlockBreakCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        Config.set(Config.COMMON.enableZombieBlockBreaking, enabled);
-        CommandUtil.feedback(source, "Zombie block breaking: " + CommandUtil.onOff(enabled), true);
+        if (enabled) {
+            FeaturePresets.enableBlockBreaking();
+            CommandUtil.feedback(source,
+                    "Zombie block breaking: ON\nBalanced preset loaded and active immediately. Containers, machines, lights, and tool-required blocks stay protected.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableZombieBlockBreaking, false);
+            CommandUtil.feedback(source, "Zombie block breaking: OFF", true);
+        }
         return 1;
+    }
+
+    private static void setEnabledValue(boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableBlockBreaking();
+        } else {
+            Config.set(Config.COMMON.enableZombieBlockBreaking, false);
+        }
     }
 
     private static String buildStatusMessage(CommandSourceStack source) {
