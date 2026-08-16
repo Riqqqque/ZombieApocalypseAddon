@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.DifficultyManager;
 
 public final class BlockBreakCommands {
@@ -34,7 +35,7 @@ public final class BlockBreakCommands {
                         Config.COMMON.enableZombieBlockBreaking::get,
                         BlockBreakCommands::setEnabledValue,
                         "Zombie block breaking"))
-                .then(CommandUtil.intSetting("startday", "day", 0, 3650,
+                .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.zombieBlockBreakingStartDay::get,
                         value -> Config.set(Config.COMMON.zombieBlockBreakingStartDay, value),
                         value -> value <= 0

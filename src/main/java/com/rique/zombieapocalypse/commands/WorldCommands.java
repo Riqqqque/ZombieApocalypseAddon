@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.LongArgumentType;
 
 import com.rique.zombieapocalypse.ApocalypseWorldData;
+import com.rique.zombieapocalypse.ConfigLimits;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -27,7 +28,7 @@ public final class WorldCommands {
                             return 1;
                         }))
                 .then(CommandUtil.admin(Commands.literal("set")
-                        .then(Commands.argument("day", LongArgumentType.longArg(0L, 1_000_000L))
+                        .then(Commands.argument("day", LongArgumentType.longArg(0L, ConfigLimits.MAX_APOCALYPSE_DAY))
                                 .suggests(CommandSuggestions.fixed(CommandSuggestions.DAYS))
                                 .executes(context -> {
                                     long day = LongArgumentType.getLong(context, "day");

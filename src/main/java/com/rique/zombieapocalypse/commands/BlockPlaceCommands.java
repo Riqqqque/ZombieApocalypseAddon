@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Zombie;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.DifficultyManager;
 import com.rique.zombieapocalypse.ZombieBlockPlacer;
 import com.rique.zombieapocalypse.ZombieClassMobs;
@@ -35,7 +36,7 @@ public final class BlockPlaceCommands {
                         .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieBlockPlacing::get,
                         BlockPlaceCommands::setEnabledValue, "Zombie block placing"))
-                .then(CommandUtil.intSetting("startday", "day", 0, 3650,
+                .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.zombieBlockPlacingStartDay::get,
                         value -> Config.set(Config.COMMON.zombieBlockPlacingStartDay, value),
                         value -> value <= 0

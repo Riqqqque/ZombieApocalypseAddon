@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.34 | `zombieapocalypseaddon-2.2.34.jar` |
-| 1.20.1 | NeoForge | 1.5.28 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.28.jar` |
-| 1.20.1 | Forge | 1.5.28 | `zombieapocalypseaddon-forge-1.20.1-1.5.28.jar` |
+| 1.21.1 | NeoForge | 2.2.35 | `zombieapocalypseaddon-2.2.35.jar` |
+| 1.20.1 | NeoForge | 1.5.29 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.29.jar` |
+| 1.20.1 | Forge | 1.5.29 | `zombieapocalypseaddon-forge-1.20.1-1.5.29.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -128,11 +128,11 @@ This setting checks block light, not sunlight. It does not disable daytime waves
 
 ### Hordes and Blood Moons
 
-Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 ### Difficulty Progression
 
-Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance.
+Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` now exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
 
 Most servers should use a preset or the basic `[scaling]` section and leave `[attributes]` unchanged.
 
@@ -142,9 +142,20 @@ All three systems are disabled by default:
 
 - **Block breaking:** bounded attempts with hardness, safety, target, obstacle, drop, and `mobGriefing` controls.
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
-- **Towering:** crowded zombies form bounded moving passenger stacks, then the top zombie dismounts toward a reachable target. No blocks are changed.
+- **Towering:** crowded zombies grow the deepest nearby moving passenger stack toward its configured size. Target memory prevents brief AI target loss from collapsing a valid tower, and a per-tower cooldown lets top zombies jump toward a reachable target one at a time instead of dismounting the whole stack together. No blocks are changed.
 
 Each feature has a start day, live commands, conservative defaults, and protection checks. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
+
+Useful tower controls:
+
+| Command | Purpose |
+|---|---|
+| `/za towering stacksize <2-128>` | Set the maximum zombies in one tower. The 128 safety ceiling protects passenger save/network depth. |
+| `/za towering maxperplayer <count>` | Limit separate loaded towers targeting one player. `0` means unlimited. |
+| `/za towering jumping <on/off>` | Let top zombies leave the tower to attack, or keep towers stacked. |
+| `/za towering jumpcooldown <ticks>` | Set the delay between jump attacks from the same tower. |
+
+`stacksize` is a maximum, not a forced height. A tower can stop earlier when it has already reached the target, runs out of nearby zombies, loses vertical space, or hits another configured safety rule.
 
 ### Variants, Biomes, and Dimensions
 
@@ -224,9 +235,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.34 |
-| NeoForge | 1.20.1 | 1.5.28 |
-| Forge | 1.20.1 | 1.5.28 |
+| NeoForge | 1.21.1 | 2.2.35 |
+| NeoForge | 1.20.1 | 1.5.29 |
+| Forge | 1.20.1 | 1.5.29 |
 
 Build all targets on Windows with:
 

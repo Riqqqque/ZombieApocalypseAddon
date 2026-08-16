@@ -54,6 +54,30 @@ class ZombieToweringTest {
         assertTrue(ZombieTowering.canGrowStack(3, 4));
         assertFalse(ZombieTowering.canGrowStack(4, 4));
         assertFalse(ZombieTowering.canGrowStack(8, 4));
+        assertTrue(ZombieTowering.canGrowStack(127, ConfigLimits.MAX_TOWER_STACK_SIZE));
+        assertFalse(ZombieTowering.canGrowStack(128, ConfigLimits.MAX_TOWER_STACK_SIZE));
+    }
+
+    @Test
+    void perPlayerTowerLimitSupportsFiniteAndUnlimitedModes() {
+        assertTrue(ZombieTowering.hasTowerSlot(0, 3));
+        assertTrue(ZombieTowering.hasTowerSlot(2, 3));
+        assertFalse(ZombieTowering.hasTowerSlot(3, 3));
+        assertFalse(ZombieTowering.hasTowerSlot(4, 3));
+        assertTrue(ZombieTowering.hasTowerSlot(10_000, 0));
+    }
+
+    @Test
+    void temporaryTargetLossDoesNotImmediatelyCollapseTower() {
+        assertFalse(ZombieTowering.isTargetLossGraceExpired(1_000L, 1_100L));
+        assertTrue(ZombieTowering.isTargetLossGraceExpired(1_000L, 1_101L));
+    }
+
+    @Test
+    void jumpCooldownPreventsWholeTowerFromDismountingTogether() {
+        assertTrue(ZombieTowering.canJumpFromTower(1_000L, -1L, 10));
+        assertFalse(ZombieTowering.canJumpFromTower(1_009L, 1_000L, 10));
+        assertTrue(ZombieTowering.canJumpFromTower(1_010L, 1_000L, 10));
     }
 
     @Test

@@ -25,13 +25,26 @@ import com.rique.zombieapocalypse.DifficultyManager;
 
 public final class AttributeCommands {
 
-    private record NumericSetting(boolean integer, DoubleSupplier getter, DoubleConsumer setter) {
+    private record NumericSetting(
+            boolean integer,
+            double minimum,
+            double maximum,
+            DoubleSupplier getter,
+            DoubleConsumer setter) {
         double get() {
             return getter.getAsDouble();
         }
 
         void set(double value) {
             setter.accept(value);
+        }
+
+        double appliedValue(double value) {
+            return integer ? Math.rint(value) : value;
+        }
+
+        boolean accepts(double value) {
+            return Double.isFinite(value) && value >= minimum && value <= maximum;
         }
     }
 
@@ -90,9 +103,17 @@ public final class AttributeCommands {
                                                         return 0;
                                                     }
 
+                                                    double applied = setting.appliedValue(value);
+                                                    if (!setting.accepts(applied)) {
+                                                        CommandUtil.failure(context.getSource(),
+                                                                "Allowed range for " + key + ": "
+                                                                        + formatNumeric(setting, setting.minimum()) + " to "
+                                                                        + formatNumeric(setting, setting.maximum()));
+                                                        return 0;
+                                                    }
+
                                                     try {
-                                                        setting.set(value);
-                                                        double applied = setting.integer() ? Math.rint(value) : value;
+                                                        setting.set(applied);
                                                         String appliedText = setting.integer()
                                                                 ? Integer.toString((int) Math.round(applied))
                                                                 : CommandUtil.number(applied);
@@ -170,10 +191,11 @@ public final class AttributeCommands {
         NumericSetting numeric = NUMERIC_SETTINGS.get(key);
         if (numeric != null) {
             double current = numeric.get();
-            String value = numeric.integer()
-                    ? Integer.toString((int) Math.round(current))
-                    : CommandUtil.number(current);
-            CommandUtil.feedback(source, key + " = " + value, false);
+            CommandUtil.feedback(source,
+                    key + " = " + formatNumeric(numeric, current)
+                            + " (allowed " + formatNumeric(numeric, numeric.minimum())
+                            + " to " + formatNumeric(numeric, numeric.maximum()) + ')',
+                    false);
             return 1;
         }
 
@@ -195,10 +217,13 @@ public final class AttributeCommands {
             return Suggestions.empty();
         }
         double current = setting.get();
-        String value = setting.integer()
-                ? Integer.toString((int) Math.round(current))
-                : CommandUtil.number(current);
-        return CommandSuggestions.suggest(builder, value, "0", "1");
+        return CommandSuggestions.suggest(
+                builder,
+                formatNumeric(setting, current),
+                formatNumeric(setting, setting.minimum()),
+                formatNumeric(setting, setting.maximum()),
+                "0",
+                "1");
     }
 
     private static String buildStatusMessage(CommandSourceStack source) {
@@ -322,8 +347,8 @@ public final class AttributeCommands {
         addMultiplier(map, "context.end.follow", Config.COMMON.endFollowRangeMultiplier);
         addMultiplier(map, "context.end.knockback", Config.COMMON.endKnockbackResistanceMultiplier);
 
-        map.put("legacy.speedMultiplier", doubleSetting(Config.COMMON.maxSpeedBoost));
-        map.put("legacy.healthBonus", intSetting(Config.COMMON.maxHealthBoost));
+        map.put("legacy.speedMultiplier", doubleSetting(Config.COMMON.maxSpeedBoost, 0.0, 1.0));
+        map.put("legacy.healthBonus", intSetting(Config.COMMON.maxHealthBoost, 0, 40));
 
         return map;
     }
@@ -342,19 +367,42 @@ public final class AttributeCommands {
             String prefix,
             ForgeConfigSpec.DoubleValue multiplier,
             ForgeConfigSpec.DoubleValue bonus) {
-        map.put(prefix + ".multiplier", doubleSetting(multiplier));
-        map.put(prefix + ".bonus", doubleSetting(bonus));
+        map.put(prefix + ".multiplier", doubleSetting(multiplier, 0.0, 10.0));
+        double bonusLimit = bonusLimit(prefix);
+        map.put(prefix + ".bonus", doubleSetting(bonus, -bonusLimit, bonusLimit));
     }
 
     private static void addMultiplier(Map<String, NumericSetting> map, String prefix, ForgeConfigSpec.DoubleValue multiplier) {
-        map.put(prefix + ".multiplier", doubleSetting(multiplier));
+        map.put(prefix + ".multiplier", doubleSetting(multiplier, 0.0, 10.0));
     }
 
-    private static NumericSetting doubleSetting(ForgeConfigSpec.DoubleValue value) {
-        return new NumericSetting(false, value::get, newValue -> Config.set(value, newValue));
+    private static NumericSetting doubleSetting(ForgeConfigSpec.DoubleValue value, double minimum, double maximum) {
+        return new NumericSetting(false, minimum, maximum, value::get, newValue -> Config.set(value, newValue));
     }
 
-    private static NumericSetting intSetting(ForgeConfigSpec.IntValue value) {
-        return new NumericSetting(true, () -> value.get(), v -> Config.set(value, (int) Math.round(v)));
+    private static NumericSetting intSetting(ForgeConfigSpec.IntValue value, int minimum, int maximum) {
+        return new NumericSetting(true, minimum, maximum, value::get, v -> Config.set(value, (int) Math.round(v)));
+    }
+
+    private static double bonusLimit(String keyPrefix) {
+        if (keyPrefix.endsWith(".health")) {
+            return 200.0;
+        }
+        if (keyPrefix.endsWith(".attack")) {
+            return 50.0;
+        }
+        if (keyPrefix.endsWith(".armor")) {
+            return 30.0;
+        }
+        if (keyPrefix.endsWith(".follow")) {
+            return 100.0;
+        }
+        return 1.0;
+    }
+
+    private static String formatNumeric(NumericSetting setting, double value) {
+        return setting.integer()
+                ? Integer.toString((int) Math.round(value))
+                : CommandUtil.number(value);
     }
 }
