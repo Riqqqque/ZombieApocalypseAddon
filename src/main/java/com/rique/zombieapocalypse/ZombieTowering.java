@@ -13,12 +13,15 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.vehicle.DismountHelper;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -68,7 +71,11 @@ public final class ZombieTowering {
     private record CrowdState(int nearbyZombies, Zombie support) {
     }
 
-    private record TowerMemory(UUID targetId, long lastValidTargetTick, long lastJumpTick) {
+    private record TowerMemory(
+            UUID targetId,
+            long lastValidTargetTick,
+            long lastActionTick,
+            long reachableGroundSinceTick) {
     }
 
     private record TargetState(LivingEntity target, boolean graceExpired) {
@@ -76,7 +83,13 @@ public final class ZombieTowering {
 
     private static final String STACK_RIDER_TAG = "zombieapocalypse.tower_rider";
     private static final long TARGET_LOSS_GRACE_TICKS = 100L;
+    private static final long REACHABLE_GROUND_STABILITY_TICKS = 10L;
+    private static final int GROUND_REACHABILITY_CHECK_INTERVAL_TICKS = 5;
+    private static final int TOWER_LIMIT_CHECK_INTERVAL_TICKS = 20;
     private static final long MEMORY_PRUNE_INTERVAL_TICKS = 1200L;
+    private static final double MIN_TOWER_VERTICAL_GAP = 1.5;
+    private static final double COLLISION_EPSILON = 1.0E-4;
+    private static final int SAFE_DISMOUNT_RADIUS = 3;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, TowerMemory> TOWER_MEMORIES = new HashMap<>();
     private static long lastMemoryPruneTick = Long.MIN_VALUE;
@@ -137,18 +150,21 @@ public final class ZombieTowering {
         }
 
         Vec3 direction = horizontalDirection(zombie, target);
-        boolean targetAbove = target.getY() > zombie.getY() + 0.5;
         boolean hasLineOfSight = zombie.hasLineOfSight(target);
-        boolean hasForwardBarrier = hasBlockCollision(
-                level,
+        boolean hasForwardBarrier = hasForwardBarrier(level, zombie, direction);
+        boolean normalPathReachable = hasNormalGroundRoute(
                 zombie,
-                zombie.getBoundingBox().move(direction.x * 0.35, 0.0, direction.z * 0.35));
+                target,
+                hasForwardBarrier,
+                hasLineOfSight);
         if (!shouldAttemptTower(
                 settings.requireObstacle(),
-                zombie.horizontalCollision,
+                target.onGround(),
+                zombie.getY(),
+                target.getY(),
                 hasForwardBarrier,
-                targetAbove,
-                hasLineOfSight)) {
+                hasLineOfSight,
+                normalPathReachable)) {
             return false;
         }
 
@@ -160,6 +176,11 @@ public final class ZombieTowering {
 
         Zombie support = crowd.support();
         Zombie root = towerRoot(support);
+        TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
+        if (memory != null
+                && !canPerformTowerAction(gameTime, memory.lastActionTick(), settings.jumpCooldownTicks())) {
+            return false;
+        }
         boolean createsNewTower = towerSize(root) == 1;
         if (createsNewTower
                 && target instanceof ServerPlayer player
@@ -168,14 +189,10 @@ public final class ZombieTowering {
                         settings.maxTowersPerPlayer())) {
             return false;
         }
-        if (!hasClearStackSpace(level, zombie, support) || !zombie.addTag(STACK_RIDER_TAG)) {
+        if (!joinTower(level, zombie, support)) {
             return false;
         }
-        if (!zombie.startRiding(support, true)) {
-            zombie.removeTag(STACK_RIDER_TAG);
-            return false;
-        }
-        rememberTarget(root, target, level.getGameTime());
+        rememberAction(root, target, gameTime);
 
         if (settings.debugLogging()) {
             LOGGER.info(
@@ -302,15 +319,27 @@ public final class ZombieTowering {
 
     static boolean shouldAttemptTower(
             boolean requireObstacle,
-            boolean horizontalCollision,
+            boolean targetOnGround,
+            double zombieY,
+            double targetY,
             boolean hasForwardBarrier,
-            boolean targetAbove,
-            boolean hasLineOfSight) {
-        return !requireObstacle
-                || horizontalCollision
+            boolean hasLineOfSight,
+            boolean normalPathReachable) {
+        if (!requireObstacle) {
+            return true;
+        }
+
+        boolean ordinaryGroundCombat = targetOnGround
+                && targetY <= zombieY + 1.0
+                && normalPathReachable;
+        if (ordinaryGroundCombat) {
+            return false;
+        }
+
+        boolean meaningfullyRaised = targetY > zombieY + MIN_TOWER_VERTICAL_GAP;
+        return meaningfullyRaised
                 || hasForwardBarrier
-                || targetAbove
-                || !hasLineOfSight;
+                || (targetOnGround && !hasLineOfSight && !normalPathReachable);
     }
 
     static boolean hasRequiredCrowd(int nearbyZombies, int minimumNearbyZombies) {
@@ -336,8 +365,8 @@ public final class ZombieTowering {
         return currentGameTime - lastValidTargetTick > TARGET_LOSS_GRACE_TICKS;
     }
 
-    static boolean canJumpFromTower(long currentGameTime, long lastJumpTick, int cooldownTicks) {
-        return lastJumpTick < 0L || currentGameTime - lastJumpTick >= Math.max(1, cooldownTicks);
+    static boolean canPerformTowerAction(long currentGameTime, long lastActionTick, int cooldownTicks) {
+        return lastActionTick < 0L || currentGameTime - lastActionTick >= Math.max(1, cooldownTicks);
     }
 
     static boolean shouldDismount(
@@ -358,15 +387,18 @@ public final class ZombieTowering {
             boolean targetOnGround,
             double rootY,
             double targetY,
-            boolean horizontalCollision,
+            boolean normalPathReachable,
             boolean hasForwardBarrier,
             boolean hasLineOfSight) {
         return enabled
                 && targetOnGround
                 && targetY <= rootY + 1.0
-                && !horizontalCollision
-                && !hasForwardBarrier
-                && hasLineOfSight;
+                && (normalPathReachable || (!hasForwardBarrier && hasLineOfSight));
+    }
+
+    static boolean isReachableGroundStable(long reachableSinceTick, long currentGameTime) {
+        return reachableSinceTick >= 0L
+                && currentGameTime - reachableSinceTick >= REACHABLE_GROUND_STABILITY_TICKS;
     }
 
     static Vec3 computeBoostedMovement(
@@ -394,15 +426,15 @@ public final class ZombieTowering {
         }
 
         Settings settings = Settings.capture();
+        if (directAddonRider(zombie) != null) {
+            return true;
+        }
         Zombie root = towerRoot(zombie);
         if (!isLinearTowerMember(root, zombie)) {
             releaseStackRider(zombie);
             return true;
         }
-        Zombie top = towerTop(root);
-        if (zombie != top) {
-            return true;
-        }
+        Zombie top = zombie;
 
         if (!isToweringActive(
                 Config.COMMON.enableZombieTowering.get(),
@@ -426,7 +458,13 @@ public final class ZombieTowering {
             }
             return true;
         }
-        if (target instanceof ServerPlayer player
+        long gameTime = level.getGameTime();
+        if (settings.maxTowersPerPlayer() > 0
+                && target instanceof ServerPlayer player
+                && ZombieBlockBreaker.isScheduledTick(
+                        gameTime,
+                        root.getId() * 43 + 11,
+                        TOWER_LIMIT_CHECK_INTERVAL_TICKS)
                 && !hasTowerSlot(
                         countLoadedTowersFor(level, player, settings.maxTargetDistance()) - 1,
                         settings.maxTowersPerPlayer())) {
@@ -434,9 +472,23 @@ public final class ZombieTowering {
             return true;
         }
         TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
-        long gameTime = level.getGameTime();
         boolean actionReady = memory == null
-                || canJumpFromTower(gameTime, memory.lastJumpTick(), settings.jumpCooldownTicks());
+                || canPerformTowerAction(gameTime, memory.lastActionTick(), settings.jumpCooldownTicks());
+
+        if (hasEmbeddedBlockCollision(level, root)) {
+            if (moveToSafeGround(level, root, root, target)) {
+                positionTowerRiders(root);
+                rememberAction(root, target, gameTime);
+            } else if (actionReady) {
+                releaseTopSafely(root, target, gameTime, settings, "embedded tower base");
+            }
+            return true;
+        }
+        if (hasEmbeddedTowerRider(level, root)) {
+            releaseTopSafely(root, target, gameTime, settings, "blocked rider space");
+            return true;
+        }
+
         if (!isHeightAllowed(
                 top.getY(),
                 target.getY(),
@@ -449,23 +501,39 @@ public final class ZombieTowering {
             return true;
         }
 
-        if (settings.smartDismountEnabled() && actionReady && target.onGround()) {
+        if (settings.smartDismountEnabled()
+                && target.onGround()
+                && actionReady
+                && ZombieBlockBreaker.isScheduledTick(
+                        gameTime,
+                        root.getId() * 31 + 7,
+                        GROUND_REACHABILITY_CHECK_INTERVAL_TICKS)) {
             Vec3 rootDirection = horizontalDirection(root, target);
-            boolean hasForwardBarrier = hasBlockCollision(
-                    level,
+            boolean hasForwardBarrier = hasForwardBarrier(level, root, rootDirection);
+            boolean hasLineOfSight = root.hasLineOfSight(target);
+            boolean normalPathReachable = hasNormalGroundRoute(
                     root,
-                    root.getBoundingBox().move(rootDirection.x * 0.35, 0.0, rootDirection.z * 0.35));
-            if (shouldSmartDismount(
+                    target,
+                    hasForwardBarrier,
+                    hasLineOfSight);
+            boolean reachableGround = shouldSmartDismount(
                     true,
                     true,
                     root.getY(),
                     target.getY(),
-                    root.horizontalCollision,
+                    normalPathReachable,
                     hasForwardBarrier,
-                    root.hasLineOfSight(target))) {
+                    hasLineOfSight);
+            updateReachableGround(root, target, gameTime, reachableGround);
+            TowerMemory updatedMemory = TOWER_MEMORIES.get(root.getUUID());
+            if (reachableGround
+                    && updatedMemory != null
+                    && isReachableGroundStable(updatedMemory.reachableGroundSinceTick(), gameTime)) {
                 releaseTopSafely(root, target, gameTime, settings, "reachable ground");
                 return true;
             }
+        } else {
+            updateReachableGround(root, target, gameTime, false);
         }
 
         if (!settings.jumpingEnabled() || !actionReady) {
@@ -486,7 +554,7 @@ public final class ZombieTowering {
 
         int formerStackSize = towerSize(root);
         Vec3 direction = horizontalDirection(top, target);
-        if (!releaseStackRider(top)) {
+        if (!detachRiderAtCurrentPosition(top)) {
             return true;
         }
         rememberAction(root, target, gameTime);
@@ -538,12 +606,12 @@ public final class ZombieTowering {
             double dz = root.getZ() - zombie.getZ();
             double horizontalDistanceSquared = dx * dx + dz * dz;
             int stackSize = towerSize(root);
-            double predictedY = support.getY() + support.getBbHeight() * 0.75 + 0.1;
+            double predictedY = TowerRiderPosition.calculate(support, zombie).y;
             if (!isSupportPosition(
                     horizontalDistanceSquared,
                     zombie.getY() - root.getY(),
                     Math.min(1.35, settings.crowdRadius()))
-                    || !isValidSupport(root, support, settings.maxStackSize())
+                    || !isValidSupport(level, root, support, settings.maxStackSize())
                     || !isTowerTargetCompatible(root, target)
                     || !isHeightAllowed(
                             predictedY,
@@ -564,26 +632,62 @@ public final class ZombieTowering {
         return new CrowdState(nearby.size(), bestSupport);
     }
 
-    private static boolean isValidSupport(Zombie root, Zombie support, int maxStackSize) {
+    private static boolean isValidSupport(ServerLevel level, Zombie root, Zombie support, int maxStackSize) {
         if (!isHealthyTower(root)
                 || support.isVehicle()
-                || !canGrowStack(towerSize(root), maxStackSize)) {
+                || !canGrowStack(towerSize(root), maxStackSize)
+                || !hasStableBlockSupport(level, root)) {
             return false;
         }
         if (support.isPassenger() && !isAddonStackRider(support)) {
             return false;
         }
 
-        return root.onGround();
+        return true;
     }
 
-    private static boolean hasClearStackSpace(ServerLevel level, Zombie zombie, Zombie support) {
-        double desiredY = support.getY() + support.getBbHeight() * 0.75 + 0.1;
-        AABB desiredBounds = zombie.getBoundingBox().move(
-                support.getX() - zombie.getX(),
-                desiredY - zombie.getY(),
-                support.getZ() - zombie.getZ());
-        return !hasBlockCollision(level, zombie, desiredBounds);
+    private static boolean joinTower(ServerLevel level, Zombie zombie, Zombie support) {
+        Vec3 originalPosition = zombie.position();
+        Vec3 originalMovement = zombie.getDeltaMovement();
+        Vec3 ridingPosition = TowerRiderPosition.calculate(support, zombie);
+        AABB ridingBounds = zombie.getBoundingBox().move(
+                ridingPosition.x - zombie.getX(),
+                ridingPosition.y - zombie.getY(),
+                ridingPosition.z - zombie.getZ());
+        if (hasBlockCollision(level, zombie, ridingBounds)) {
+            return false;
+        }
+        if (!zombie.addTag(STACK_RIDER_TAG)) {
+            return false;
+        }
+        if (!zombie.startRiding(support, true)) {
+            zombie.removeTag(STACK_RIDER_TAG);
+            return false;
+        }
+
+        support.positionRider(zombie);
+        if (hasEmbeddedBlockCollision(level, zombie)) {
+            zombie.stopRiding();
+            if (zombie.getVehicle() instanceof Zombie) {
+                return true;
+            }
+            zombie.removeTag(STACK_RIDER_TAG);
+            zombie.moveTo(
+                    originalPosition.x,
+                    originalPosition.y,
+                    originalPosition.z,
+                    zombie.getYRot(),
+                    zombie.getXRot());
+            zombie.setDeltaMovement(originalMovement);
+            zombie.hasImpulse = true;
+            return false;
+        }
+
+        zombie.getNavigation().stop();
+        zombie.setDeltaMovement(Vec3.ZERO);
+        zombie.fallDistance = 0.0F;
+        zombie.hasImpulse = true;
+        return true;
     }
 
     private static int stackSizeBelow(Zombie zombie) {
@@ -694,7 +798,7 @@ public final class ZombieTowering {
         }
 
         if (memory == null) {
-            TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(null, gameTime, -1L));
+            TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(null, gameTime, -1L, -1L));
             return new TargetState(null, false);
         }
         return new TargetState(null, isTargetLossGraceExpired(memory.lastValidTargetTick(), gameTime));
@@ -702,12 +806,44 @@ public final class ZombieTowering {
 
     private static void rememberTarget(Zombie root, LivingEntity target, long gameTime) {
         TowerMemory current = TOWER_MEMORIES.get(root.getUUID());
-        long lastJumpTick = current == null ? -1L : current.lastJumpTick();
-        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(target.getUUID(), gameTime, lastJumpTick));
+        boolean sameTarget = current != null && target.getUUID().equals(current.targetId());
+        long lastActionTick = sameTarget ? current.lastActionTick() : -1L;
+        long reachableGroundSinceTick = sameTarget ? current.reachableGroundSinceTick() : -1L;
+        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(
+                target.getUUID(),
+                gameTime,
+                lastActionTick,
+                reachableGroundSinceTick));
     }
 
     private static void rememberAction(Zombie root, LivingEntity target, long gameTime) {
-        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(target.getUUID(), gameTime, gameTime));
+        TowerMemory current = TOWER_MEMORIES.get(root.getUUID());
+        long reachableGroundSinceTick = current == null ? -1L : current.reachableGroundSinceTick();
+        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(
+                target.getUUID(),
+                gameTime,
+                gameTime,
+                reachableGroundSinceTick));
+    }
+
+    private static void updateReachableGround(
+            Zombie root,
+            LivingEntity target,
+            long gameTime,
+            boolean reachableGround) {
+        TowerMemory current = TOWER_MEMORIES.get(root.getUUID());
+        long lastActionTick = current == null ? -1L : current.lastActionTick();
+        boolean sameTarget = current != null && target.getUUID().equals(current.targetId());
+        long reachableSince = reachableGround
+                ? sameTarget && current.reachableGroundSinceTick() >= 0L
+                        ? current.reachableGroundSinceTick()
+                        : gameTime
+                : -1L;
+        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(
+                target.getUUID(),
+                gameTime,
+                lastActionTick,
+                reachableSince));
     }
 
     private static boolean isTowerTargetCompatible(Zombie root, LivingEntity target) {
@@ -801,14 +937,12 @@ public final class ZombieTowering {
         }
 
         int formerStackSize = towerSize(root);
-        Vec3 awayFromTarget = horizontalDirectionAway(top, target);
-        if (!releaseStackRider(top)) {
+        if (!(root.level() instanceof ServerLevel level)
+                || !releaseStackRiderToGround(level, top, root, target)) {
             return false;
         }
 
         top.setTarget(target);
-        top.setDeltaMovement(computeSafeDismountMovement(root.getDeltaMovement(), awayFromTarget));
-        top.hasImpulse = true;
         if (towerSize(root) <= 1) {
             TOWER_MEMORIES.remove(root.getUUID());
         } else {
@@ -855,6 +989,51 @@ public final class ZombieTowering {
         if (!isAddonStackRider(zombie)) {
             return false;
         }
+
+        if (zombie.level() instanceof ServerLevel level && zombie.getVehicle() instanceof Zombie) {
+            Zombie root = towerRoot(zombie);
+            LivingEntity target = findLiveChainTarget(root);
+            if (releaseStackRiderToGround(level, zombie, root, target)) {
+                return true;
+            }
+            if (hasEmbeddedBlockCollision(level, zombie)) {
+                return false;
+            }
+        }
+
+        return detachRiderAtCurrentPosition(zombie);
+    }
+
+    private static boolean releaseStackRiderToGround(
+            ServerLevel level,
+            Zombie zombie,
+            Zombie root,
+            LivingEntity target) {
+        Vec3 safePosition = findSafeGroundPosition(level, zombie, root, target, false);
+        if (safePosition == null) {
+            return false;
+        }
+
+        Vec3 awayFromTarget = target == null ? Vec3.ZERO : horizontalDirectionAway(zombie, target);
+        if (!detachRiderAtCurrentPosition(zombie)) {
+            return false;
+        }
+        zombie.moveTo(
+                safePosition.x,
+                safePosition.y,
+                safePosition.z,
+                zombie.getYRot(),
+                zombie.getXRot());
+        zombie.setDeltaMovement(computeSafeDismountMovement(Vec3.ZERO, awayFromTarget));
+        zombie.fallDistance = 0.0F;
+        zombie.hasImpulse = true;
+        return true;
+    }
+
+    private static boolean detachRiderAtCurrentPosition(Zombie zombie) {
+        if (!isAddonStackRider(zombie)) {
+            return false;
+        }
         Vec3 supportMovement = Vec3.ZERO;
         if (zombie.getVehicle() instanceof Zombie support) {
             supportMovement = support.getDeltaMovement();
@@ -865,8 +1044,160 @@ public final class ZombieTowering {
         }
         zombie.removeTag(STACK_RIDER_TAG);
         zombie.setDeltaMovement(computeSafeDismountMovement(supportMovement, Vec3.ZERO));
+        zombie.fallDistance = 0.0F;
         zombie.hasImpulse = true;
         return true;
+    }
+
+    private static boolean canUseNormalNavigation(Zombie zombie, LivingEntity target) {
+        if (!target.onGround() || target.getY() > zombie.getY() + 1.0) {
+            return false;
+        }
+        Path path = zombie.getNavigation().createPath(target, 0);
+        return path != null && (path.canReach() || path.getDistToTarget() <= 1.5F);
+    }
+
+    private static boolean hasNormalGroundRoute(
+            Zombie zombie,
+            LivingEntity target,
+            boolean hasForwardBarrier,
+            boolean hasLineOfSight) {
+        if (!target.onGround() || target.getY() > zombie.getY() + 1.0) {
+            return false;
+        }
+        return (!hasForwardBarrier && hasLineOfSight) || canUseNormalNavigation(zombie, target);
+    }
+
+    private static boolean hasForwardBarrier(ServerLevel level, Zombie zombie, Vec3 direction) {
+        AABB shiftedBounds = zombie.getBoundingBox()
+                .move(direction.x * 0.45, 0.0, direction.z * 0.45)
+                .deflate(0.05, 0.08, 0.05);
+        return hasBlockCollision(level, zombie, shiftedBounds);
+    }
+
+    private static boolean hasStableBlockSupport(ServerLevel level, Zombie zombie) {
+        if (!zombie.onGround() || hasEmbeddedBlockCollision(level, zombie)) {
+            return false;
+        }
+        AABB bounds = zombie.getBoundingBox();
+        double inset = Math.min(0.05, Math.max(0.0, zombie.getBbWidth() * 0.2));
+        AABB feet = new AABB(
+                bounds.minX + inset,
+                bounds.minY - 0.08,
+                bounds.minZ + inset,
+                bounds.maxX - inset,
+                bounds.minY + 0.02,
+                bounds.maxZ - inset);
+        return hasBlockCollision(level, zombie, feet);
+    }
+
+    private static boolean hasEmbeddedBlockCollision(ServerLevel level, Zombie zombie) {
+        return hasBlockCollision(level, zombie, zombie.getBoundingBox().deflate(COLLISION_EPSILON));
+    }
+
+    private static boolean hasEmbeddedTowerRider(ServerLevel level, Zombie root) {
+        Zombie current = directAddonRider(root);
+        while (current != null) {
+            if (hasEmbeddedBlockCollision(level, current)) {
+                return true;
+            }
+            current = directAddonRider(current);
+        }
+        return false;
+    }
+
+    private static boolean moveToSafeGround(
+            ServerLevel level,
+            Zombie zombie,
+            Zombie root,
+            LivingEntity target) {
+        Vec3 safePosition = findSafeGroundPosition(level, zombie, root, target, true);
+        if (safePosition == null) {
+            return false;
+        }
+        zombie.moveTo(
+                safePosition.x,
+                safePosition.y,
+                safePosition.z,
+                zombie.getYRot(),
+                zombie.getXRot());
+        zombie.setDeltaMovement(Vec3.ZERO);
+        zombie.fallDistance = 0.0F;
+        zombie.hasImpulse = true;
+        return true;
+    }
+
+    private static Vec3 findSafeGroundPosition(
+            ServerLevel level,
+            Zombie zombie,
+            Zombie root,
+            LivingEntity target,
+            boolean includeCenter) {
+        BlockPos origin = BlockPos.containing(root.getX(), root.getY(), root.getZ());
+        Vec3 away = target == null ? Vec3.ZERO : horizontalDirectionAway(root, target);
+        List<int[]> offsets = new ArrayList<>();
+        if (includeCenter) {
+            offsets.add(new int[] { 0, 0 });
+        }
+        for (int radius = 1; radius <= SAFE_DISMOUNT_RADIUS; radius++) {
+            for (int x = -radius; x <= radius; x++) {
+                for (int z = -radius; z <= radius; z++) {
+                    if (Math.max(Math.abs(x), Math.abs(z)) == radius) {
+                        offsets.add(new int[] { x, z });
+                    }
+                }
+            }
+        }
+        offsets.sort(Comparator
+                .<int[]>comparingDouble(offset -> -(offset[0] * away.x + offset[1] * away.z))
+                .thenComparingInt(offset -> offset[0] * offset[0] + offset[1] * offset[1]));
+
+        int[] verticalOffsets = { 0, 1, -1, 2, -2 };
+        for (int[] offset : offsets) {
+            for (int verticalOffset : verticalOffsets) {
+                BlockPos candidatePos = origin.offset(offset[0], verticalOffset, offset[1]);
+                if (!level.hasChunk(candidatePos.getX() >> 4, candidatePos.getZ() >> 4)) {
+                    continue;
+                }
+                Vec3 candidate = DismountHelper.findSafeDismountLocation(
+                        zombie.getType(),
+                        level,
+                        candidatePos,
+                        true);
+                if (candidate == null) {
+                    continue;
+                }
+                AABB candidateBounds = zombie.getBoundingBox().move(
+                        candidate.x - zombie.getX(),
+                        candidate.y - zombie.getY(),
+                        candidate.z - zombie.getZ());
+                if (level.noCollision(zombie, candidateBounds)
+                        && (zombie == root || !intersectsTower(candidateBounds, root, zombie))) {
+                    return candidate;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean intersectsTower(AABB bounds, Zombie root, Zombie excluded) {
+        Zombie current = root;
+        while (current != null) {
+            if (current != excluded && current.getBoundingBox().intersects(bounds)) {
+                return true;
+            }
+            current = directAddonRider(current);
+        }
+        return false;
+    }
+
+    private static void positionTowerRiders(Zombie support) {
+        Zombie rider = directAddonRider(support);
+        if (rider == null) {
+            return;
+        }
+        support.positionRider(rider);
+        positionTowerRiders(rider);
     }
 
     private static boolean hasBlockCollision(ServerLevel level, Zombie zombie, AABB bounds) {

@@ -801,6 +801,7 @@ public final class Config {
                     "Optional World War Z-style swarm movement that lets zombie-class mobs form real moving stacks.",
                     "Safe beginner setup: leave this disabled. It never places or breaks blocks.",
                     "Towering requires a valid target and a nearby crowd, and is day-gated to prevent early-world pressure.",
+                    "Normal ground combat and ordinary player jumps do not trigger a tower with the default obstacle rule.",
                     "Quick setup: /za towering on enables a balanced stack preset immediately.",
                     "Checks are staggered by entity ID so large hordes do not all scan on the same tick."))
                     .push("towering");
@@ -855,7 +856,7 @@ public final class Config {
                             "Maximum number of zombies allowed in one vertical stack, including the bottom zombie.",
                             "Default 0 means no configured zombie-count limit; dynamic target height stops normal towers.",
                             "1 prevents a stack from forming. Values 2 and higher set an exact per-tower cap.",
-                            "Unlimited mode still needs enough zombies, loaded space, and valid collision-free positions.")
+                            "Unlimited mode still needs enough zombies, a useful raised target, and collision-free rider space.")
                     .defineInRange("zombieToweringMaxStackSize", 0, 0, ConfigLimits.MAX_TOWER_STACK_SIZE);
 
             zombieToweringMaxTowersPerPlayer = builder
@@ -884,8 +885,9 @@ public final class Config {
             zombieToweringSmartDismountEnabled = builder
                     .comment(
                             "Let towers return to normal zombies when stacking is no longer useful.",
-                            "When a target is back on reachable ground with no wall in the way, riders dismount gradually.",
-                            "Dynamic height reductions also release one top rider at a time without launch velocity.",
+                            "When a target stays on reachable ground, riders move one at a time to nearby safe floor positions.",
+                            "The short stability delay prevents a single jump or pathfinding hiccup from collapsing the tower.",
+                            "Blocked or unsafe dismount positions are rejected instead of putting zombies inside the floor.",
                             "Disable this only for intentionally permanent or unlimited towers.")
                     .define("zombieToweringSmartDismountEnabled", true);
 
@@ -898,9 +900,10 @@ public final class Config {
 
             zombieToweringJumpCooldownTicks = builder
                     .comment(
-                            "Minimum delay between zombies jumping from the same tower.",
-                            "Default 10 ticks prevents the whole stack from dismounting at once.",
-                            "20 ticks = 1 second. Lower values attack faster; higher values preserve stacks longer.")
+                            "Minimum delay between changes to the same tower: growth, safe dismounts, and jump attacks.",
+                            "Default 10 ticks makes stacks build and separate gradually instead of snapping together.",
+                            "20 ticks = 1 second. Lower values react faster; higher values look calmer and cost less CPU.",
+                            "The config key keeps its old jumpCooldown name so existing server configs remain compatible.")
                     .defineInRange("zombieToweringJumpCooldownTicks", 10, 1, 1200);
 
             zombieToweringDismountDistance = builder
@@ -931,8 +934,9 @@ public final class Config {
 
             zombieToweringRequireObstacle = builder
                     .comment(
-                            "If true, towering requires a collision, nearby barrier, covered target, or raised target.",
-                            "Leave this true to stop zombie crowds from hopping across open ground.")
+                            "If true, towering only starts for a meaningfully raised target or a genuinely blocked route.",
+                            "Ordinary ground combat, crowd collisions, and normal player jumps are ignored.",
+                            "Leave this true for smooth gameplay. false allows towers to form anywhere, including flat ground.")
                     .define("zombieToweringRequireObstacle", true);
             builder.pop();
 

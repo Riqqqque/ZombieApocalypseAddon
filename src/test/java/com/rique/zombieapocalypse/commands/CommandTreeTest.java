@@ -124,6 +124,7 @@ class CommandTreeTest {
         assertAdmin("ztower", "smartdismount", "state");
         assertAdmin("ztower", "jumping", "state");
         assertAdmin("ztower", "jumpcooldown", "ticks");
+        assertAdmin("ztower", "pace", "ticks");
         assertAdmin("ztower", "height", "blocks");
         assertAdmin("zattr", "set");
         assertAdmin("zattr", "toggle");
@@ -146,6 +147,7 @@ class CommandTreeTest {
         assertIntegerRange(0, ConfigLimits.MAX_TOWER_HEIGHT_OFFSET, "ztower", "offset", "blocks");
         assertIntegerRange(0, ConfigLimits.MAX_TOWER_HEIGHT_LIMIT, "ztower", "height", "blocks");
         assertIntegerRange(1, 1_200, "ztower", "jumpcooldown", "ticks");
+        assertIntegerRange(1, 1_200, "ztower", "pace", "ticks");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "ztower", "startday", "day");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zblockbreak", "startday", "day");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zblockplace", "startday", "day");
