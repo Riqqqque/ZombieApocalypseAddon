@@ -12,7 +12,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 class CommandSuggestionsTest {
 
     @Test
-    void toggleSuggestionsUseReadableStatesAndKeepLegacyValues() throws Exception {
+    void toggleSuggestionsOnlyShowReadableStates() throws Exception {
         List<String> suggestions = CommandSuggestions.fixed(CommandSuggestions.TOGGLE)
                 .getSuggestions(null, new SuggestionsBuilder("", 0))
                 .get()
@@ -21,7 +21,7 @@ class CommandSuggestionsTest {
                 .map(Suggestion::getText)
                 .toList();
 
-        assertEquals(List.of("false", "off", "on", "true"), suggestions);
+        assertEquals(List.of("off", "on"), suggestions);
     }
 
     @Test

@@ -80,7 +80,9 @@ public final class HelpCommands {
         CommandUtil.feedback(source,
                 "Event commands:\n"
                         + "/za events - show horde and blood moon status\n"
+                        + "/za events on|off - enable scheduled hordes with balanced defaults\n"
                         + "/za events start|stop - control a horde\n"
+                        + "/za bloodmoon on|off - enable random blood moons with balanced defaults\n"
                         + "/za bloodmoon start - start one now or queue it for tonight\n"
                         + "/za spawn horde on|off - enable scheduled hordes\n"
                         + "/za spawn hordechance <0.0-1.0> - scheduled horde chance\n"
@@ -109,7 +111,8 @@ public final class HelpCommands {
                 "Base-pressure commands (all OFF by default):\n"
                         + "/za breaking [on|off|status] - let zombies damage allowed blocks\n"
                         + "/za placing [on|off|status] - let zombies build limited steps and bridges\n"
-                        + "/za towering [on|off|status] - let zombie crowds climb over each other\n"
+                        + "/za towering [on|off|status] - let zombie crowds form moving vertical stacks\n"
+                        + "Each on command loads safe, usable defaults and starts on the current day.\n"
                         + "Use <command> startday <day> to delay a feature.\n"
                         + "Use <command> dayone to enable it immediately.\n"
                         + "Block breaking and placing respect mobGriefing by default.",

@@ -30,10 +30,6 @@ public final class UtilityCommands {
     private static void registerZBurn(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zburn")
                 .executes(context -> showBurning(context.getSource()))
-                .then(CommandUtil.admin(Commands.literal("on")
-                        .executes(context -> setBurning(context.getSource(), true))))
-                .then(CommandUtil.admin(Commands.literal("off")
-                        .executes(context -> setBurning(context.getSource(), false))))
                 .then(CommandUtil.admin(CommandUtil.toggleArgument("state")
                         .executes(context -> setBurning(
                                 context.getSource(),

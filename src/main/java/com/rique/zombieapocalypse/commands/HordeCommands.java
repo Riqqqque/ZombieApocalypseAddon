@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
 import com.rique.zombieapocalypse.Config;
@@ -24,6 +23,10 @@ public final class HordeCommands {
     private static void registerZHorde(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("zhorde")
                 .executes(context -> showStatus(context.getSource()))
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setHordesEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setHordesEnabled(context.getSource(), false))))
                 .then(CommandUtil.admin(Commands.literal("start")
                         .executes(context -> startHorde(context.getSource()))))
                 .then(CommandUtil.admin(Commands.literal("stop")
@@ -38,25 +41,28 @@ public final class HordeCommands {
     }
 
     private static void registerZBloodMoon(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(CommandUtil.admin(Commands.literal("zbloodmoon")
-                .executes(context -> startBloodMoon(context.getSource()))
-                .then(Commands.literal("start")
-                        .executes(context -> startBloodMoon(context.getSource())))
+        dispatcher.register(Commands.literal("zbloodmoon")
+                .executes(context -> startBloodMoonLegacy(context.getSource()))
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setBloodMoonsEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setBloodMoonsEnabled(context.getSource(), false))))
+                .then(CommandUtil.admin(Commands.literal("start")
+                        .executes(context -> startBloodMoon(context.getSource()))))
                 .then(Commands.literal("status")
-                        .executes(context -> showStatus(context.getSource())))));
+                        .executes(context -> showStatus(context.getSource()))));
     }
 
     private static int startHorde(CommandSourceStack source) {
         ServerLevel level = source.getLevel();
         HordeStartResult result = HordeManager.startHorde(level);
         if (result == HordeStartResult.CUSTOM_SPAWNING_DISABLED) {
-            source.sendFailure(Component.literal(
-                    "Custom zombie waves are off. Run /za spawn on before starting a horde."));
+            CommandUtil.failure(source, "Custom zombie waves are off. Run /za spawn on before starting a horde.");
             return 0;
         }
         if (result == HordeStartResult.DAYTIME_SPAWNING_DISABLED) {
-            source.sendFailure(Component.literal(
-                    "Daytime custom waves are off. Wait until night or run /za spawn daytime on."));
+            CommandUtil.failure(source,
+                    "Daytime custom waves are off. Wait until night or run /za spawn daytime on.");
             return 0;
         }
         CommandUtil.feedback(source, "Horde event started.", true);
@@ -65,8 +71,8 @@ public final class HordeCommands {
 
     private static int startBloodMoon(CommandSourceStack source) {
         if (!Config.COMMON.enableDaySpawning.get()) {
-            source.sendFailure(Component.literal(
-                    "Custom zombie waves are off. Run /za spawn on before forcing a blood moon."));
+            CommandUtil.failure(source,
+                    "Custom zombie waves are off. Run /za spawn on before forcing a blood moon.");
             return 0;
         }
         ServerLevel level = source.getLevel();
@@ -75,6 +81,42 @@ public final class HordeCommands {
                 source,
                 activeNow ? "Blood moon is active now." : "Blood moon queued for tonight.",
                 true);
+        return 1;
+    }
+
+    private static int startBloodMoonLegacy(CommandSourceStack source) {
+        if (!source.hasPermission(2)) {
+            CommandUtil.failure(source, "Starting a blood moon requires permission level 2. Use /za bloodmoon status to view it.");
+            return 0;
+        }
+        return startBloodMoon(source);
+    }
+
+    private static int setHordesEnabled(CommandSourceStack source, boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableHordes();
+            CommandUtil.feedback(source,
+                    "Scheduled hordes: ON\nBalanced event preset loaded. Custom day/night waves were enabled so scheduled dawn hordes can run.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableHordeEvents, false);
+            HordeManager.stopHorde(source.getLevel());
+            CommandUtil.feedback(source, "Scheduled hordes: OFF\nAny active horde was stopped.", true);
+        }
+        return 1;
+    }
+
+    private static int setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
+        if (enabled) {
+            FeaturePresets.enableBloodMoons();
+            CommandUtil.feedback(source,
+                    "Random blood moons: ON\nBalanced night-event preset loaded. Custom zombie waves were enabled automatically.",
+                    true);
+        } else {
+            Config.set(Config.COMMON.enableBloodMoon, false);
+            HordeManager.stopBloodMoon(source.getLevel());
+            CommandUtil.feedback(source, "Random blood moons: OFF\nAny active or queued blood moon was stopped.", true);
+        }
         return 1;
     }
 

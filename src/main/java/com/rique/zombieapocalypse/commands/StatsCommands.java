@@ -14,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
+import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.StatisticsManager;
 import com.rique.zombieapocalypse.ZombieKillAdvancements;
 
@@ -32,6 +33,10 @@ public final class StatsCommands {
                     }
                     return 1;
                 })
+                .then(CommandUtil.admin(Commands.literal("on")
+                        .executes(context -> setEnabled(context.getSource(), true))))
+                .then(CommandUtil.admin(Commands.literal("off")
+                        .executes(context -> setEnabled(context.getSource(), false))))
                 .then(Commands.argument("player", EntityArgument.player())
                         .executes(context -> {
                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
@@ -68,6 +73,15 @@ public final class StatsCommands {
                                     true);
                             return 1;
                         }))));
+    }
+
+    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+        Config.set(Config.COMMON.enableStatistics, enabled);
+        CommandUtil.feedback(source,
+                "Kill statistics: " + CommandUtil.onOff(enabled)
+                        + "\nMilestone advancements keep their own progress and are not changed by this switch.",
+                true);
+        return 1;
     }
 
     private static void showPlayerStats(CommandSourceStack source, ServerPlayer player) {

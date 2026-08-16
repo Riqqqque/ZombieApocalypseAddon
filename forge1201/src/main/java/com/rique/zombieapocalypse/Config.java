@@ -168,6 +168,8 @@ public final class Config {
         public final ForgeConfigSpec.IntValue zombieToweringMaxTargetDistance;
         public final ForgeConfigSpec.IntValue zombieToweringMinNearbyZombies;
         public final ForgeConfigSpec.DoubleValue zombieToweringCrowdRadius;
+        public final ForgeConfigSpec.IntValue zombieToweringMaxStackSize;
+        public final ForgeConfigSpec.DoubleValue zombieToweringDismountDistance;
         public final ForgeConfigSpec.DoubleValue zombieToweringVerticalBoost;
         public final ForgeConfigSpec.DoubleValue zombieToweringForwardBoost;
         public final ForgeConfigSpec.IntValue zombieToweringMaxHeightAboveTarget;
@@ -372,6 +374,7 @@ public final class Config {
                     "MOD COMPATIBILITY",
                     "Controls how this addon cooperates with other zombie, difficulty, AI, and spawn-control mods.",
                     "Beginner advice: skip this section and keep every default.",
+                    "Quick reset: /za compatibility on restores the recommended safeguards.",
                     "No compatibility option creates a hard dependency. Missing mods and missing optional entity IDs are ignored."))
                     .push("compatibility");
             enableModdedZombieCompatibility = builder
@@ -450,6 +453,7 @@ public final class Config {
                     "CUSTOM DAY/NIGHT SPAWNING",
                     "This is the main pressure system. It creates extra zombie waves around survival players.",
                     "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
+                    "Quick setup: /za spawn on loads the standard day/night spawning preset.",
                     "Use enableDaytimeSpawning = false for permanent night-only custom waves.",
                     "Use maxBlockLightForSpawning if you want player-placed lights to protect bases from custom waves.",
                     "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
@@ -598,6 +602,7 @@ public final class Config {
                     "ZOMBIE BLOCK BREAKING",
                     "Optional destructive behavior for zombie-class mobs.",
                     "Safe beginner setup: leave this disabled unless your server wants base pressure.",
+                    "Quick setup: /za breaking on enables a protected, balanced preset immediately.",
                     "When enabled, zombies only try on a timer and chance roll, so this avoids every-zombie every-tick scans.",
                     "The defaults protect chests, furnaces, modded machines, light sources, tool-required blocks, and unbreakable blocks.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -694,6 +699,7 @@ public final class Config {
                     "ZOMBIE BLOCK PLACING",
                     "Optional siege behavior that lets zombie-class mobs place simple building blocks to reach targets.",
                     "Safe beginner setup: leave this disabled. It is separate from zombie block breaking.",
+                    "Quick setup: /za placing on enables limited cobblestone steps and bridges immediately.",
                     "Placement honors mobGriefing and loader block-place events by default, so protection mods can cancel it.",
                     "Each zombie has a configurable placement limit to prevent unlimited terrain clutter.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -798,16 +804,17 @@ public final class Config {
 
             builder.comment(sectionComment(
                     "ZOMBIE TOWERING",
-                    "Optional World War Z-style swarm movement that lets zombie-class mobs climb over each other.",
+                    "Optional World War Z-style swarm movement that lets zombie-class mobs form real moving stacks.",
                     "Safe beginner setup: leave this disabled. It never places or breaks blocks.",
                     "Towering requires a valid target and a nearby crowd, and is day-gated to prevent early-world pressure.",
+                    "Quick setup: /za towering on enables a balanced stack preset immediately.",
                     "Checks are staggered by entity ID so large hordes do not all scan on the same tick."))
                     .push("towering");
             enableZombieTowering = builder
                     .comment(
                             "Main on/off switch for zombie towering.",
-                            "false = zombies never receive towering movement from this mod.",
-                            "true = recognized Zombie subclasses can tower after zombieToweringStartDay if the other rules allow it.")
+                            "false = zombies never form passenger stacks from this mod.",
+                            "true = recognized Zombie subclasses can form moving stacks after zombieToweringStartDay.")
                     .define("enableZombieTowering", false);
 
             zombieToweringStartDay = builder
@@ -839,7 +846,7 @@ public final class Config {
 
             zombieToweringMinNearbyZombies = builder
                     .comment(
-                            "Minimum number of other nearby Zombie subclasses required for a towering boost.",
+                            "Minimum number of other nearby Zombie subclasses required before a stack can form.",
                             "Default 2 means towering needs a crowd of at least three including the climbing zombie.")
                     .defineInRange("zombieToweringMinNearbyZombies", 2, 1, 16);
 
@@ -849,16 +856,29 @@ public final class Config {
                             "Keep this small because every eligible attempt performs one bounded entity lookup.")
                     .defineInRange("zombieToweringCrowdRadius", 2.25, 0.75, 6.0);
 
+            zombieToweringMaxStackSize = builder
+                    .comment(
+                            "Maximum number of zombies allowed in one vertical stack, including the bottom zombie.",
+                            "Default 4 can reach common walls without creating extreme entity towers.",
+                            "Range 2-8. Higher values need more vertical space and can look chaotic in large hordes.")
+                    .defineInRange("zombieToweringMaxStackSize", 4, 2, 8);
+
+            zombieToweringDismountDistance = builder
+                    .comment(
+                            "Horizontal distance from the target where a high-enough stacked zombie jumps off to attack.",
+                            "Default 2.75 blocks lets the upper zombie clear a wall edge without launching from far away.")
+                    .defineInRange("zombieToweringDismountDistance", 2.75, 1.0, 8.0);
+
             zombieToweringVerticalBoost = builder
                     .comment(
-                            "Upward velocity applied when a zombie successfully uses the crowd to climb.",
-                            "Default 0.48 is slightly stronger than a normal jump without acting like flight.")
+                            "Upward velocity used when the upper zombie jumps off its stack toward the target.",
+                            "Default 0.48 clears a normal block edge without acting like flight.")
                     .defineInRange("zombieToweringVerticalBoost", 0.48, 0.1, 1.0);
 
             zombieToweringForwardBoost = builder
                     .comment(
-                            "Horizontal velocity toward the target during a towering boost.",
-                            "The result is capped so repeated boosts cannot create runaway horizontal speed.")
+                            "Horizontal velocity toward the target when a stacked zombie jumps off.",
+                            "The result is capped so repeated attempts cannot create runaway horizontal speed.")
                     .defineInRange("zombieToweringForwardBoost", 0.18, 0.0, 0.6);
 
             zombieToweringMaxHeightAboveTarget = builder
@@ -878,6 +898,7 @@ public final class Config {
                     "HORDE EVENTS",
                     "Scheduled high-pressure events that temporarily increase custom spawning.",
                     "Safe beginner setup: keep interval and duration at defaults until you know your server can handle more.",
+                    "Quick setup: /za events on enables a balanced scheduled-horde preset.",
                     "Performance warning: hordeZombiesPerSpawn, hordeSpawnMultiplier, and eventSpawnInterval are the big lag knobs.",
                     "Hardcore setup: increase one setting at a time, not all at once."))
                     .push("horde");
@@ -944,7 +965,8 @@ public final class Config {
                     "BLOOD MOON EVENTS",
                     "Random night events that raise zombie pressure until dawn.",
                     "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
-                    "Safe beginner setup: keep chance low and avoid huge multipliers."))
+                    "Safe beginner setup: keep chance low and avoid huge multipliers.",
+                    "Quick setup: /za bloodmoon on enables a balanced random-event preset."))
                     .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
@@ -978,6 +1000,7 @@ public final class Config {
                     "DAY-BASED DIFFICULTY SCALING",
                     "Makes the apocalypse get harder as the world day counter rises.",
                     "Safe beginner setup: keep scalingStartDay above 0 so new worlds get a short grace period.",
+                    "Quick setup: /za scaling on loads balanced day 3-50 progression.",
                     "Hardcore setup: lower scalingStartDay or maxScalingDay, but test before combining with strong hordes."))
                     .push("scaling");
             enableDifficultyScaling = builder
@@ -1028,6 +1051,7 @@ public final class Config {
                     "ADVANCED ATTRIBUTE SYSTEM",
                     "Deep stat tuning for zombie-class mobs when they enter the world.",
                     "Beginner advice: leave this on with default numbers unless you are building a custom difficulty profile.",
+                    "Quick setup: /za attributes on loads conservative scaling values and required dependencies.",
                     "Hardcore setup: use small multiplier changes first. 1.20 is already 20% stronger.",
                     "Warning: extreme health, speed, follow range, or knockback values can feel broken or hurt performance."))
                     .push("attributes");
@@ -1667,7 +1691,8 @@ public final class Config {
             builder.comment(sectionComment(
                     "STATISTICS",
                     "Controls kill totals shown by /zstats.",
-                    "Milestone advancements use their own progress so achievements can still work if this is disabled."))
+                    "Milestone advancements use their own progress so achievements can still work if this is disabled.",
+                    "Quick control: /za stats on or /za stats off."))
                     .push("statistics");
             enableStatistics = builder
                     .comment(
