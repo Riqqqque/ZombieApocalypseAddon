@@ -34,6 +34,11 @@ final class CommandUtil {
         void accept(CommandSourceStack source, boolean value);
     }
 
+    @FunctionalInterface
+    interface SourceIntConsumer {
+        void accept(CommandSourceStack source, int value);
+    }
+
     private static final DynamicCommandExceptionType INVALID_TOGGLE = new DynamicCommandExceptionType(value ->
             Component.literal("Unknown state '" + value + "'. Use on or off (true and false also work)."));
 
@@ -106,6 +111,19 @@ final class CommandUtil {
             IntConsumer setter,
             IntFunction<String> message,
             int... commonValues) {
+        return intSetting(literal, argument, minimum, maximum, getter,
+                (source, value) -> setter.accept(value), message, commonValues);
+    }
+
+    static LiteralArgumentBuilder<CommandSourceStack> intSetting(
+            String literal,
+            String argument,
+            int minimum,
+            int maximum,
+            IntSupplier getter,
+            SourceIntConsumer setter,
+            IntFunction<String> message,
+            int... commonValues) {
         return Commands.literal(literal)
                 .executes(context -> {
                     feedback(context.getSource(), message.apply(getter.getAsInt()), false);
@@ -115,7 +133,7 @@ final class CommandUtil {
                         .suggests(CommandSuggestions.integers(getter, commonValues))
                         .executes(context -> {
                             int value = IntegerArgumentType.getInteger(context, argument);
-                            setter.accept(value);
+                            setter.accept(context.getSource(), value);
                             feedback(context.getSource(), message.apply(value), true);
                             return 1;
                         })));

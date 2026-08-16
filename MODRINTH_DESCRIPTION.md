@@ -132,9 +132,9 @@ For night-only custom spawning, run `/za spawn daytime off`. Normal night waves 
 
 ## Events and Progression
 
-Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
-Basic day scaling is enough for most servers. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment.
+Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
 
 ## Optional Base Pressure
 
@@ -142,9 +142,11 @@ Block breaking, block placing, and towering are independent and disabled by defa
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
-- Towering forms bounded moving passenger stacks. The top zombie dismounts toward the target once the stack is high and close enough, without placing or breaking blocks.
+- Towering grows the deepest nearby moving passenger stack toward a configurable maximum of 128 zombies. Brief AI target loss no longer collapses valid towers, separate towers can be capped per player, and top zombies jump off one at a time using a configurable cooldown. Jump attacks can also be disabled so zombies remain stacked. No blocks are placed or broken.
 
 Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. The older `dayone` aliases remain supported.
+
+Tower controls include `/za towering stacksize <2-128>`, `/za towering maxperplayer <count>` (`0` means unlimited), `/za towering jumping <on|off>`, and `/za towering jumpcooldown <ticks>`. The stack size is a maximum; a tower can stop earlier when it reaches its target or another safety condition.
 
 ## Mod Compatibility
 

@@ -14,11 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
+
+import com.rique.zombieapocalypse.ConfigLimits;
 
 class CommandTreeTest {
 
@@ -104,10 +107,19 @@ class CommandTreeTest {
         assertAdmin("zday", "set");
         assertAdmin("zhorde", "start");
         assertAdmin("zhorde", "stop");
+        assertAdmin("zhorde", "interval", "days");
+        assertAdmin("zhorde", "duration", "minutes");
+        assertAdmin("zbloodmoon", "multiplier", "multiplier");
+        assertAdmin("zscaling", "startday", "day");
+        assertAdmin("zscaling", "maxday", "day");
         assertAdmin("zstats", "clear");
         assertAdmin("zblockbreak", "dayone");
         assertAdmin("zblockplace", "block", "id");
         assertAdmin("ztower", "enabled", "state");
+        assertAdmin("ztower", "stacksize", "zombies");
+        assertAdmin("ztower", "maxperplayer", "towers");
+        assertAdmin("ztower", "jumping", "state");
+        assertAdmin("ztower", "jumpcooldown", "ticks");
         assertAdmin("zattr", "set");
         assertAdmin("zattr", "toggle");
         assertAdmin("zburn", "state");
@@ -119,6 +131,22 @@ class CommandTreeTest {
             assertAdmin(command, "on");
             assertAdmin(command, "off");
         }
+    }
+
+    @Test
+    void towerAndDayArgumentsExposeTheReviewedRanges() {
+        assertIntegerRange(1, 72_000, "ztower", "interval", "ticks");
+        assertIntegerRange(2, ConfigLimits.MAX_TOWER_STACK_SIZE, "ztower", "stacksize", "zombies");
+        assertIntegerRange(0, ConfigLimits.MAX_TOWERS_PER_PLAYER, "ztower", "maxperplayer", "towers");
+        assertIntegerRange(1, 1_200, "ztower", "jumpcooldown", "ticks");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "ztower", "startday", "day");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zblockbreak", "startday", "day");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zblockplace", "startday", "day");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zdayspawn", "daylightstart", "day");
+        assertIntegerRange(1, ConfigLimits.MAX_APOCALYPSE_DAY, "zhorde", "interval", "days");
+        assertIntegerRange(1, 10_080, "zhorde", "duration", "minutes");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "startday", "day");
+        assertIntegerRange(1, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "maxday", "day");
     }
 
     @Test
@@ -142,6 +170,16 @@ class CommandTreeTest {
 
     private void assertAdmin(String... path) {
         assertFalse(find(path).getRequirement().test(null), String.join(" ", path));
+    }
+
+    private void assertIntegerRange(int minimum, int maximum, String... path) {
+        CommandNode<CommandSourceStack> node = find(path);
+        assertTrue(node instanceof ArgumentCommandNode<?, ?>, String.join(" ", path));
+        Object type = ((ArgumentCommandNode<?, ?>) node).getType();
+        assertTrue(type instanceof IntegerArgumentType, String.join(" ", path));
+        IntegerArgumentType integer = (IntegerArgumentType) type;
+        assertEquals(minimum, integer.getMinimum(), String.join(" ", path));
+        assertEquals(maximum, integer.getMaximum(), String.join(" ", path));
     }
 
     private CommandNode<CommandSourceStack> find(String... path) {

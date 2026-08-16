@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.HordeManager;
 import com.rique.zombieapocalypse.SpawnMath;
 
@@ -86,7 +87,7 @@ public final class DaySpawnCommands {
                         value -> Config.set(Config.COMMON.minSpawnDistance, value),
                         value -> "Minimum spawn distance: " + value + " blocks" + buildSpawnDistanceWarning(),
                         8, 12, 16, 24, 32, 48, 64))
-                .then(CommandUtil.intSetting("daylightstart", "day", 0, 3650,
+                .then(CommandUtil.intSetting("daylightstart", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.daylightSpawnStartDay::get,
                         value -> Config.set(Config.COMMON.daylightSpawnStartDay, value),
                         DaySpawnCommands::formatDaylightStart,

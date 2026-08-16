@@ -157,6 +157,9 @@ public final class Config {
         public final ModConfigSpec.IntValue zombieToweringMinNearbyZombies;
         public final ModConfigSpec.DoubleValue zombieToweringCrowdRadius;
         public final ModConfigSpec.IntValue zombieToweringMaxStackSize;
+        public final ModConfigSpec.IntValue zombieToweringMaxTowersPerPlayer;
+        public final ModConfigSpec.BooleanValue zombieToweringJumpingEnabled;
+        public final ModConfigSpec.IntValue zombieToweringJumpCooldownTicks;
         public final ModConfigSpec.DoubleValue zombieToweringDismountDistance;
         public final ModConfigSpec.DoubleValue zombieToweringVerticalBoost;
         public final ModConfigSpec.DoubleValue zombieToweringForwardBoost;
@@ -544,7 +547,7 @@ public final class Config {
                             "Nighttime custom spawning still works before this day.",
                             "This value is kept but ignored while enableDaytimeSpawning is false.",
                             "Use enableDaytimeSpawning = false for permanent night-only spawning.")
-                    .defineInRange("daylightSpawnStartDay", 0, 0, 3650);
+                    .defineInRange("daylightSpawnStartDay", 0, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
             builder.pop();
 
             builder.comment(sectionComment(
@@ -607,7 +610,7 @@ public final class Config {
                             "Apocalypse day when block breaking is allowed to start after the feature is enabled.",
                             "0 = active immediately on day 0/day 1 style worlds.",
                             "10 = zombies cannot break blocks until the day counter reaches 10.")
-                    .defineInRange("zombieBlockBreakingStartDay", 10, 0, 3650);
+                    .defineInRange("zombieBlockBreakingStartDay", 10, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             zombieBlockBreakingInterval = builder
                     .comment(
@@ -704,7 +707,7 @@ public final class Config {
                             "Apocalypse day when block placing is allowed to start after the feature is enabled.",
                             "0 = active immediately on day 0/day 1 style worlds.",
                             "15 = zombies cannot place blocks until the day counter reaches 15.")
-                    .defineInRange("zombieBlockPlacingStartDay", 15, 0, 3650);
+                    .defineInRange("zombieBlockPlacingStartDay", 15, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             zombieBlockPlacingInterval = builder
                     .comment(
@@ -810,14 +813,14 @@ public final class Config {
                             "Apocalypse day when towering is allowed to start after the feature is enabled.",
                             "0 = active immediately on day 0/day 1 style worlds.",
                             "20 = zombies cannot tower until the day counter reaches 20.")
-                    .defineInRange("zombieToweringStartDay", 20, 0, 3650);
+                    .defineInRange("zombieToweringStartDay", 20, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             zombieToweringInterval = builder
                     .comment(
                             "How often each zombie can check for a towering opportunity.",
                             "20 ticks = 1 second. Checks are spread across ticks using the entity ID.",
                             "Lower values react faster but increase nearby-entity scans in crowded areas.")
-                    .defineInRange("zombieToweringInterval", 20, 5, 72000);
+                    .defineInRange("zombieToweringInterval", 20, 1, 72000);
 
             zombieToweringChance = builder
                     .comment(
@@ -848,8 +851,29 @@ public final class Config {
                     .comment(
                             "Maximum number of zombies allowed in one vertical stack, including the bottom zombie.",
                             "Default 4 can reach common walls without creating extreme entity towers.",
-                            "Range 2-8. Higher values need more vertical space and can look chaotic in large hordes.")
-                    .defineInRange("zombieToweringMaxStackSize", 4, 2, 8);
+                            "Range 2-128. The upper safety limit avoids unsafe passenger save/network depth.",
+                            "Very tall values are intentionally possible, but they need enough zombies and vertical space.")
+                    .defineInRange("zombieToweringMaxStackSize", 4, 2, ConfigLimits.MAX_TOWER_STACK_SIZE);
+
+            zombieToweringMaxTowersPerPlayer = builder
+                    .comment(
+                            "Maximum number of separate zombie towers that may target one player at the same time.",
+                            "Default 3 allows pressure from several directions without turning every crowd into a tower.",
+                            "0 = unlimited. Lowering this live releases extra loaded towers cleanly.")
+                    .defineInRange("zombieToweringMaxTowersPerPlayer", 3, 0, ConfigLimits.MAX_TOWERS_PER_PLAYER);
+
+            zombieToweringJumpingEnabled = builder
+                    .comment(
+                            "Controls whether the top zombie can jump off a tall-enough tower toward its target.",
+                            "true = towers deliver attackers one at a time. false = zombies remain stacked.")
+                    .define("zombieToweringJumpingEnabled", true);
+
+            zombieToweringJumpCooldownTicks = builder
+                    .comment(
+                            "Minimum delay between zombies jumping from the same tower.",
+                            "Default 10 ticks prevents the whole stack from dismounting at once.",
+                            "20 ticks = 1 second. Lower values attack faster; higher values preserve stacks longer.")
+                    .defineInRange("zombieToweringJumpCooldownTicks", 10, 1, 1200);
 
             zombieToweringDismountDistance = builder
                     .comment(
@@ -901,7 +925,7 @@ public final class Config {
                     .comment(
                             "How often the mod reaches a scheduled horde day.",
                             "Example: 5 means every 5th day is checked for a horde.")
-                    .defineInRange("hordeIntervalDays", 5, 1, 30);
+                    .defineInRange("hordeIntervalDays", 5, 1, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             hordeStartChance = builder
                     .comment(
@@ -913,7 +937,7 @@ public final class Config {
                     .comment(
                             "How long a horde lasts in real-world minutes.",
                             "Longer hordes keep the stronger event settings active for more time.")
-                    .defineInRange("hordeDurationMinutes", 5, 1, 60);
+                    .defineInRange("hordeDurationMinutes", 5, 1, 10080);
 
             hordeSpawnMultiplier = builder
                     .comment(
@@ -1001,13 +1025,13 @@ public final class Config {
                     .comment(
                             "The first day where scaling starts to increase.",
                             "Before this day, the scaling factor stays at 0%.")
-                    .defineInRange("scalingStartDay", 3, 0, 100);
+                    .defineInRange("scalingStartDay", 3, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             maxScalingDay = builder
                     .comment(
                             "The day where scaling reaches full strength.",
                             "After this day, the legacy scaling factor stays at 100%.")
-                    .defineInRange("maxScalingDay", 50, 1, 365);
+                    .defineInRange("maxScalingDay", 50, 1, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             maxSpeedBoost = builder
                     .comment(

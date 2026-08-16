@@ -127,6 +127,9 @@ final class FeaturePresets {
             Config.set(config.zombieToweringMinNearbyZombies, 2);
             Config.set(config.zombieToweringCrowdRadius, 2.25);
             Config.set(config.zombieToweringMaxStackSize, 4);
+            Config.set(config.zombieToweringMaxTowersPerPlayer, 3);
+            Config.set(config.zombieToweringJumpingEnabled, true);
+            Config.set(config.zombieToweringJumpCooldownTicks, 10);
             Config.set(config.zombieToweringDismountDistance, 2.75);
             Config.set(config.zombieToweringVerticalBoost, 0.48);
             Config.set(config.zombieToweringForwardBoost, 0.18);
