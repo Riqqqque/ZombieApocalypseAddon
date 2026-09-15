@@ -1,39 +1,58 @@
-# Contributing
+# ZombieApocalypseAddon
 
-Bug reports, compatibility details, documentation fixes, and focused code changes are welcome.
+Server-side-only Minecraft mod shipped for three loader targets:
 
-## Before You Start
+| Target | Module | Version var | Java |
+|---|---|---|---|
+| NeoForge 1.21.1 | root | `mod_version` (2.x) | 21 |
+| Forge 1.20.1 | `forge1201/` | `forge_mod_version` (1.5.x) | 17 |
+| NeoForge 1.20.1 | `neoforge1201/` | `forge_mod_version` (1.5.x) | 17 |
 
-1. Search the [existing issues](https://github.com/Riqqqque/ZombieApocalypseAddon/issues).
-2. Use the matching issue form for bugs, config help, or features.
-3. Discuss large behavior changes before writing them.
-4. Keep each pull request focused on one problem.
+`neoforge1201` reuses `forge1201` sources via `neoforge1201/build.gradle` sourceSets.
+Adapter copies live in `forge1201/src/main/java`; everything else is shared.
+Adapter files must differ only by loader API calls — any other diff is drift.
 
-## Development Setup
+## Build / test
 
-- Use Java 21 to run the aggregate Gradle build.
-- Do not add generated jars, Gradle caches, test worlds, logs, or IDE-specific files.
-- Never commit access tokens, server addresses, private logs, or player data.
-
-Build every supported target on Windows:
-
-```powershell
-.\gradlew.bat clean build --console=plain --warning-mode all
-```
-
-Run the Markdown table check after documentation changes:
+Three independent Gradle builds (each has its own `settings.gradle`).
 
 ```powershell
-.\scripts\check-markdown-tables.ps1
+# Full build: root jar + tests + both 1.20.1 jars via composite tasks,
+# then syncs all three jars into build\modrinth\
+.\gradlew.bat clean build --no-daemon --console=plain --warning-mode all
+
+# Focused tests (JUnit 5, root only)
+.\gradlew.bat test --tests "ClassName" --console=plain --no-daemon
+
+# Adapter-only compile check
+.\gradlew.bat -p forge1201 compileJava
+.\gradlew.bat -p neoforge1201 compileJava
 ```
 
-## Pull Request Checklist
+CI (`.github/workflows/build.yml`) runs `./gradlew build` plus
+`scripts/check-markdown-tables.ps1` against the repo and the live wiki clone.
 
-- The change works on every loader/version it touches.
-- Existing config keys and commands remain compatible unless the change is explicitly documented.
-- New gameplay behavior is configurable, safe by default, and bounded for server performance.
-- User-facing config comments and wiki text explain any new setting.
-- Tests cover reusable logic where practical.
-- The aggregate Gradle build passes.
+## Conventions
 
-By submitting a contribution, you confirm it is your work and allow it to be included and distributed as part of Zombie Apocalypse Addon under this project's license.
+- Pure logic lives in package-private static helpers (see `SpawnMath`,
+  `EventSchedule`, `ConfigValidator`, `StatisticsManager`) so it can be
+  unit-tested without a running server. Keep it that way.
+- `SavedData` subclasses persist world state; `save`/`load` ignore the
+  `HolderLookup.Provider` arg on 1.21.1, so tests may pass `null`.
+- Command mutating nodes go through `CommandUtil.admin` (permission level 2);
+  read-only nodes stay public.
+- `Config.set(...)` writes through to the config file; batch changes inside
+  `Config.edit(() -> ...)`.
+- Feature toggles (`/za <feature> on`) must load working defaults via
+  `FeaturePresets` — never just flip the enable flag.
+
+## Verified invariants (do not regress)
+
+- `/zday set` resets persisted horde/blood-moon scheduling state.
+- `/zstats clear` revokes online advancements and queues offline resets.
+- Block breaking / placing / towering are independent, off by default.
+- Towering never triggers in ordinary ground combat or normal jumps; tower
+  riders/roots never spawn inside floors or ceilings; dismounts require
+  stable, collision-free, reachable ground.
+- NeoForge 1.21.1 jar `pack.mcmeta` uses resource-pack format 34; the 1.20.1
+  jars use 15 and share `forge1201`'s pack.mcmeta on purpose.
