@@ -41,6 +41,8 @@ import net.minecraft.world.level.Level;
  * and promote to horde leaders. Horses killed by zombies can rise as zombie
  * horses, and idle zombies can ride them.
  *
+ * Mechanics inspired by the MIT-licensed "Zombies Eat Animals" mod by Vomiter.
+ *
  * Every mechanic is gated by {@code enableAnimalHunting}, which defaults off.
  * All version-divergent calls go through {@link ZombieHuntCompat}.
  */
