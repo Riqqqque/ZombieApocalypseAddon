@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.2.37 | `zombieapocalypseaddon-2.2.37.jar` |
-| 1.20.1 | NeoForge | 1.5.31 | `zombieapocalypseaddon-neoforge-1.20.1-1.5.31.jar` |
-| 1.20.1 | Forge | 1.5.31 | `zombieapocalypseaddon-forge-1.20.1-1.5.31.jar` |
+| 1.21.1 | NeoForge | 2.3.0 | `zombieapocalypseaddon-2.3.0.jar` |
+| 1.20.1 | NeoForge | 1.6.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.6.0.jar` |
+| 1.20.1 | Forge | 1.6.0 | `zombieapocalypseaddon-forge-1.20.1-1.6.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -81,6 +81,7 @@ Start with these:
 | `/za spawn` | Show the important custom-spawn settings. |
 | `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
 | `/za events` | Show current horde and blood moon status. |
+| `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
 | `/za scaling` | Show current day-based difficulty progress. |
 
 Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `advanced`, and `all`.
@@ -112,7 +113,7 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, permanent daytime enablement, a temporary daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/za events start` must be used at night. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
+Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/za events start` must be used at night. Enable `/za events dusk on` to keep scheduled hordes in night-only mode; they roll at dusk and hit as night begins. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
 
 Use `/za spawn status all` only when you need every related toggle. The normal `/za spawn` output stays short.
 
@@ -128,7 +129,7 @@ This setting checks block light, not sunlight. It does not disable daytime waves
 
 ### Hordes and Blood Moons
 
-Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Scheduled hordes roll at dawn by default; `/za events dusk on` moves the roll to dusk so the horde arrives with nightfall. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 ### Difficulty Progression
 
@@ -239,9 +240,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.2.37 |
-| NeoForge | 1.20.1 | 1.5.31 |
-| Forge | 1.20.1 | 1.5.31 |
+| NeoForge | 1.21.1 | 2.3.0 |
+| NeoForge | 1.20.1 | 1.6.0 |
+| Forge | 1.20.1 | 1.6.0 |
 
 Build all targets on Windows with:
 

@@ -41,6 +41,9 @@ public final class HordeCommands {
                         .executes(context -> showStatus(context.getSource())))
                 .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableHordeEvents::get,
                         HordeCommands::setHordesEnabledValue, "Scheduled hordes"))
+                .then(CommandUtil.toggleSetting("dusk", Config.COMMON.hordeStartsAtDusk::get,
+                        value -> Config.set(Config.COMMON.hordeStartsAtDusk, value),
+                        "Scheduled hordes start at dusk"))
                 .then(CommandUtil.intSetting("interval", "days", 1, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.hordeIntervalDays::get,
                         value -> Config.set(Config.COMMON.hordeIntervalDays, value),
@@ -209,11 +212,12 @@ public final class HordeCommands {
         status.append("Custom zombie waves: ")
                 .append(CommandUtil.onOff(Config.COMMON.enableDaySpawning.get())).append('\n');
         boolean daytimeSpawning = Config.COMMON.enableDaytimeSpawning.get();
+        boolean duskMode = Config.COMMON.hordeStartsAtDusk.get();
         String scheduledHordes = !Config.COMMON.enableHordeEvents.get()
                 ? "OFF"
                 : !Config.COMMON.enableDaySpawning.get()
                 ? "PAUSED (custom waves off)"
-                : !daytimeSpawning
+                : !daytimeSpawning && !duskMode
                         ? "PAUSED (night-only mode)"
                         : "ON";
         status.append("Daytime custom waves: ").append(CommandUtil.onOff(daytimeSpawning)).append('\n');
@@ -236,7 +240,8 @@ public final class HordeCommands {
                 .append(CommandUtil.multiplier(HordeManager.getSpawnMultiplier(level)));
         status.append("\nScheduled horde setup: every ").append(Config.COMMON.hordeIntervalDays.get())
                 .append(" days at ").append(CommandUtil.percent(Config.COMMON.hordeStartChance.get()))
-                .append(" chance, ").append(Config.COMMON.hordeDurationMinutes.get()).append(" minutes");
+                .append(" chance ").append(duskMode ? "at dusk" : "at dawn")
+                .append(", ").append(Config.COMMON.hordeDurationMinutes.get()).append(" minutes");
         status.append("\nHorde pressure: ").append(Config.COMMON.hordeZombiesPerSpawn.get())
                 .append(" zombies per wave at ")
                 .append(CommandUtil.multiplier(Config.COMMON.hordeSpawnMultiplier.get()));

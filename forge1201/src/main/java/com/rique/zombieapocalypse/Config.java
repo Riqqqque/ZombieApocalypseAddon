@@ -185,6 +185,7 @@ public final class Config {
         public final ForgeConfigSpec.BooleanValue enableHordeEvents;
         public final ForgeConfigSpec.IntValue hordeIntervalDays;
         public final ForgeConfigSpec.DoubleValue hordeStartChance;
+        public final ForgeConfigSpec.BooleanValue hordeStartsAtDusk;
         public final ForgeConfigSpec.IntValue hordeDurationMinutes;
         public final ForgeConfigSpec.DoubleValue hordeSpawnMultiplier;
         public final ForgeConfigSpec.IntValue hordeZombiesPerSpawn;
@@ -976,8 +977,18 @@ public final class Config {
             hordeStartChance = builder
                     .comment(
                             "Chance that a scheduled horde day actually starts a horde at dawn.",
+                            "When hordeStartsAtDusk is enabled, the chance is rolled at dusk instead.",
                             "0.0 = scheduled days never trigger, 1.0 = every scheduled day triggers.")
                     .defineInRange("hordeStartChance", 0.5, 0.0, 1.0);
+
+            hordeStartsAtDusk = builder
+                    .comment(
+                            "When true, scheduled hordes roll their start chance at dusk (around 18:00 in-game)",
+                            "instead of dawn, so the horde hits just as night begins.",
+                            "This also allows scheduled hordes while enableDaytimeSpawning is false, since the",
+                            "horde begins at nightfall rather than during the day.",
+                            "Manual horde commands are unaffected and still follow the normal daytime rules.")
+                    .define("hordeStartsAtDusk", false);
 
             hordeDurationMinutes = builder
                     .comment(
