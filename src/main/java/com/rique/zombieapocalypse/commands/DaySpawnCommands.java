@@ -173,7 +173,9 @@ public final class DaySpawnCommands {
         });
         String message = enabled
                 ? "Daytime custom waves: ON. Daytime spawning starts immediately."
-                : "Daytime custom waves: OFF (night-only). Night waves and blood moons still work; scheduled dawn hordes are paused.";
+                : Config.COMMON.hordeStartsAtDusk.get()
+                        ? "Daytime custom waves: OFF (night-only). Night waves, blood moons, and dusk hordes still work."
+                        : "Daytime custom waves: OFF (night-only). Night waves and blood moons still work; scheduled dawn hordes are paused.";
         CommandUtil.feedback(source, message, true);
         return 1;
     }
