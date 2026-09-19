@@ -43,6 +43,19 @@ out/
 .vscode/
 
 # -----------------------------------------------
+# Editor and assistant tooling state
+# -----------------------------------------------
+.cursor/
+.claude/
+.devin/
+.aider*/
+.windsurf/
+.codeium/
+.github/copilot-instructions.md
+CLAUDE.md
+AGENTS.md
+
+# -----------------------------------------------
 # macOS
 # -----------------------------------------------
 .DS_Store
