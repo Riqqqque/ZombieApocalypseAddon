@@ -85,6 +85,7 @@ sourceSets {
             exclude 'META-INF/neoforge.mods.toml'
             exclude 'data/**/advancement/**'
             exclude 'data/**/tags/entity_type/**'
+            exclude 'data/**/tags/item/**'
             exclude 'pack.mcmeta'
         }
     }
@@ -148,6 +149,7 @@ tasks.named('compileJava', JavaCompile).configure {
         exclude 'com/rique/zombieapocalypse/StatisticsManager.java'
         exclude 'com/rique/zombieapocalypse/TowerRiderPosition.java'
         exclude 'com/rique/zombieapocalypse/ZombieApocalypseAddon.java'
+        exclude 'com/rique/zombieapocalypse/ZombieHuntCompat.java'
         exclude 'com/rique/zombieapocalypse/ZombieKillAdvancements.java'
         exclude 'com/rique/zombieapocalypse/commands/AttributeCommands.java'
     }

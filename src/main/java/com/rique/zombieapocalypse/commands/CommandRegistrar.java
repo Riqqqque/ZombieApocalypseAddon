@@ -22,6 +22,7 @@ public final class CommandRegistrar {
         BlockPlaceCommands.register(dispatcher);
         TowerCommands.register(dispatcher);
         AttributeCommands.register(dispatcher);
+        HuntCommands.register(dispatcher);
         MainCommands.register(dispatcher);
     }
 }

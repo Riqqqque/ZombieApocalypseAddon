@@ -11,7 +11,7 @@ Zombie Apocalypse Addon adds custom zombie waves, hordes, blood moons, day-based
 - **Current targets:** NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1.
 - **Commands:** anyone can read dashboards, help, stats, status pages, and current setting values. Changes require permission level 2.
 - **Config:** `config/zombieapocalypseaddon-common.toml`.
-- **Safe defaults:** block breaking, block placing, and zombie towering are off.
+- **Safe defaults:** block breaking, block placing, zombie towering, and animal hunting are off.
 
 ## Start Here
 
@@ -54,6 +54,7 @@ Use `/za help` for short topic-based help instead of a wall of commands. Press T
 - Optional zombie block breaking with conservative safety rules
 - Optional limited block placing for steps and one-block gaps
 - Optional moving zombie stacks that climb defenses without changing blocks
+- Optional animal hunting: zombies hunt animals, eat dropped meat, and permanently grow health — well-fed zombies persist, drop extra loot, and can promote to door-breaking leaders that call reinforcements. Killed horses can rise as zombie horses for zombies to ride
 - Biome-aware Husk and Drowned spawning
 - Optional Nether and End custom spawning
 - Death cooldown protection after a player dies
@@ -99,6 +100,7 @@ Every system is available below `/za`:
 - `/za events` and `/za bloodmoon` for events
 - `/za day` and `/za scaling` for progression
 - `/za breaking`, `/za placing`, and `/za towering` for optional base pressure
+- `/za hunt` for optional animal hunting and zombie growth
 - `/za stats` for kills and milestone reset
 - `/za attributes` for advanced attributes
 - `/za compatibility` for mixed-mod behavior
@@ -106,7 +108,7 @@ Every system is available below `/za`:
 
 Run any setting name without a value to read its current value. Use `on` and `off` for switches; `true` and `false` still work for existing command blocks and scripts. All original `/z...` command roots remain supported.
 
-Feature-level `on` commands load balanced working defaults automatically. You can enable spawning, events, blood moons, scaling, attributes, compatibility, block breaking, block placing, or towering without first repairing old chances, day gates, or dependent settings.
+Feature-level `on` commands load balanced working defaults automatically. You can enable spawning, events, blood moons, scaling, attributes, compatibility, block breaking, block placing, towering, or animal hunting without first repairing old chances, day gates, or dependent settings.
 
 See the [full command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) for every subcommand and range.
 

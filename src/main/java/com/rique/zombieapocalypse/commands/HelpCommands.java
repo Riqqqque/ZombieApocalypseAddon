@@ -24,6 +24,7 @@ public final class HelpCommands {
         help.then(topic("events", HelpCommands::showEventHelp));
         help.then(topic("difficulty", HelpCommands::showDifficultyHelp));
         help.then(topic("bases", HelpCommands::showBaseHelp));
+        help.then(topic("hunt", HelpCommands::showHuntHelp));
         help.then(topic("admin", HelpCommands::showAdminHelp));
         help.then(topic("advanced", HelpCommands::showAdvancedHelp));
         help.then(topic("all", HelpCommands::showAllHelp));
@@ -134,6 +135,24 @@ public final class HelpCommands {
         return 1;
     }
 
+    private static int showHuntHelp(CommandSourceStack source) {
+        CommandUtil.feedback(source,
+                "Animal hunting commands (all OFF by default):\n"
+                        + "/za hunt [on|off|status] - let zombies hunt animals, eat meat, and grow stronger\n"
+                        + "/za hunt startday <day> - delay hunting until a chosen day\n"
+                        + "/za hunt always|berserker on|off - hunt even when fully fed; berserker also ignores cooldown and caps\n"
+                        + "/za hunt babies on|off - allow hunting baby animals\n"
+                        + "/za hunt daycap|totalcap <kills> - per-zombie and per-dimension daily kill caps\n"
+                        + "/za hunt cooldown <ticks> - rest between kills per zombie\n"
+                        + "/za hunt eat on|off - zombies seek dropped meat and heal or bulk up\n"
+                        + "/za hunt recovery|boostcap|hardbonus - tune healing and max-health growth\n"
+                        + "/za hunt persistent|loot|leaders on|off - eaten zombies persist, drop extra loot, or become leaders\n"
+                        + "/za hunt zombifyhorses|zombifytamed|ridehorses on|off - horses rise as zombie horses and zombies ride them\n"
+                        + "Fed zombies keep permanent bonus health. Extra loot and leaders reward the investment.",
+                false);
+        return 1;
+    }
+
     private static int showAdminHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Stats and maintenance commands:\n"
@@ -169,6 +188,7 @@ public final class HelpCommands {
                         + "/za events, /za bloodmoon - event controls\n"
                         + "/za day, /za scaling - day counter and difficulty\n"
                         + "/za breaking, /za placing, /za towering - optional base pressure\n"
+                        + "/za hunt - optional animal hunting and growth\n"
                         + "/za stats - kill totals and milestone reset\n"
                         + "/za attributes, /za compatibility - advanced controls\n"
                         + "/za burn, /za kill, /za cleanup - utilities and removal\n"

@@ -17,7 +17,7 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 - **Permissions:** anyone can read dashboards, help, stats, status pages, and current setting values. Changes and admin actions require permission level 2.
 - **Minecraft targets:** NeoForge 1.21.1, NeoForge 1.20.1, and Forge 1.20.1.
 - **Config:** `config/zombieapocalypseaddon-common.toml`.
-- **Safe defaults:** block breaking, block placing, and zombie towering are disabled.
+- **Safe defaults:** block breaking, block placing, zombie towering, and animal hunting are disabled.
 
 ## Choose the Correct File
 
@@ -96,6 +96,7 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 | `/za breaking` | Optional zombie block breaking. |
 | `/za placing` | Optional limited bridges and steps. |
 | `/za towering` | Optional moving zombie stacks for climbing defenses. |
+| `/za hunt` | Optional animal hunting, meat eating, and zombie growth. |
 | `/za stats` | Kill totals, cooldowns, and milestone reset. |
 | `/za compatibility` | Mixed-mod compatibility safeguards. |
 | `/za attributes` | Advanced attribute tuning. |
@@ -103,7 +104,7 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 
 Press Tab after `/za` to see every command family. Tab completion suggests only the clear `on` and `off` states, plus current and common numeric values, attribute keys, online players, and registered block IDs. Existing `true` and `false` inputs still work in old scripts. Running a setting without a value shows its current value. The original `/z...` commands remain supported.
 
-Feature-level `on` commands load safe defaults so the feature works immediately instead of inheriting a zero chance, future start day, or broken dependency. This includes `/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, and `/za compatibility on`.
+Feature-level `on` commands load safe defaults so the feature works immediately instead of inheriting a zero chance, future start day, or broken dependency. This includes `/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, `/za hunt on`, and `/za compatibility on`.
 
 The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) includes every subcommand and range.
 
@@ -146,6 +147,12 @@ All three systems are disabled by default:
 - **Towering:** crowded zombies form real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps are ignored. The default smart limit follows the target's block Y level plus one, then moves riders one at a time to collision-free floor positions when the target stays reachable on the ground. No blocks are changed.
 
 Each feature has a start day, live commands, conservative defaults, and protection checks. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
+
+### Optional Animal Hunting
+
+Disabled by default. Enable it with `/za hunt on` or `enableAnimalHunting` in `[animalhunting]`. Zombies hunt animals for food, then seek dropped meat from the `zombieapocalypseaddon:zombie_food` item tag to heal. Surplus nutrition becomes permanent bonus max health up to a configurable cap (higher on Hard). Fed zombies can persist, drop extra loot rolls scaled by the health they gained, and promote to leaders that call reinforcements and break doors.
+
+Hunts are limited by a per-zombie cooldown and per-zombie and per-dimension daily kill caps. `alwaysHunting` removes the hunger motivation; `berserkerHunting` also ignores cooldowns and caps. Horses killed by zombies can rise as zombie horses keeping their name, owner, saddle, and gear (always on Hard, 50% on Normal), and idle zombies can seek out and ride zombie horses. Tamed horses are spared unless `zombifyTamedHorses` is on. Pack makers can force-include or exclude targets with the `zombie_hunt_target` and `never_zombie_hunt_target` entity tags or the `additionalHuntTargets`/`excludedHuntTargets` config lists.
 
 Useful tower controls:
 
