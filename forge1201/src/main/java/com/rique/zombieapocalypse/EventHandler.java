@@ -167,9 +167,10 @@ public final class EventHandler {
         }
 
         long gameTime = level.getGameTime();
+        boolean onFireDamage = event.getSource().is(DamageTypes.ON_FIRE);
         if (shouldCancelSunFireDamage(
-                event.getSource().is(DamageTypes.ON_FIRE),
-                isLikelySunBurnContext(zombie),
+                onFireDamage,
+                onFireDamage && isLikelySunBurnContext(zombie),
                 hasRecentExternalFire(zombie, gameTime))) {
             event.setCanceled(true);
             zombie.clearFire();
@@ -215,15 +216,16 @@ public final class EventHandler {
     }
 
     private static void prepareSunBurnTick(Zombie zombie) {
-        if (!zombie.isOnFire()) {
+        boolean onFire = zombie.isOnFire();
+        if (!onFire) {
             clearExpiredExternalFire(zombie);
         }
 
         long gameTime = zombie.level().getGameTime();
         if (shouldTrackPotentialSunIgnition(
                 Config.COMMON.preventSunBurn.get(),
-                zombie.isOnFire(),
-                isLikelySunBurnContext(zombie),
+                onFire,
+                !onFire && isLikelySunBurnContext(zombie),
                 hasRecentExternalFire(zombie, gameTime))) {
             SUN_BURN_CANDIDATES.put(zombie.getUUID(), zombie);
         } else {

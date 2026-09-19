@@ -114,7 +114,9 @@ public final class MainCommands {
         long day = DifficultyManager.getCurrentDay(level);
         boolean spawningEnabled = Config.COMMON.enableDaySpawning.get();
         boolean daytimeSpawningEnabled = Config.COMMON.enableDaytimeSpawning.get();
-        boolean hordePressureAvailable = spawningEnabled && (daytimeSpawningEnabled || !level.isDay());
+        boolean hordeScheduledAvailable = spawningEnabled
+                && (daytimeSpawningEnabled || Config.COMMON.hordeStartsAtDusk.get());
+        boolean hordeWavesNow = spawningEnabled && (daytimeSpawningEnabled || !level.isDay());
         int daylightStart = Config.COMMON.daylightSpawnStartDay.get();
         int lightLimit = Config.COMMON.maxBlockLightForSpawning.get();
 
@@ -140,10 +142,11 @@ public final class MainCommands {
         status.append("Base light protection: ").append(lightProtection).append('\n');
         status.append("Events: horde ").append(eventState(
                 Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level),
-                hordePressureAvailable))
+                hordeScheduledAvailable, hordeWavesNow))
                 .append(" | blood moon ")
                 .append(eventState(
-                        Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level), spawningEnabled)).append('\n');
+                        Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level),
+                        spawningEnabled, hordeWavesNow)).append('\n');
         status.append("Difficulty scaling: ").append(CommandUtil.onOff(Config.COMMON.enableDifficultyScaling.get()))
                 .append(" (").append(CommandUtil.percent(DifficultyManager.getScalingFactor(level))).append(")\n");
         status.append("World pressure: breaking ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockBreaking.get()))
@@ -161,14 +164,14 @@ public final class MainCommands {
         return 1;
     }
 
-    private static String eventState(boolean enabled, boolean active, boolean customSpawningEnabled) {
+    private static String eventState(boolean enabled, boolean active, boolean scheduledAvailable, boolean wavesNow) {
         if (active) {
-            return customSpawningEnabled ? "ACTIVE" : "ACTIVE (daytime blocked)";
+            return wavesNow ? "ACTIVE" : "ACTIVE (daytime blocked)";
         }
         if (!enabled) {
             return "OFF";
         }
-        if (!customSpawningEnabled) {
+        if (!scheduledAvailable) {
             return "PAUSED";
         }
         return "ON";
