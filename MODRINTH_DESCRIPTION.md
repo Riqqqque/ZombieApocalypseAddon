@@ -88,6 +88,7 @@ This checks block light only. It does not disable daytime waves by itself; use `
 | `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
 | `/za spawn status all` | Show every spawn-related toggle. |
 | `/za events` | Show horde and blood moon status. |
+| `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
 | `/za scaling` | Show day-based difficulty progress. |
 | `/za compatibility` | Show mixed-mod compatibility safeguards. |
 | `/za cleanup uninstall` | Prepare a world before removing the mod. |
@@ -128,11 +129,11 @@ Administrators can control:
 
 Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-For night-only custom spawning, run `/za spawn daytime off`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
+For night-only custom spawning, run `/za spawn daytime off`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. Enable `/za events dusk on` to keep scheduled hordes running in night-only mode; they roll at dusk and arrive as night begins. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
 
 ## Events and Progression
 
-Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes roll at dawn by default, or at dusk with `/za events dusk on`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
 

@@ -10,11 +10,19 @@ class HordeManagerTest {
 
     @Test
     void scheduledHordesRespectNightOnlyModeAndGracePeriod() {
-        assertTrue(HordeManager.isScheduledHordeBlocked(false, 10, 0));
-        assertTrue(HordeManager.isScheduledHordeBlocked(true, 0, 10));
-        assertTrue(HordeManager.isScheduledHordeBlocked(true, 9, 10));
-        assertFalse(HordeManager.isScheduledHordeBlocked(true, 10, 10));
-        assertFalse(HordeManager.isScheduledHordeBlocked(true, 0, 0));
+        assertTrue(HordeManager.isScheduledHordeBlocked(false, 10, 0, false));
+        assertTrue(HordeManager.isScheduledHordeBlocked(true, 0, 10, false));
+        assertTrue(HordeManager.isScheduledHordeBlocked(true, 9, 10, false));
+        assertFalse(HordeManager.isScheduledHordeBlocked(true, 10, 10, false));
+        assertFalse(HordeManager.isScheduledHordeBlocked(true, 0, 0, false));
+    }
+
+    @Test
+    void duskHordesIgnoreNightOnlyModeButKeepGracePeriod() {
+        assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 0, true));
+        assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 10, true));
+        assertTrue(HordeManager.isScheduledHordeBlocked(false, 9, 10, true));
+        assertTrue(HordeManager.isScheduledHordeBlocked(true, 5, 10, true));
     }
 
     @Test
@@ -46,9 +54,18 @@ class HordeManagerTest {
 
     @Test
     void hordeEndingAtDawnConsumesThatDaysScheduledRoll() {
-        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(0L));
-        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(99L));
-        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(100L));
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(0L, false));
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(99L, false));
+        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(100L, false));
+    }
+
+    @Test
+    void hordeEndingAtDuskConsumesThatDaysScheduledRollInDuskMode() {
+        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(50L, true));
+        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(11999L, true));
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(12000L, true));
+        assertTrue(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(12499L, true));
+        assertFalse(HordeManager.shouldConsumeScheduledHordeRollAfterEnd(12500L, true));
     }
 
     @Test
@@ -84,7 +101,7 @@ class HordeManagerTest {
         state.setBloodMoonActive(true);
         state.setForcedBloodMoonPending(true);
 
-        HordeManager.stopSpawnEvents(state, 10L, 50L);
+        HordeManager.stopSpawnEvents(state, 10L, 50L, false);
 
         assertFalse(state.isHordeActive());
         assertEquals(0L, state.getHordeEndGameTime());

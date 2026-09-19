@@ -83,6 +83,7 @@ public final class HelpCommands {
                         + "/za events on|off - enable scheduled hordes with balanced defaults\n"
                         + "/za events start|stop - control a horde\n"
                         + "/za events interval|chance|duration - tune the schedule\n"
+                        + "/za events dusk on|off - start scheduled hordes at dusk instead of dawn\n"
                         + "/za events multiplier|amount|spawninterval - tune event pressure\n"
                         + "/za bloodmoon on|off - enable random blood moons with balanced defaults\n"
                         + "/za bloodmoon start - start one now or queue it for tonight\n"

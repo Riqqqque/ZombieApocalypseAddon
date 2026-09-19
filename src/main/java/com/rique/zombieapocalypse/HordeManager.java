@@ -88,7 +88,7 @@ public final class HordeManager {
         long currentDay = absoluteDayTime / 24000L;
 
         if (!Config.COMMON.enableDaySpawning.get()) {
-            stopSpawnEvents(state, currentDay, dayTime);
+            stopSpawnEvents(state, currentDay, dayTime, Config.COMMON.hordeStartsAtDusk.get());
             notifyDayTransitions(
                     overworldLevel,
                     state,
@@ -111,9 +111,9 @@ public final class HordeManager {
             long currentDay,
             long dayTime) {
         if (expireHordeIfNeeded(state, gameTime)) {
-            // A horde that reaches dawn consumes that day's roll. Otherwise it can
-            // immediately restart during the same five-second scheduling window.
-            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime)) {
+            // A horde that reaches its scheduling window consumes that day's roll.
+            // Otherwise it can immediately restart during the same window.
+            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime, Config.COMMON.hordeStartsAtDusk.get())) {
                 state.setLastHordeRollDay(currentDay);
             }
             return HordeTransition.ENDED;
@@ -145,7 +145,8 @@ public final class HordeManager {
             return false;
         }
 
-        if (!EventSchedule.isHordeRollWindow(dayTime)) {
+        boolean duskMode = Config.COMMON.hordeStartsAtDusk.get();
+        if (duskMode ? !EventSchedule.isHordeDuskRollWindow(dayTime) : !EventSchedule.isHordeRollWindow(dayTime)) {
             return false;
         }
 
@@ -157,14 +158,15 @@ public final class HordeManager {
         if (isScheduledHordeBlocked(
                 Config.COMMON.enableDaytimeSpawning.get(),
                 currentDay,
-                Config.COMMON.daylightSpawnStartDay.get())) {
+                Config.COMMON.daylightSpawnStartDay.get(),
+                duskMode)) {
             return false;
         }
 
         state.setLastHordeRollDay(currentDay);
 
         int intervalDays = Math.max(1, Config.COMMON.hordeIntervalDays.get());
-        if (!EventSchedule.shouldRollHorde(currentDay, dayTime, lastRollDay, intervalDays)) {
+        if (!EventSchedule.shouldRollHorde(currentDay, dayTime, lastRollDay, intervalDays, duskMode)) {
             return false;
         }
 
@@ -214,10 +216,10 @@ public final class HordeManager {
         return BloodMoonTransition.STARTED;
     }
 
-    static void stopSpawnEvents(ApocalypseWorldData state, long currentDay, long dayTime) {
+    static void stopSpawnEvents(ApocalypseWorldData state, long currentDay, long dayTime, boolean duskMode) {
         if (state.isHordeActive()) {
             state.setHordeActive(false);
-            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime)) {
+            if (shouldConsumeScheduledHordeRollAfterEnd(dayTime, duskMode)) {
                 state.setLastHordeRollDay(currentDay);
             }
         }
@@ -257,16 +259,22 @@ public final class HordeManager {
         boolean hordeStarted = hordeTransition == HordeTransition.STARTED;
         boolean hordeEnded = hordeTransition == HordeTransition.ENDED;
         boolean bloodMoonEnded = bloodMoonTransition == BloodMoonTransition.ENDED;
+        boolean dayCounterEnabled = Config.COMMON.enableDayCounterAnnouncements.get();
+        boolean eventNotificationsEnabled = Config.COMMON.enableEventNotifications.get();
 
         if (!isDayAnnouncementWindow(dayTime)) {
-            if (hordeEnded || bloodMoonEnded) {
+            if (eventNotificationsEnabled && hordeStarted) {
+                sendTitleToAllPlayers(level, "HORDE INCOMING",
+                        buildHordeIncomingSubtitle(
+                                Math.max(1, Config.COMMON.hordeDurationMinutes.get()),
+                                currentDay,
+                                false));
+            } else if (hordeEnded || bloodMoonEnded) {
                 notifyEndedEvents(level, hordeEnded, bloodMoonEnded, false, currentDay);
             }
             return;
         }
 
-        boolean dayCounterEnabled = Config.COMMON.enableDayCounterAnnouncements.get();
-        boolean eventNotificationsEnabled = Config.COMMON.enableEventNotifications.get();
         boolean shouldAnnounceDay = shouldAnnounceDay(currentDay, dayTime, state.getLastDayAnnouncementDay(), dayCounterEnabled);
 
         if (eventNotificationsEnabled && hordeStarted) {
@@ -390,7 +398,9 @@ public final class HordeManager {
         boolean includeDayInHordeTitle = includeDayAnnouncement && Config.COMMON.enableEventNotifications.get();
 
         activateHorde(eventLevel, state);
-        if (EventSchedule.isHordeRollWindow(dayTime)) {
+        if (Config.COMMON.hordeStartsAtDusk.get()
+                ? EventSchedule.isHordeDuskRollWindow(dayTime)
+                : EventSchedule.isHordeRollWindow(dayTime)) {
             state.setLastHordeRollDay(currentDay);
         }
         if (includeDayInHordeTitle) {
@@ -458,7 +468,8 @@ public final class HordeManager {
         ServerLevel eventLevel = eventLevel(level);
         ApocalypseWorldData state = ApocalypseWorldData.get(eventLevel.getServer());
         long absoluteDayTime = eventLevel.getDayTime();
-        stopSpawnEvents(state, absoluteDayTime / 24000L, absoluteDayTime % 24000L);
+        stopSpawnEvents(state, absoluteDayTime / 24000L, absoluteDayTime % 24000L,
+                Config.COMMON.hordeStartsAtDusk.get());
     }
 
     public static boolean isHordeActive(ServerLevel level) {
@@ -549,8 +560,9 @@ public final class HordeManager {
     static boolean isScheduledHordeBlocked(
             boolean daytimeSpawningEnabled,
             long currentDay,
-            int daylightSpawnStartDay) {
-        return !daytimeSpawningEnabled || currentDay < Math.max(0, daylightSpawnStartDay);
+            int daylightSpawnStartDay,
+            boolean duskMode) {
+        return (!daytimeSpawningEnabled && !duskMode) || currentDay < Math.max(0, daylightSpawnStartDay);
     }
 
     static boolean isManualHordeBlockedByDaytime(
@@ -560,8 +572,8 @@ public final class HordeManager {
         return hasDayNightCycle && isDay && !daytimeSpawningEnabled;
     }
 
-    static boolean shouldConsumeScheduledHordeRollAfterEnd(long dayTime) {
-        return EventSchedule.isHordeRollWindow(dayTime);
+    static boolean shouldConsumeScheduledHordeRollAfterEnd(long dayTime, boolean duskMode) {
+        return duskMode ? EventSchedule.isHordeDuskRollWindow(dayTime) : EventSchedule.isHordeRollWindow(dayTime);
     }
 
     private static ServerLevel eventLevel(ServerLevel level) {

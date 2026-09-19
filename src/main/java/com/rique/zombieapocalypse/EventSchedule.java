@@ -6,6 +6,8 @@ package com.rique.zombieapocalypse;
 public final class EventSchedule {
 
     private static final long HORDE_ROLL_WINDOW_TICKS = 100L;
+    private static final long DUSK_ROLL_START_TICKS = 12000L;
+    private static final long DUSK_ROLL_WINDOW_TICKS = 500L;
 
     private EventSchedule() {
     }
@@ -14,7 +16,7 @@ public final class EventSchedule {
         return dayTime >= 13000L && dayTime < 23000L;
     }
 
-    public static boolean shouldRollHorde(long currentDay, long dayTime, long lastRolledDay, int intervalDays) {
+    public static boolean shouldRollHorde(long currentDay, long dayTime, long lastRolledDay, int intervalDays, boolean duskMode) {
         if (currentDay <= 0 || intervalDays <= 0) {
             return false;
         }
@@ -23,7 +25,7 @@ public final class EventSchedule {
             return false;
         }
 
-        if (dayTime >= HORDE_ROLL_WINDOW_TICKS) {
+        if (duskMode ? !isHordeDuskRollWindow(dayTime) : dayTime >= HORDE_ROLL_WINDOW_TICKS) {
             return false;
         }
 
@@ -32,5 +34,9 @@ public final class EventSchedule {
 
     public static boolean isHordeRollWindow(long dayTime) {
         return dayTime < HORDE_ROLL_WINDOW_TICKS;
+    }
+
+    public static boolean isHordeDuskRollWindow(long dayTime) {
+        return dayTime >= DUSK_ROLL_START_TICKS && dayTime < DUSK_ROLL_START_TICKS + DUSK_ROLL_WINDOW_TICKS;
     }
 }
