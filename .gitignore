@@ -54,6 +54,8 @@ out/
 .github/copilot-instructions.md
 CLAUDE.md
 AGENTS.md
+.env
+.env.*
 
 # -----------------------------------------------
 # macOS
