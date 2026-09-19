@@ -28,7 +28,7 @@ class CommandTreeTest {
     private static final Set<String> ROOT_COMMANDS = Set.of(
             "za", "zombieapocalypse", "zhelp", "zcompat", "zburn", "zkill", "zcleanup",
             "zday", "zhorde", "zbloodmoon", "zstats", "zscaling", "zdayspawn",
-            "zblockbreak", "zblockplace", "ztower", "zattr");
+            "zblockbreak", "zblockplace", "ztower", "zattr", "zhunt");
 
     private static final Map<String, String> ZA_REDIRECTS = Map.ofEntries(
             Map.entry("spawn", "zdayspawn"),
@@ -44,6 +44,7 @@ class CommandTreeTest {
             Map.entry("compatibility", "zcompat"),
             Map.entry("burn", "zburn"),
             Map.entry("kill", "zkill"),
+            Map.entry("hunt", "zhunt"),
             Map.entry("cleanup", "zcleanup"));
 
     private CommandDispatcher<CommandSourceStack> dispatcher;
@@ -89,7 +90,10 @@ class CommandTreeTest {
         assertPublic("zattr");
         assertPublic("zcompat");
         assertPublic("zburn");
-        assertPublic("zbloodmoon");
+        assertPublic("zhunt");
+        assertPublic("zhunt", "status");
+        assertPublic("zhunt", "enabled");
+        assertPublic("zhunt", "daycap");
         assertPublic("zdayspawn", "chance");
         assertPublic("zdayspawn", "daytime");
         assertPublic("zblockplace", "block");
@@ -130,6 +134,33 @@ class CommandTreeTest {
         assertAdmin("zattr", "toggle");
         assertAdmin("zburn", "state");
         assertAdmin("za", "preset", "casual");
+        assertAdmin("zhunt", "on");
+        assertAdmin("zhunt", "off");
+        assertAdmin("zhunt", "enabled", "state");
+        assertAdmin("zhunt", "babies", "state");
+        assertAdmin("zhunt", "always", "state");
+        assertAdmin("zhunt", "berserker", "state");
+        assertAdmin("zhunt", "startday", "day");
+        assertAdmin("zhunt", "cooldown", "ticks");
+        assertAdmin("zhunt", "daycap", "kills");
+        assertAdmin("zhunt", "totalcap", "kills");
+        assertAdmin("zhunt", "followrange", "multiplier");
+        assertAdmin("zhunt", "eat", "state");
+        assertAdmin("zhunt", "eatcooldown", "ticks");
+        assertAdmin("zhunt", "recovery", "half-hearts");
+        assertAdmin("zhunt", "boostcap", "half-hearts");
+        assertAdmin("zhunt", "hardbonus", "half-hearts");
+        assertAdmin("zhunt", "fleshresist", "state");
+        assertAdmin("zhunt", "lockticks", "ticks");
+        assertAdmin("zhunt", "lockdist", "blocks");
+        assertAdmin("zhunt", "persistent", "state");
+        assertAdmin("zhunt", "loot", "state");
+        assertAdmin("zhunt", "lootratio", "ratio");
+        assertAdmin("zhunt", "leaders", "state");
+        assertAdmin("zhunt", "zombifyhorses", "state");
+        assertAdmin("zhunt", "zombifytamed", "state");
+        assertAdmin("zhunt", "ridehorses", "state");
+        assertAdmin("zhunt", "sparehorses", "state");
 
         for (String command : List.of(
                 "zdayspawn", "zhorde", "zbloodmoon", "zstats", "zscaling",

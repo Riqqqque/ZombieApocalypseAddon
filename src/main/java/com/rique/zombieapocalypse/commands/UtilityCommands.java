@@ -83,6 +83,7 @@ public final class UtilityCommands {
                 Config.set(Config.COMMON.enableZombieBlockBreaking, false);
                 Config.set(Config.COMMON.enableZombieBlockPlacing, false);
                 Config.set(Config.COMMON.enableZombieTowering, false);
+                Config.set(Config.COMMON.enableAnimalHunting, false);
                 Config.set(Config.COMMON.enableDayCounterAnnouncements, false);
                 Config.set(Config.COMMON.preventSunBurn, false);
                 Config.set(Config.COMMON.enableExtraDrops, false);
@@ -113,7 +114,7 @@ public final class UtilityCommands {
         String message = "Cleanup complete. Removed " + removed
                 + " zombie-class entities and reset apocalypse event state.";
         if (uninstallPrep) {
-            return message + " Custom spawning, events, scaling, attributes, block breaking, block placing, towering, sunlight immunity, extra drops, and death cooldowns are disabled.";
+            return message + " Custom spawning, events, scaling, attributes, block breaking, block placing, towering, animal hunting, sunlight immunity, extra drops, and death cooldowns are disabled.";
         }
         return message;
     }

@@ -58,6 +58,7 @@ public final class MainCommands {
         addRedirect(root, dispatcher, "compatibility", "zcompat");
         addRedirect(root, dispatcher, "burn", "zburn");
         addRedirect(root, dispatcher, "kill", "zkill");
+        addRedirect(root, dispatcher, "hunt", "zhunt");
         addRedirect(root, dispatcher, "cleanup", "zcleanup");
         return root;
     }
@@ -151,7 +152,8 @@ public final class MainCommands {
                 .append(" (").append(CommandUtil.percent(DifficultyManager.getScalingFactor(level))).append(")\n");
         status.append("World pressure: breaking ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockBreaking.get()))
                 .append(" | placing ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockPlacing.get()))
-                .append(" | towering ").append(CommandUtil.onOff(Config.COMMON.enableZombieTowering.get())).append('\n');
+                .append(" | towering ").append(CommandUtil.onOff(Config.COMMON.enableZombieTowering.get()))
+                .append(" | hunting ").append(CommandUtil.onOff(Config.COMMON.enableAnimalHunting.get())).append('\n');
 
         if (SpawnMath.isSpawnDistanceImpossible(
                 Config.COMMON.minSpawnDistance.get(),

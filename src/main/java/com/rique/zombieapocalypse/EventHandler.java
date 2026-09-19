@@ -147,6 +147,7 @@ public final class EventHandler {
         lastWarnedSpawnRange = Integer.MIN_VALUE;
         ZombieBlockPlacer.clearRuntimeState();
         ZombieTowering.clearRuntimeState();
+        ZombieHunt.clearRuntimeState();
     }
 
     @SubscribeEvent
@@ -182,9 +183,15 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onEntityTick(EntityTickEvent.Pre event) {
-        if (!(event.getEntity() instanceof Zombie zombie)
-                || zombie.level().isClientSide
-                || !ZombieClassMobs.isZombieClass(zombie)) {
+        if (!(event.getEntity() instanceof Zombie zombie) || zombie.level().isClientSide) {
+            return;
+        }
+
+        if (ZombieHunt.isEnabled()) {
+            ZombieHunt.tick(zombie, zombie.level().getGameTime());
+        }
+
+        if (!ZombieClassMobs.isZombieClass(zombie)) {
             return;
         }
 
@@ -293,6 +300,11 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide()
+                && event.getEntity() instanceof Zombie huntZombie
+                && ZombieCompatibility.shouldUseAddonAi(huntZombie)) {
+            ZombieHunt.injectGoals(huntZombie);
+        }
         if (event.loadedFromDisk()
                 || !(event.getLevel() instanceof ServerLevel level)
                 || !(event.getEntity() instanceof Mob mob)
@@ -312,6 +324,16 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
+        if (event.getSource().getEntity() instanceof Zombie killerZombie) {
+            ZombieHunt.onKilledByZombie(event.getEntity(), killerZombie);
+        }
+        if (event.getEntity() instanceof Zombie deadZombie
+                && deadZombie.level() instanceof ServerLevel dropLevel) {
+            int bonusRolls = ZombieHunt.bonusLootRolls(deadZombie);
+            if (bonusRolls > 0) {
+                ZombieHuntCompat.spawnBonusLoot(deadZombie, dropLevel, event.getSource(), bonusRolls);
+            }
+        }
         if (ZombieClassMobs.isZombieClass(event.getEntity()) && event.getEntity().level() instanceof ServerLevel serverLevel) {
             EXTERNAL_FIRE_UNTIL.remove(event.getEntity().getUUID());
             SUN_BURN_CANDIDATES.remove(event.getEntity().getUUID());

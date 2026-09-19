@@ -336,6 +336,35 @@ public final class Config {
         public final ModConfigSpec.DoubleValue enderPearlChance;
         public final ModConfigSpec.DoubleValue phantomMembraneChance;
 
+        // Animal hunting
+        public final ModConfigSpec.BooleanValue enableAnimalHunting;
+        public final ModConfigSpec.BooleanValue huntBabies;
+        public final ModConfigSpec.BooleanValue alwaysHunting;
+        public final ModConfigSpec.BooleanValue berserkerHunting;
+        public final ModConfigSpec.IntValue huntStartDay;
+        public final ModConfigSpec.IntValue huntCooldownTicks;
+        public final ModConfigSpec.IntValue huntCapPerZombiePerDay;
+        public final ModConfigSpec.IntValue huntCapPerLevelPerDay;
+        public final ModConfigSpec.DoubleValue huntFollowDistanceFactor;
+        public final ModConfigSpec.BooleanValue eatDroppedFood;
+        public final ModConfigSpec.IntValue eatCooldownTicks;
+        public final ModConfigSpec.IntValue healthPerNutrition;
+        public final ModConfigSpec.IntValue feedingMaxHealthBoost;
+        public final ModConfigSpec.IntValue feedingMaxHealthBoostHardBonus;
+        public final ModConfigSpec.BooleanValue rottenFleshGivesResistance;
+        public final ModConfigSpec.IntValue foodCombatLockTicks;
+        public final ModConfigSpec.DoubleValue foodCombatLockDistance;
+        public final ModConfigSpec.BooleanValue persistentAfterEating;
+        public final ModConfigSpec.BooleanValue fedZombiesDropExtraLoot;
+        public final ModConfigSpec.DoubleValue extraLootHealthRatio;
+        public final ModConfigSpec.BooleanValue fedZombiesBecomeLeaders;
+        public final ModConfigSpec.BooleanValue zombifyHorses;
+        public final ModConfigSpec.BooleanValue zombifyTamedHorses;
+        public final ModConfigSpec.BooleanValue rideZombieHorses;
+        public final ModConfigSpec.BooleanValue neverHuntZombieHorses;
+        public final ModConfigSpec.ConfigValue<String> additionalHuntTargets;
+        public final ModConfigSpec.ConfigValue<String> excludedHuntTargets;
+
         public Common(ModConfigSpec.Builder builder) {
             builder.comment(sectionComment(
                     "START HERE",
@@ -1794,6 +1823,176 @@ public final class Config {
                             "Chance for an extra phantom membrane to drop from a zombie-class mob.",
                             "0.03 = 3% chance.")
                     .defineInRange("phantomMembraneChance", 0.03, 0.0, 1.0);
+            builder.pop();
+
+            builder.comment(sectionComment(
+                    "ANIMAL HUNTING",
+                    "Optional predator system: zombies hunt animals, eat dropped meat, and grow stronger.",
+                    "Everything in this section stays OFF until enableAnimalHunting is set to true.",
+                    "Zombies hunt animals whose drops include zombie_food tag items, plus any forced targets.",
+                    "Food items come from the zombieapocalypseaddon:zombie_food item tag (vanilla meats and rotten flesh).",
+                    "Manage it in game with /zhunt or /za hunting."))
+                    .push("animalhunting");
+
+            enableAnimalHunting = builder
+                    .comment(
+                            "Master switch for animal hunting, meat eating, health growth, and horse interactions.",
+                            "Everything in this section does nothing while this is false.")
+                    .define("enableAnimalHunting", false);
+
+            huntBabies = builder
+                    .comment(
+                            "If true, zombies may also hunt baby animals.")
+                    .define("huntBabies", false);
+
+            alwaysHunting = builder
+                    .comment(
+                            "If true, zombies look for prey even when fully healed and at the health-growth cap.",
+                            "Normal mode only hunts while a zombie is injured or can still grow.",
+                            "Does NOT bypass hunt cooldowns or daily caps.")
+                    .define("alwaysHunting", false);
+
+            berserkerHunting = builder
+                    .comment(
+                            "If true, zombies ignore hunt motivation checks, cooldowns, and daily caps entirely.",
+                            "Very aggressive. Intended for short events or hardcore packs.")
+                    .define("berserkerHunting", false);
+
+            huntStartDay = builder
+                    .comment(
+                            "First apocalypse day when zombies may hunt animals.",
+                            "0 = hunting allowed from world start. 5 = hunting begins on day 5.")
+                    .defineInRange("huntStartDay", 0, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
+
+            huntCooldownTicks = builder
+                    .comment(
+                            "Cooldown between successful hunts for each zombie, in ticks.",
+                            "1200 = 1 minute. Only used when berserkerHunting is false.")
+                    .defineInRange("huntCooldownTicks", 1200, 0, 72000);
+
+            huntCapPerZombiePerDay = builder
+                    .comment(
+                            "Maximum successful animal hunts per zombie within one Minecraft day.",
+                            "0 = zombies can hunt but kills never count against a daily cap.",
+                            "Only used when berserkerHunting is false.")
+                    .defineInRange("huntCapPerZombiePerDay", 10, 0, 100000);
+
+            huntCapPerLevelPerDay = builder
+                    .comment(
+                            "Maximum successful hunts by all zombies in the same dimension within one Minecraft day.",
+                            "0 = no dimension-wide cap.",
+                            "Only used when berserkerHunting is false.")
+                    .defineInRange("huntCapPerLevelPerDay", 20, 0, 100000);
+
+            huntFollowDistanceFactor = builder
+                    .comment(
+                            "Multiplier applied to a zombie's follow range while searching for animals.",
+                            "1.0 = normal follow range, 2.0 = double it.")
+                    .defineInRange("huntFollowDistanceFactor", 1.0, 0.0, 64.0);
+
+            eatDroppedFood = builder
+                    .comment(
+                            "If true, zombies seek out dropped zombie_food items, eat them to heal,",
+                            "and grow permanent bonus health. This is the core feeding mechanic.")
+                    .define("eatDroppedFood", true);
+
+            eatCooldownTicks = builder
+                    .comment(
+                            "Cooldown after a successful eating action, in ticks.")
+                    .defineInRange("eatCooldownTicks", 40, 0, 72000);
+
+            healthPerNutrition = builder
+                    .comment(
+                            "Health restored per food nutrition point when a zombie eats, in half-hearts.",
+                            "1 = each nutrition point restores half a heart. Overflow becomes bonus max health.")
+                    .defineInRange("healthPerNutrition", 1, 0, 40);
+
+            feedingMaxHealthBoost = builder
+                    .comment(
+                            "Maximum bonus max-health a zombie can gain from feeding, in half-hearts.",
+                            "20 = +10 hearts. Reaching the cap can promote the zombie to a horde leader.")
+                    .defineInRange("feedingMaxHealthBoost", 20, 0, 1024);
+
+            feedingMaxHealthBoostHardBonus = builder
+                    .comment(
+                            "Extra feeding health-growth cap on Hard difficulty, in half-hearts.")
+                    .defineInRange("feedingMaxHealthBoostHardBonus", 20, 0, 1024);
+
+            rottenFleshGivesResistance = builder
+                    .comment(
+                            "If true, eating rotten flesh grants the zombie a short Resistance effect.")
+                    .define("rottenFleshGivesResistance", true);
+
+            foodCombatLockTicks = builder
+                    .comment(
+                            "Zombies damaged within this many ticks will not leave combat to seek food.")
+                    .defineInRange("foodCombatLockTicks", 100, 0, 24000);
+
+            foodCombatLockDistance = builder
+                    .comment(
+                            "Zombies will not abandon an attack target within this distance to pick up food.")
+                    .defineInRange("foodCombatLockDistance", 8.0, 0.0, 64.0);
+
+            persistentAfterEating = builder
+                    .comment(
+                            "If true, zombies that have eaten no longer despawn naturally.",
+                            "Well-fed zombies stick around until killed.")
+                    .define("persistentAfterEating", false);
+
+            fedZombiesDropExtraLoot = builder
+                    .comment(
+                            "If true, zombies drop bonus loot scaled by the health they gained from feeding.")
+                    .define("fedZombiesDropExtraLoot", false);
+
+            extraLootHealthRatio = builder
+                    .comment(
+                            "Health gained per extra loot roll. Each (base max health x this value) of gained",
+                            "health adds one extra roll of the zombie's loot table when it dies.",
+                            "1.0 = one extra roll per full base-health worth of growth.")
+                    .defineInRange("extraLootHealthRatio", 1.0, 0.1, 64.0);
+
+            fedZombiesBecomeLeaders = builder
+                    .comment(
+                            "If true, zombies that reach the feeding health cap become horde leaders:",
+                            "higher reinforcement-spawn chance and the ability to break doors.")
+                    .define("fedZombiesBecomeLeaders", true);
+
+            zombifyHorses = builder
+                    .comment(
+                            "If true, horses killed by zombies may rise again as zombie horses.",
+                            "Hard difficulty always converts; Normal converts 50% of the time; Easy never does.",
+                            "The zombie horse keeps the original's speed, jump, saddle, name, and owner.")
+                    .define("zombifyHorses", false);
+
+            zombifyTamedHorses = builder
+                    .comment(
+                            "If true, tamed horses can also be zombified. Only used when zombifyHorses is true.")
+                    .define("zombifyTamedHorses", false);
+
+            rideZombieHorses = builder
+                    .comment(
+                            "If true, idle zombies may seek out and ride nearby zombie horses.")
+                    .define("rideZombieHorses", false);
+
+            neverHuntZombieHorses = builder
+                    .comment(
+                            "If true, zombies never hunt zombie horses.",
+                            "Keep true if you use rideZombieHorses or zombifyHorses.")
+                    .define("neverHuntZombieHorses", true);
+
+            additionalHuntTargets = builder
+                    .comment(
+                            "Optional comma-separated entity IDs to always treat as valid hunt targets.",
+                            "Useful for modded prey that does not extend the Animal class.",
+                            "Example: examplemod:deer,examplemod:wild_boar")
+                    .define("additionalHuntTargets", "");
+
+            excludedHuntTargets = builder
+                    .comment(
+                            "Optional comma-separated entity IDs that zombies must never hunt.",
+                            "Exclusions win over everything, including the force-target tag.",
+                            "Example: minecraft:cat,minecraft:wolf")
+                    .define("excludedHuntTargets", "");
             builder.pop();
         }
 
