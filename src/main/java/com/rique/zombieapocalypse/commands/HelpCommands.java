@@ -70,7 +70,7 @@ public final class HelpCommands {
                         + "/za spawn amount <1-50> - zombies attempted per wave\n"
                         + "/za spawn max <1-500> - nearby cap per player\n"
                         + "/za spawn daylightstart <day> - temporary daytime grace period\n"
-                        + "/za spawn maxlight <-1-15> - -1 ignores lights; 7 protects bright bases\n"
+                        + "/za spawn maxlight <-1-15> - 0 protects lit bases (default); -1 ignores lights\n"
                         + "/za spawn babychance <0.0-1.0> - use 0 to disable baby zombies\n"
                         + "Run a setting without a value to see its current value. Tab suggests useful values.",
                 false);

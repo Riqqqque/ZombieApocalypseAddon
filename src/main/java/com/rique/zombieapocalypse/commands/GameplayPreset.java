@@ -16,7 +16,7 @@ public enum GameplayPreset {
     STANDARD(
             "Standard",
             "The recommended default balance for most survival servers.",
-            120, 0.50, 2, 50, 0, -1, 0.05,
+            120, 0.50, 2, 50, 0, 0, 0.05,
             5, 0.50, 5, 3.0, 5, 20,
             0.15, 5.0, 4,
             3, 50, 0.20, 10, 0.30, 0.20,

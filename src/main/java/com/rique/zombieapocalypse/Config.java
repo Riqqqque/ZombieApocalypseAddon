@@ -566,12 +566,12 @@ public final class Config {
                             "This only affects the mod's custom spawn waves. It does not change vanilla natural spawning.",
                             "Block light means light from blocks like torches, lanterns, glowstone, campfires, and similar sources.",
                             "Light never makes custom spawns more likely. This setting can only block spawns when the area is too bright.",
-                            "-1 = ignore block light and keep the old behavior, so lit bases are not protected from custom waves.",
-                            "0 = custom waves only spawn in complete block darkness.",
-                            "7 = classic hostile-mob style limit and a good choice if players expect torches to protect bases.",
+                            "0 = custom waves only spawn in complete block darkness, so torches and lanterns protect lit areas. This is the default.",
+                            "7 = classic hostile-mob style limit, allowing spawns in dim spots.",
                             "15 = any block light is allowed, which is almost the same as ignoring this check.",
+                            "-1 = ignore block light entirely, so lit bases are not protected from custom waves.",
                             "Sunlight is ignored on purpose so daytime apocalypse spawning still works.")
-                    .defineInRange("maxBlockLightForSpawning", -1, -1, 15);
+                    .defineInRange("maxBlockLightForSpawning", 0, -1, 15);
 
             daylightSpawnStartDay = builder
                     .comment(
