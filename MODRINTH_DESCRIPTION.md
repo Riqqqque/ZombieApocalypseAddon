@@ -69,10 +69,11 @@ Mushroom-field safe zones remain active even if biome variant weighting is turne
 
 The standard setup attempts two zombies with a 50% wave chance every six seconds. It limits nearby pressure per player, increases pressure at night, enables natural events and progression, and keeps destructive features disabled.
 
-Player-built lights do not block the addon's custom waves by default. If you want torches and similar blocks to protect bases, use the Casual preset or set:
+Player-built lights block the addon's custom waves by default - custom spawns need complete block darkness, so torches and lanterns protect bases. To let zombies spawn in dimmer spots, or ignore light entirely:
 
 ```mcfunction
 /za spawn maxlight 7
+/za spawn maxlight -1
 ```
 
 This checks block light only. It does not disable daytime waves by itself; use `/za spawn daytime off` for that.

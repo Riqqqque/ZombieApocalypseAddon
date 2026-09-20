@@ -230,7 +230,7 @@ final class FeaturePresets {
         Config.set(config.minSpawnDistance, 12);
         Config.set(config.spawnAttemptsPerZombie, 10);
         Config.set(config.requireOpenSkyForOverworldSpawns, true);
-        Config.set(config.maxBlockLightForSpawning, -1);
+        Config.set(config.maxBlockLightForSpawning, 0);
         if (enableDaytime) {
             Config.set(config.enableDaytimeSpawning, true);
             Config.set(config.daylightSpawnStartDay, 0);

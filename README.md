@@ -122,9 +122,9 @@ Use `/za spawn status all` only when you need every related toggle. The normal `
 
 `maxBlockLightForSpawning` controls whether torches and similar blocks protect an area from the mod's custom waves:
 
-- `-1`: ignore block light. This is the default apocalypse behavior.
-- `0`: custom spawns require complete block darkness.
-- `7`: brighter areas block custom spawns.
+- `0` (default): custom spawns require complete block darkness, so lit bases are safe.
+- `7`: brighter areas block custom spawns, but dim spots still allow them.
+- `-1`: ignore block light entirely, so waves can spawn anywhere.
 
 This setting checks block light, not sunlight. It does not disable daytime waves by itself; use `/za spawn daytime off` for that.
 
