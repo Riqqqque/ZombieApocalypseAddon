@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.3.0 | `zombieapocalypseaddon-2.3.0.jar` |
-| 1.20.1 | NeoForge | 1.6.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.6.0.jar` |
-| 1.20.1 | Forge | 1.6.0 | `zombieapocalypseaddon-forge-1.20.1-1.6.0.jar` |
+| 1.21.1 | NeoForge | 2.4.1 | `zombieapocalypseaddon-2.4.1.jar` |
+| 1.20.1 | NeoForge | 1.7.1 | `zombieapocalypseaddon-neoforge-1.20.1-1.7.1.jar` |
+| 1.20.1 | Forge | 1.7.1 | `zombieapocalypseaddon-forge-1.20.1-1.7.1.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -38,6 +38,26 @@ Install only the file for your exact Minecraft version and loader. Forge and Neo
 5. Use `/za help` whenever you need a short command topic.
 
 That is enough for a normal server. You do not need to edit advanced attributes or compatibility settings.
+
+## Common Tweaks
+
+Most questions are one command away:
+
+| I want to... | Run this |
+|---|---|
+| Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables the protection if you ever want it off. |
+| Stop custom spawns during the day | `/za spawn daytime off` (night waves and blood moons still work) |
+| Have hordes arrive at nightfall | `/za events dusk on` |
+| Remove baby zombies | `/za spawn babychance 0` |
+| Make it easier overall | `/za preset casual` or `/za spawn chance 0.25` |
+| Make it harder overall | `/za preset hardcore` |
+| Let zombies break stone and ores, not just wood | `/za breaking on` then `/za breaking toolblocks on` and `/za breaking hardness 50` |
+| Let zombies break chests and machines too | `/za breaking containers on` (think twice - they really will) |
+| Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Check what is currently running | `/za` for the dashboard, `/za spawn` for spawn settings |
+| Keep my settings for every new world | Nothing - they are stored once in the common config and apply to all worlds automatically. |
+
+Every `on` loads safe defaults first, so features work immediately. Details are in the sections below.
 
 ## Gameplay Presets
 
@@ -64,7 +84,7 @@ With the standard defaults:
 - Difficulty begins scaling after a short grace period.
 - Death cooldowns reduce immediate repeat pressure after a player dies.
 - Zombie variants, kill tracking, milestones, effects, and bonus drops are enabled.
-- Player-built lights do not block custom waves unless light protection is enabled.
+- Lit bases are protected: custom waves need complete block darkness, so torches and lanterns keep areas safe.
 - World-damaging features remain off until an administrator enables them.
 
 ## Main Commands
@@ -247,9 +267,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.3.0 |
-| NeoForge | 1.20.1 | 1.6.0 |
-| Forge | 1.20.1 | 1.6.0 |
+| NeoForge | 1.21.1 | 2.4.1 |
+| NeoForge | 1.20.1 | 1.7.1 |
+| Forge | 1.20.1 | 1.7.1 |
 
 Build all targets on Windows with:
 
