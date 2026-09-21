@@ -39,6 +39,23 @@ Presets turn daytime custom waves on and restore a safe spawn range, minimum dis
 
 Use `/za help` for short topic-based help instead of a wall of commands. Press Tab after `/za` to browse every system and get suggestions for states, values, players, attribute keys, and blocks.
 
+## Common Tweaks
+
+Most things players ask for are one command away:
+
+| I want to... | Run this |
+|---|---|
+| Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables it. |
+| Stop custom spawns during the day | `/za spawn daytime off` |
+| Have hordes arrive at nightfall | `/za events dusk on` |
+| Remove baby zombies | `/za spawn babychance 0` |
+| Make it easier or harder overall | `/za preset casual` or `/za preset hardcore` |
+| Let zombies break stone and ores | `/za breaking on`, then `/za breaking toolblocks on` and `/za breaking hardness 50` |
+| Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Keep my settings for every new world | Nothing - the common config applies to all worlds automatically. |
+
+Every `on` loads safe defaults first, so features work immediately.
+
 ## Main Features
 
 - Custom zombie waves around survival players during day and night
