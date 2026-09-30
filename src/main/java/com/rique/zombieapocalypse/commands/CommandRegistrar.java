@@ -17,6 +17,7 @@ public final class CommandRegistrar {
         HordeCommands.register(dispatcher);
         StatsCommands.register(dispatcher);
         ScalingCommands.register(dispatcher);
+        GearCommands.register(dispatcher);
         DaySpawnCommands.register(dispatcher);
         BlockBreakCommands.register(dispatcher);
         BlockPlaceCommands.register(dispatcher);

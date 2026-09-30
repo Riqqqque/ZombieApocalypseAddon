@@ -23,6 +23,7 @@ public final class HelpCommands {
         help.then(topic("spawning", HelpCommands::showSpawningHelp));
         help.then(topic("events", HelpCommands::showEventHelp));
         help.then(topic("difficulty", HelpCommands::showDifficultyHelp));
+        help.then(topic("gear", HelpCommands::showGearHelp));
         help.then(topic("bases", HelpCommands::showBaseHelp));
         help.then(topic("hunt", HelpCommands::showHuntHelp));
         help.then(topic("admin", HelpCommands::showAdminHelp));
@@ -107,8 +108,26 @@ public final class HelpCommands {
                         + "/za spawn scaling on|off - toggle day-based scaling\n"
                         + "/za scaling startday|maxday - set the progression window\n"
                         + "/za scaling speed|health|armorchance|weaponchance - tune full-strength bonuses\n"
+                        + "/za gear - choose which armor and weapons zombies get, including modded items\n"
                         + "/za spawn attributes on|off - toggle advanced attribute tuning\n"
-                        + "Use /za help advanced only if you need exact stat profiles.",
+                        + "Use /za help gear for gear setup or /za help advanced for exact stat profiles.",
+                false);
+        return 1;
+    }
+
+    private static int showGearHelp(CommandSourceStack source) {
+        CommandUtil.feedback(source,
+                "Zombie gear commands:\n"
+                        + "/za gear - show tiers, today's odds, and the drop chance\n"
+                        + "/za gear list <tier> - show every item in a tier by slot\n"
+                        + "/za gear add <tier> - add the item in your main hand\n"
+                        + "/za gear add <tier> <item> - add an item by ID, including modded items\n"
+                        + "/za gear remove <tier> <item> - remove an item from a tier\n"
+                        + "/za gear clear <tier> - empty a tier so it uses vanilla gear until you add items\n"
+                        + "/za gear reset <tier|all> - restore the vanilla items\n"
+                        + "/za gear dropchance <0.0-1.0> - chance each piece drops on a player kill; 0.085 is vanilla\n"
+                        + "/za gear preview <tier> - spawn a zombie wearing that tier\n"
+                        + "Tier 1 is most common early; later days favor tiers 3 and 4. Slots are detected automatically and shields are never used.",
                 false);
         return 1;
     }
@@ -187,6 +206,7 @@ public final class HelpCommands {
                         + "/za spawn - spawning and main feature toggles\n"
                         + "/za events, /za bloodmoon - event controls\n"
                         + "/za day, /za scaling - day counter and difficulty\n"
+                        + "/za gear - zombie armor and weapons, including modded items\n"
                         + "/za breaking, /za placing, /za towering - optional base pressure\n"
                         + "/za hunt - optional animal hunting and growth\n"
                         + "/za stats - kill totals and milestone reset\n"

@@ -4,15 +4,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -47,10 +43,6 @@ public final class DifficultyManager {
             boolean mushroomBiome,
             boolean netherDimension,
             boolean endDimension) {
-    }
-
-    private enum ArmorTier {
-        LEATHER, CHAINMAIL, IRON, DIAMOND
     }
 
     private static final SpawnContext NO_CONTEXT = new SpawnContext(false, false, false, false, false);
@@ -93,11 +85,11 @@ public final class DifficultyManager {
 
         RandomSource random = level.getRandom();
         if (random.nextDouble() < Config.COMMON.maxArmorChance.get() * factor) {
-            applyRandomArmor(zombie, random, factor);
+            ZombieGear.applyArmor(zombie, random, factor);
         }
 
         if (random.nextDouble() < Config.COMMON.maxWeaponChance.get() * factor) {
-            applyRandomWeapon(zombie, random, factor);
+            ZombieGear.applyWeapon(zombie, random, factor);
         }
     }
 
@@ -549,111 +541,6 @@ public final class DifficultyManager {
         return value;
     }
 
-    private static void applyRandomArmor(Mob zombie, RandomSource random, double factor) {
-        boolean preserveExisting = Config.COMMON.preserveExistingZombieEquipment.get();
-        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), preserveExisting)
-                && random.nextFloat() < 0.4F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.HEAD, getRandomArmor(random, factor, EquipmentSlot.HEAD));
-        }
-        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), preserveExisting)
-                && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.CHEST, getRandomArmor(random, factor, EquipmentSlot.CHEST));
-        }
-        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.LEGS).isEmpty(), preserveExisting)
-                && random.nextFloat() < 0.2F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.LEGS, getRandomArmor(random, factor, EquipmentSlot.LEGS));
-        }
-        if (shouldEquipSlot(zombie.getItemBySlot(EquipmentSlot.FEET).isEmpty(), preserveExisting)
-                && random.nextFloat() < 0.3F + (float) factor * 0.4F) {
-            zombie.setItemSlot(EquipmentSlot.FEET, getRandomArmor(random, factor, EquipmentSlot.FEET));
-        }
-    }
-
-    private static ItemStack getRandomArmor(RandomSource random, double factor, EquipmentSlot slot) {
-        double roll = random.nextDouble();
-
-        double leatherMax = 0.5 - factor * 0.3;
-        double chainMax = leatherMax + 0.2;
-        double ironMax = chainMax + 0.2 + factor * 0.1;
-
-        ArmorTier tier;
-        if (roll < leatherMax) {
-            tier = ArmorTier.LEATHER;
-        } else if (roll < chainMax) {
-            tier = ArmorTier.CHAINMAIL;
-        } else if (roll < ironMax) {
-            tier = ArmorTier.IRON;
-        } else {
-            tier = ArmorTier.DIAMOND;
-        }
-
-        return new ItemStack(getArmorItem(tier, slot));
-    }
-
-    private static Item getArmorItem(ArmorTier tier, EquipmentSlot slot) {
-        return switch (tier) {
-            case LEATHER -> switch (slot) {
-                case HEAD -> Items.LEATHER_HELMET;
-                case CHEST -> Items.LEATHER_CHESTPLATE;
-                case LEGS -> Items.LEATHER_LEGGINGS;
-                case FEET -> Items.LEATHER_BOOTS;
-                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
-            };
-            case CHAINMAIL -> switch (slot) {
-                case HEAD -> Items.CHAINMAIL_HELMET;
-                case CHEST -> Items.CHAINMAIL_CHESTPLATE;
-                case LEGS -> Items.CHAINMAIL_LEGGINGS;
-                case FEET -> Items.CHAINMAIL_BOOTS;
-                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
-            };
-            case IRON -> switch (slot) {
-                case HEAD -> Items.IRON_HELMET;
-                case CHEST -> Items.IRON_CHESTPLATE;
-                case LEGS -> Items.IRON_LEGGINGS;
-                case FEET -> Items.IRON_BOOTS;
-                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
-            };
-            case DIAMOND -> switch (slot) {
-                case HEAD -> Items.DIAMOND_HELMET;
-                case CHEST -> Items.DIAMOND_CHESTPLATE;
-                case LEGS -> Items.DIAMOND_LEGGINGS;
-                case FEET -> Items.DIAMOND_BOOTS;
-                default -> throw new IllegalArgumentException("Invalid armor slot: " + slot);
-            };
-        };
-    }
-
-    private static void applyRandomWeapon(Mob zombie, RandomSource random, double factor) {
-        if (!shouldEquipSlot(
-                zombie.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty(),
-                Config.COMMON.preserveExistingZombieEquipment.get())) {
-            return;
-        }
-
-        double roll = random.nextDouble();
-
-        double woodenMax = 0.4 - factor * 0.2;
-        double stoneMax = woodenMax + 0.25;
-        double ironMax = stoneMax + 0.2 + factor * 0.1;
-
-        ItemStack weapon;
-        if (roll < woodenMax) {
-            weapon = new ItemStack(Items.WOODEN_SWORD);
-        } else if (roll < stoneMax) {
-            weapon = new ItemStack(Items.STONE_SWORD);
-        } else if (roll < ironMax) {
-            weapon = new ItemStack(Items.IRON_SWORD);
-        } else {
-            weapon = new ItemStack(Items.DIAMOND_SWORD);
-        }
-
-        zombie.setItemSlot(EquipmentSlot.MAINHAND, weapon);
-    }
-
-    static boolean shouldEquipSlot(boolean slotEmpty, boolean preserveExisting) {
-        return slotEmpty || !preserveExisting;
-    }
-
     public static String getScalingStatus(ServerLevel level) {
         long currentDay = getCurrentDay(level);
         double factor = getScalingFactor(level);
@@ -671,9 +558,10 @@ public final class DifficultyManager {
                         + "Enabled: %s | Current day: %d | Current strength: %d%%\n"
                         + "Progression: starts day %d, full strength day %d\n"
                         + "Current legacy bonuses: speed +%d%%, health +%d\n"
-                        + "Full-strength gear chances: armor %.0f%%, weapon %.0f%%\n"
+                        + "Full-strength gear chances: armor %.0f%%, weapon %.0f%% | drop %s per item\n"
                         + "Advanced attributes: %s | Day scaling: %s | Variant profiles: %s | Context profiles: %s\n"
-                        + "Base multipliers: health x%.2f, attack x%.2f, speed x%.2f",
+                        + "Base multipliers: health x%.2f, attack x%.2f, speed x%.2f\n"
+                        + "/za gear - choose the armor and weapons zombies get, including modded items",
                 scalingEnabled,
                 currentDay,
                 percentage,
@@ -683,6 +571,7 @@ public final class DifficultyManager {
                 healthBonus,
                 Config.COMMON.maxArmorChance.get() * 100.0,
                 Config.COMMON.maxWeaponChance.get() * 100.0,
+                ZombieGear.formatChance(ZombieGear.dropChance()),
                 attrs,
                 attrScaling,
                 variantProfiles,

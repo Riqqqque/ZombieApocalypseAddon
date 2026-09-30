@@ -21,7 +21,9 @@ public final class MainCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralCommandNode<CommandSourceStack> root = dispatcher.register(buildRoot(dispatcher));
-        dispatcher.register(Commands.literal("zombieapocalypse").redirect(root));
+        dispatcher.register(Commands.literal("zombieapocalypse")
+                .executes(root.getCommand())
+                .redirect(root));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildRoot(
@@ -50,6 +52,7 @@ public final class MainCommands {
         addRedirect(root, dispatcher, "bloodmoon", "zbloodmoon");
         addRedirect(root, dispatcher, "day", "zday");
         addRedirect(root, dispatcher, "scaling", "zscaling");
+        addRedirect(root, dispatcher, "gear", "zgear");
         addRedirect(root, dispatcher, "stats", "zstats");
         addRedirect(root, dispatcher, "breaking", "zblockbreak");
         addRedirect(root, dispatcher, "placing", "zblockplace");
@@ -72,8 +75,10 @@ public final class MainCommands {
         if (target == null) {
             throw new IllegalStateException("Command target was not registered: " + targetName);
         }
+        // A redirect alone leaves the bare alias incomplete, so the alias also runs the target's own command.
         root.then(Commands.literal(alias)
                 .requires(target.getRequirement())
+                .executes(target.getCommand())
                 .redirect(target));
     }
 
@@ -104,6 +109,7 @@ public final class MainCommands {
         CommandUtil.feedback(source,
                 "Config file: config/zombieapocalypseaddon-common.toml\n"
                         + "Start with [dayspawning], [variants], [horde], [bloodmoon], and [scaling].\n"
+                        + "Zombie armor and weapon lists (tier1Gear to tier4Gear) are in [scaling]; /za gear edits them in game.\n"
                         + "Leave [compatibility] and [attributes] at their defaults unless you need advanced tuning.\n"
                         + "For a fast setup, use /za preset casual, standard, or hardcore. Stop the server before manual edits.",
                 false);
