@@ -107,6 +107,22 @@ class ConfigSpecTest {
         assertRejects(Config.COMMON.extraLootHealthRatio, 64.1);
     }
 
+    @Test
+    void gearDefaultsKeepVanillaProgressionAndDropRate() {
+        assertEquals(0.085, defaultValue(Config.COMMON.gearDropChance));
+        assertEquals(ZombieGear.DEFAULT_TIER_1, defaultValue(Config.COMMON.tier1Gear));
+        assertEquals(ZombieGear.DEFAULT_TIER_2, defaultValue(Config.COMMON.tier2Gear));
+        assertEquals(ZombieGear.DEFAULT_TIER_3, defaultValue(Config.COMMON.tier3Gear));
+        assertEquals(ZombieGear.DEFAULT_TIER_4, defaultValue(Config.COMMON.tier4Gear));
+
+        assertAccepts(Config.COMMON.gearDropChance, 0.0);
+        assertAccepts(Config.COMMON.gearDropChance, 1.0);
+        assertRejects(Config.COMMON.gearDropChance, -0.1);
+        assertRejects(Config.COMMON.gearDropChance, 1.1);
+        assertAccepts(Config.COMMON.tier1Gear, "");
+        assertAccepts(Config.COMMON.tier4Gear, "example:knight_helmet, example:knight_helmet");
+    }
+
     private static void assertAccepts(ModConfigSpec.ConfigValue<?> setting, Object value) {
         assertTrue(valueSpec(setting).test(value), setting.getPath().toString());
     }

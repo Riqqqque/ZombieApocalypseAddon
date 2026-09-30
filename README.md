@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.4.1 | `zombieapocalypseaddon-2.4.1.jar` |
-| 1.20.1 | NeoForge | 1.7.1 | `zombieapocalypseaddon-neoforge-1.20.1-1.7.1.jar` |
-| 1.20.1 | Forge | 1.7.1 | `zombieapocalypseaddon-forge-1.20.1-1.7.1.jar` |
+| 1.21.1 | NeoForge | 2.5.0 | `zombieapocalypseaddon-2.5.0.jar` |
+| 1.20.1 | NeoForge | 1.8.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.8.0.jar` |
+| 1.20.1 | Forge | 1.8.0 | `zombieapocalypseaddon-forge-1.20.1-1.8.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -54,6 +54,8 @@ Most questions are one command away:
 | Let zombies break stone and ores, not just wood | `/za breaking on` then `/za breaking toolblocks on` and `/za breaking hardness 50` |
 | Let zombies break chests and machines too | `/za breaking containers on` (think twice - they really will) |
 | Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Give zombies armor or weapons from another mod | Hold the item and run `/za gear add <tier>` (tier 1 is common, tier 4 is rare). `/za gear preview <tier>` shows the result. |
+| Change how often zombie gear drops | `/za gear dropchance 0.25` (default `0.085`, the vanilla rate) |
 | Check what is currently running | `/za` for the dashboard, `/za spawn` for spawn settings |
 | Keep my settings for every new world | Nothing - they are stored once in the common config and apply to all worlds automatically. |
 
@@ -103,8 +105,9 @@ Start with these:
 | `/za events` | Show current horde and blood moon status. |
 | `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
 | `/za scaling` | Show current day-based difficulty progress. |
+| `/za gear` | Show the zombie gear tiers, today's tier odds, and the drop chance. |
 
-Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `advanced`, and `all`.
+Help topics are `start`, `spawning`, `events`, `difficulty`, `gear`, `bases`, `hunt`, `admin`, `advanced`, and `all`.
 
 ### Command Families
 
@@ -113,6 +116,7 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 | `/za spawn` | Custom waves, variants, dimensions, effects, and main system toggles. |
 | `/za events` and `/za bloodmoon` | Horde and blood moon events. |
 | `/za day` and `/za scaling` | World day and difficulty progression. |
+| `/za gear` | Armor and weapon tiers for scaled zombies, including modded items, and the gear drop chance. |
 | `/za breaking` | Optional zombie block breaking. |
 | `/za placing` | Optional limited bridges and steps. |
 | `/za towering` | Optional moving zombie stacks for climbing defenses. |
@@ -122,7 +126,7 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `bases`, `admin`, `
 | `/za attributes` | Advanced attribute tuning. |
 | `/za burn`, `/za kill`, `/za cleanup` | Sunlight, cleanup, and safe removal utilities. |
 
-Press Tab after `/za` to see every command family. Tab completion suggests only the clear `on` and `off` states, plus current and common numeric values, attribute keys, online players, and registered block IDs. Existing `true` and `false` inputs still work in old scripts. Running a setting without a value shows its current value. The original `/z...` commands remain supported.
+Press Tab after `/za` to see every command family. Tab completion suggests only the clear `on` and `off` states, plus current and common numeric values, attribute keys, online players, and registered block and item IDs. Existing `true` and `false` inputs still work in old scripts. Running a setting without a value shows its current value. The original `/z...` commands remain supported.
 
 Feature-level `on` commands load safe defaults so the feature works immediately instead of inheriting a zero chance, future start day, or broken dependency. This includes `/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, `/za hunt on`, and `/za compatibility on`.
 
@@ -157,6 +161,26 @@ Hordes are scheduled high-pressure events. Blood moons are random night events. 
 Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` now exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
 
 Most servers should use a preset or the basic `[scaling]` section and leave `[attributes]` unchanged.
+
+### Zombie Gear
+
+Scaled zombies draw armor and weapons from four tiers. Tier 1 is the most common on early days, and later days shift the odds toward tiers 3 and 4. Out of the box the tiers hold vanilla leather, chainmail, iron, and diamond gear, so nothing changes until you edit them. Items from any mod can join a tier:
+
+| Command | Purpose |
+|---|---|
+| `/za gear` | Show every tier, today's tier odds, and the drop chance. |
+| `/za gear list <tier>` | Show every item in a tier by slot, plus anything skipped. |
+| `/za gear add <tier>` | Add the item in your main hand. |
+| `/za gear add <tier> <item>` | Add an item by ID, with tab completion. |
+| `/za gear remove <tier> <item>` | Remove an item from a tier. |
+| `/za gear clear <tier>` | Empty a tier so you can build it from scratch. |
+| `/za gear reset <tier\|all>` | Restore the vanilla items. |
+| `/za gear dropchance <0.0-1.0>` | Chance each piece drops when a player kills the zombie. Default `0.085`, the vanilla rate. |
+| `/za gear preview <tier>` | Spawn a zombie wearing one item per slot from that tier. |
+
+Each item's slot is detected automatically: helmets go on the head, boots on the feet, and swords, axes, or other items in the main hand. Shields and offhand items are never used. Listing an item twice makes it twice as likely. IDs from mods that are not installed are skipped, and a tier with nothing usable falls back to its vanilla gear. If a tier has no item for a slot, zombies that roll that tier leave the slot empty. Only the item type is saved, so enchantments on a held item are not copied. The same lists are `tier1Gear` to `tier4Gear` in `[scaling]`.
+
+Zombies can still spawn with vanilla's own random armor. After `/za compatibility equipment off`, the addon's gear replaces it when both use the same slot. That also applies to modded zombies that spawn with their own gear.
 
 ### Optional Base Pressure
 
@@ -267,9 +291,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.4.1 |
-| NeoForge | 1.20.1 | 1.7.1 |
-| Forge | 1.20.1 | 1.7.1 |
+| NeoForge | 1.21.1 | 2.5.0 |
+| NeoForge | 1.20.1 | 1.8.0 |
+| Forge | 1.20.1 | 1.8.0 |
 
 Build all targets on Windows with:
 

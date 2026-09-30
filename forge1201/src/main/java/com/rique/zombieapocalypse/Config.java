@@ -207,6 +207,11 @@ public final class Config {
         public final ForgeConfigSpec.IntValue maxHealthBoost;
         public final ForgeConfigSpec.DoubleValue maxArmorChance;
         public final ForgeConfigSpec.DoubleValue maxWeaponChance;
+        public final ForgeConfigSpec.DoubleValue gearDropChance;
+        public final ForgeConfigSpec.ConfigValue<String> tier1Gear;
+        public final ForgeConfigSpec.ConfigValue<String> tier2Gear;
+        public final ForgeConfigSpec.ConfigValue<String> tier3Gear;
+        public final ForgeConfigSpec.ConfigValue<String> tier4Gear;
 
         // Attribute tuning for zombie-class mobs
         public final ForgeConfigSpec.BooleanValue enableAttributeModifiers;
@@ -1135,14 +1140,57 @@ public final class Config {
             maxArmorChance = builder
                     .comment(
                             "Chance a scaled zombie gets armor at 100% scaling.",
-                            "0.0 = never, 1.0 = always.")
+                            "0.0 = never, 1.0 = always.",
+                            "Which armor it gets comes from tier1Gear to tier4Gear below.")
                     .defineInRange("maxArmorChance", 0.3, 0.0, 1.0);
 
             maxWeaponChance = builder
                     .comment(
                             "Chance a scaled zombie gets a weapon at 100% scaling.",
-                            "0.0 = never, 1.0 = always.")
+                            "0.0 = never, 1.0 = always.",
+                            "Which weapon it gets comes from tier1Gear to tier4Gear below.")
                     .defineInRange("maxWeaponChance", 0.2, 0.0, 1.0);
+
+            gearDropChance = builder
+                    .comment(
+                            "Chance each armor piece or weapon the addon gives a zombie drops when a player kills it.",
+                            "0.085 = the vanilla mob default (8.5%), 0.0 = never, 1.0 = always.",
+                            "Dropped gear comes off worn, like other mob gear. Gear zombies pick up themselves is not affected.",
+                            "Command: /za gear dropchance <0.0-1.0>")
+                    .defineInRange("gearDropChance", ZombieGear.DEFAULT_DROP_CHANCE, 0.0, 1.0);
+
+            tier1Gear = builder
+                    .comment(
+                            "Armor and weapons scaled zombies can get from tier 1, the most common tier on early days.",
+                            "Later days shift the odds toward tiers 3 and 4. /za gear shows today's odds.",
+                            "Comma-separated item IDs from any mod. The slot is detected automatically:",
+                            "helmets go on the head, boots on the feet, and swords or other items in the main hand.",
+                            "List an item twice to make it twice as likely. Shields and offhand items are skipped.",
+                            "Items from mods that are not installed are skipped, so one list can work across modpacks.",
+                            "If a tier has no item for a slot, zombies rolling that tier leave the slot empty.",
+                            "Leave a tier blank to use its vanilla gear. Blank tier 1 = leather armor and a wooden sword.",
+                            "Easiest setup: hold an item in game and run /za gear add <tier>. /za gear preview <tier> shows the result.",
+                            "Zombies can still spawn with vanilla's own random armor. /za compatibility equipment off",
+                            "lets the addon's gear replace it when both use the same slot.")
+                    .define("tier1Gear", ZombieGear.DEFAULT_TIER_1);
+
+            tier2Gear = builder
+                    .comment(
+                            "Gear for tier 2. Same format as tier1Gear.",
+                            "Blank = chainmail armor and a stone sword.")
+                    .define("tier2Gear", ZombieGear.DEFAULT_TIER_2);
+
+            tier3Gear = builder
+                    .comment(
+                            "Gear for tier 3. Same format as tier1Gear.",
+                            "Blank = iron armor and an iron sword.")
+                    .define("tier3Gear", ZombieGear.DEFAULT_TIER_3);
+
+            tier4Gear = builder
+                    .comment(
+                            "Gear for tier 4, the rarest tier. It becomes more common as scaling reaches full strength.",
+                            "Same format as tier1Gear. Blank = diamond armor and a diamond sword.")
+                    .define("tier4Gear", ZombieGear.DEFAULT_TIER_4);
             builder.pop();
 
             builder.comment(sectionComment(

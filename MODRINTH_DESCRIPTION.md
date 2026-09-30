@@ -52,6 +52,8 @@ Most things players ask for are one command away:
 | Make it easier or harder overall | `/za preset casual` or `/za preset hardcore` |
 | Let zombies break stone and ores | `/za breaking on`, then `/za breaking toolblocks on` and `/za breaking hardness 50` |
 | Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Give zombies armor or weapons from another mod | Hold the item and run `/za gear add <tier>`, then `/za gear preview <tier>` |
+| Change how often zombie gear drops | `/za gear dropchance 0.25` (default `0.085`) |
 | Keep my settings for every new world | Nothing - the common config applies to all worlds automatically. |
 
 Every `on` loads safe defaults first, so features work immediately.
@@ -67,6 +69,7 @@ Every `on` loads safe defaults first, so features work immediately.
 - Random and forced blood moons
 - Morning day-counter announcements and manual day control
 - Day-based health, speed, armor, and equipment scaling
+- Armor and weapon tiers that accept items from any mod, such as Epic Knights, with an adjustable gear drop chance
 - Advanced per-attribute, per-variant, biome, and dimension tuning
 - Optional zombie block breaking with conservative safety rules
 - Optional limited block placing for steps and one-block gaps
@@ -109,6 +112,7 @@ This checks block light only. It does not disable daytime waves by itself; use `
 | `/za events` | Show horde and blood moon status. |
 | `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
 | `/za scaling` | Show day-based difficulty progress. |
+| `/za gear` | Show zombie gear tiers, today's tier odds, and the drop chance. |
 | `/za compatibility` | Show mixed-mod compatibility safeguards. |
 | `/za cleanup uninstall` | Prepare a world before removing the mod. |
 
@@ -117,6 +121,7 @@ Every system is available below `/za`:
 - `/za spawn` for spawning and main toggles
 - `/za events` and `/za bloodmoon` for events
 - `/za day` and `/za scaling` for progression
+- `/za gear` for zombie armor and weapons, including modded items
 - `/za breaking`, `/za placing`, and `/za towering` for optional base pressure
 - `/za hunt` for optional animal hunting and zombie growth
 - `/za stats` for kills and milestone reset
@@ -156,6 +161,8 @@ For night-only custom spawning, run `/za spawn daytime off`. Normal night waves 
 Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes roll at dawn by default, or at dusk with `/za events dusk on`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
+
+Scaled zombies draw armor and weapons from four tiers. Tier 1 is most common early and later days favor tiers 3 and 4. The tiers start with vanilla gear, and items from any mod can be added: hold an item and run `/za gear add <tier>`, or list item IDs in `tier1Gear` to `tier4Gear`. Slots are detected automatically, shields are never used, and `/za gear preview <tier>` spawns a zombie wearing a tier. `gearDropChance` controls how often that gear drops.
 
 ## Optional Base Pressure
 

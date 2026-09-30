@@ -28,7 +28,7 @@ class CommandTreeTest {
     private static final Set<String> ROOT_COMMANDS = Set.of(
             "za", "zombieapocalypse", "zhelp", "zcompat", "zburn", "zkill", "zcleanup",
             "zday", "zhorde", "zbloodmoon", "zstats", "zscaling", "zdayspawn",
-            "zblockbreak", "zblockplace", "ztower", "zattr", "zhunt");
+            "zblockbreak", "zblockplace", "ztower", "zattr", "zhunt", "zgear");
 
     private static final Map<String, String> ZA_REDIRECTS = Map.ofEntries(
             Map.entry("spawn", "zdayspawn"),
@@ -36,6 +36,7 @@ class CommandTreeTest {
             Map.entry("bloodmoon", "zbloodmoon"),
             Map.entry("day", "zday"),
             Map.entry("scaling", "zscaling"),
+            Map.entry("gear", "zgear"),
             Map.entry("stats", "zstats"),
             Map.entry("breaking", "zblockbreak"),
             Map.entry("placing", "zblockplace"),
@@ -78,6 +79,23 @@ class CommandTreeTest {
     }
 
     @Test
+    void bareAliasesRunTheirTargetDashboard() {
+        CommandNode<CommandSourceStack> za = required(dispatcher.getRoot(), "za");
+        for (Map.Entry<String, String> entry : ZA_REDIRECTS.entrySet()) {
+            CommandNode<CommandSourceStack> target = required(dispatcher.getRoot(), entry.getValue());
+            assertNotNull(target.getCommand(), "/" + entry.getValue());
+            assertSame(target.getCommand(), required(za, entry.getKey()).getCommand(), "/za " + entry.getKey());
+
+            if (target.getRequirement().test(null)) {
+                assertNotNull(dispatcher.parse("za " + entry.getKey(), null).getContext().getCommand(),
+                        "/za " + entry.getKey() + " must run without arguments");
+            }
+        }
+        assertSame(za.getCommand(), required(dispatcher.getRoot(), "zombieapocalypse").getCommand());
+        assertNotNull(dispatcher.parse("zombieapocalypse", null).getContext().getCommand());
+    }
+
+    @Test
     void readOnlyCommandsStayPublicAndMutationsStayAdminOnly() {
         assertPublic("zdayspawn");
         assertPublic("zday");
@@ -98,6 +116,11 @@ class CommandTreeTest {
         assertPublic("zdayspawn", "daytime");
         assertPublic("zblockplace", "block");
         assertPublic("zcompat", "modded");
+        assertPublic("zgear");
+        assertPublic("zgear", "status");
+        assertPublic("zgear", "list");
+        assertPublic("zgear", "list", "tier");
+        assertPublic("zgear", "dropchance");
 
         assertAdmin("zkill");
         assertAdmin("zcleanup");
@@ -161,6 +184,12 @@ class CommandTreeTest {
         assertAdmin("zhunt", "zombifytamed", "state");
         assertAdmin("zhunt", "ridehorses", "state");
         assertAdmin("zhunt", "sparehorses", "state");
+        assertAdmin("zgear", "add");
+        assertAdmin("zgear", "remove");
+        assertAdmin("zgear", "clear");
+        assertAdmin("zgear", "reset");
+        assertAdmin("zgear", "preview");
+        assertAdmin("zgear", "dropchance", "chance");
 
         for (String command : List.of(
                 "zdayspawn", "zhorde", "zbloodmoon", "zstats", "zscaling",
@@ -187,6 +216,10 @@ class CommandTreeTest {
         assertIntegerRange(1, 10_080, "zhorde", "duration", "minutes");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "startday", "day");
         assertIntegerRange(1, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "maxday", "day");
+        assertIntegerRange(1, 4, "zgear", "add", "tier");
+        assertIntegerRange(1, 4, "zgear", "remove", "tier");
+        assertIntegerRange(1, 4, "zgear", "preview", "tier");
+        assertIntegerRange(1, 4, "zgear", "reset", "tier");
     }
 
     @Test
