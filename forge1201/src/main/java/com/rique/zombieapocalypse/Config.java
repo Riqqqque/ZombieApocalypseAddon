@@ -73,20 +73,27 @@ public final class Config {
             throw new IllegalStateException("Zombie Apocalypse config is not loaded yet.");
         }
 
-        try (CommentedFileConfig file = CommentedFileConfig.builder(config.getFullPath())
+        CommentedFileConfig file = CommentedFileConfig.builder(config.getFullPath())
                 .sync()
                 .preserveInsertionOrder()
                 .writingMode(WritingMode.REPLACE)
-                .build()) {
-            file.load();
-            changes.forEach(file::set);
-            file.save();
-        }
+                .build();
+        file.load();
+        changes.forEach(file::set);
+        file.save();
 
-        CommentedFileConfig loaded = (CommentedFileConfig) config.getConfigData();
-        loaded.load();
-        COMMON_SPEC.setConfig(loaded);
-        COMMON_SPEC.afterReload();
+        // Forge's file watcher reloads its own config object on another thread after this save.
+        // Reloading or correcting that shared object here races the watcher and can reset whole
+        // sections to defaults, so serve values from this complete copy until the watcher's reload
+        // event points the spec back at Forge's object.
+        COMMON_SPEC.setConfig(file);
+    }
+
+    public static void reloaded(ModConfig config) {
+        bind(config);
+        if (config.getSpec() == COMMON_SPEC && config.getConfigData() != null) {
+            COMMON_SPEC.setConfig(config.getConfigData());
+        }
     }
 
     public static final class Common {

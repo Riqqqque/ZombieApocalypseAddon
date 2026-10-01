@@ -24,8 +24,8 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
 | 1.21.1 | NeoForge | 2.5.0 | `zombieapocalypseaddon-2.5.0.jar` |
-| 1.20.1 | NeoForge | 1.8.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.8.0.jar` |
-| 1.20.1 | Forge | 1.8.0 | `zombieapocalypseaddon-forge-1.20.1-1.8.0.jar` |
+| 1.20.1 | NeoForge | 1.8.1 | `zombieapocalypseaddon-neoforge-1.20.1-1.8.1.jar` |
+| 1.20.1 | Forge | 1.8.1 | `zombieapocalypseaddon-forge-1.20.1-1.8.1.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -292,8 +292,8 @@ Do not paste server addresses, access tokens, private player information, or oth
 | Loader | Minecraft | Version |
 |---|---:|---:|
 | NeoForge | 1.21.1 | 2.5.0 |
-| NeoForge | 1.20.1 | 1.8.0 |
-| Forge | 1.20.1 | 1.8.0 |
+| NeoForge | 1.20.1 | 1.8.1 |
+| Forge | 1.20.1 | 1.8.1 |
 
 Build all targets on Windows with:
 
