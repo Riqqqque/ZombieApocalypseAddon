@@ -25,6 +25,6 @@ public class ZombieApocalypseAddon {
     }
 
     private void onConfigReloading(ModConfigEvent.Reloading event) {
-        Config.bind(event.getConfig());
+        Config.reloaded(event.getConfig());
     }
 }
