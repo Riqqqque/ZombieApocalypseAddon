@@ -139,6 +139,7 @@ public final class Config {
         // Zombie block breaking
         public final ForgeConfigSpec.BooleanValue enableZombieBlockBreaking;
         public final ForgeConfigSpec.IntValue zombieBlockBreakingStartDay;
+        public final ForgeConfigSpec.BooleanValue zombieBlockBreakingDuringEvents;
         public final ForgeConfigSpec.IntValue zombieBlockBreakingInterval;
         public final ForgeConfigSpec.DoubleValue zombieBlockBreakingChance;
         public final ForgeConfigSpec.IntValue zombieBlockBreakingRange;
@@ -154,6 +155,7 @@ public final class Config {
         // Zombie block placing
         public final ForgeConfigSpec.BooleanValue enableZombieBlockPlacing;
         public final ForgeConfigSpec.IntValue zombieBlockPlacingStartDay;
+        public final ForgeConfigSpec.BooleanValue zombieBlockPlacingDuringEvents;
         public final ForgeConfigSpec.IntValue zombieBlockPlacingInterval;
         public final ForgeConfigSpec.DoubleValue zombieBlockPlacingChance;
         public final ForgeConfigSpec.ConfigValue<String> zombieBlockPlacingBlock;
@@ -170,6 +172,7 @@ public final class Config {
         // Zombie towering
         public final ForgeConfigSpec.BooleanValue enableZombieTowering;
         public final ForgeConfigSpec.IntValue zombieToweringStartDay;
+        public final ForgeConfigSpec.BooleanValue zombieToweringDuringEvents;
         public final ForgeConfigSpec.IntValue zombieToweringInterval;
         public final ForgeConfigSpec.DoubleValue zombieToweringChance;
         public final ForgeConfigSpec.IntValue zombieToweringMaxTargetDistance;
@@ -210,6 +213,8 @@ public final class Config {
         public final ForgeConfigSpec.BooleanValue enableDifficultyScaling;
         public final ForgeConfigSpec.IntValue scalingStartDay;
         public final ForgeConfigSpec.IntValue maxScalingDay;
+        public final ForgeConfigSpec.IntValue scalingStepDays;
+        public final ForgeConfigSpec.IntValue maxExtraZombiesPerWave;
         public final ForgeConfigSpec.DoubleValue maxSpeedBoost;
         public final ForgeConfigSpec.IntValue maxHealthBoost;
         public final ForgeConfigSpec.DoubleValue maxArmorChance;
@@ -669,6 +674,14 @@ public final class Config {
                             "10 = zombies cannot break blocks until the day counter reaches 10.")
                     .defineInRange("zombieBlockBreakingStartDay", 10, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
+            zombieBlockBreakingDuringEvents = builder
+                    .comment(
+                            "If true, zombies can also break blocks during hordes and blood moons before zombieBlockBreakingStartDay.",
+                            "The main switch above still has to be on. Once the start day is reached it works every night and day.",
+                            "Siege nights example: turn this on and set the start day to 50. Zombies break blocks only during events,",
+                            "then all the time from day 50.")
+                    .define("zombieBlockBreakingDuringEvents", false);
+
             zombieBlockBreakingInterval = builder
                     .comment(
                             "How often each zombie can attempt block breaking.",
@@ -765,6 +778,14 @@ public final class Config {
                             "0 = active immediately on day 0/day 1 style worlds.",
                             "15 = zombies cannot place blocks until the day counter reaches 15.")
                     .defineInRange("zombieBlockPlacingStartDay", 15, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
+
+            zombieBlockPlacingDuringEvents = builder
+                    .comment(
+                            "If true, zombies can also place blocks during hordes and blood moons before zombieBlockPlacingStartDay.",
+                            "The main switch above still has to be on. Once the start day is reached it works every night and day.",
+                            "Siege nights example: turn this on and set the start day to 50. Zombies place blocks only during events,",
+                            "then all the time from day 50.")
+                    .define("zombieBlockPlacingDuringEvents", false);
 
             zombieBlockPlacingInterval = builder
                     .comment(
@@ -872,6 +893,14 @@ public final class Config {
                             "0 = active immediately on day 0/day 1 style worlds.",
                             "20 = zombies cannot tower until the day counter reaches 20.")
                     .defineInRange("zombieToweringStartDay", 20, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
+
+            zombieToweringDuringEvents = builder
+                    .comment(
+                            "If true, zombies can also tower during hordes and blood moons before zombieToweringStartDay.",
+                            "The main switch above still has to be on. Once the start day is reached it works every night and day.",
+                            "Siege nights example: turn this on and set the start day to 50. Zombies tower only during events,",
+                            "then all the time from day 50.")
+                    .define("zombieToweringDuringEvents", false);
 
             zombieToweringInterval = builder
                     .comment(
@@ -1130,6 +1159,21 @@ public final class Config {
                             "The day where scaling reaches full strength.",
                             "After this day, the legacy scaling factor stays at 100%.")
                     .defineInRange("maxScalingDay", 50, 1, ConfigLimits.MAX_APOCALYPSE_DAY);
+
+            scalingStepDays = builder
+                    .comment(
+                            "0 = strength climbs a little every day.",
+                            "Above 0 = strength only rises once every this many days, on the morning after each step.",
+                            "Example: 10 makes zombies jump in strength on days 11, 21, 31 and so on.",
+                            "Set it to the same value as hordeIntervalDays so each jump lands the morning after a scheduled horde.")
+                    .defineInRange("scalingStepDays", 0, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
+
+            maxExtraZombiesPerWave = builder
+                    .comment(
+                            "Extra zombies added to every custom wave at 100% scaling, including horde and blood moon waves.",
+                            "It grows with the scaling strength, so 4 means +2 at 50% and +4 at full strength.",
+                            "0 = scaling never changes wave size. maxDayZombiesPerPlayer still caps the total around each player.")
+                    .defineInRange("maxExtraZombiesPerWave", 0, 0, 50);
 
             maxSpeedBoost = builder
                     .comment(

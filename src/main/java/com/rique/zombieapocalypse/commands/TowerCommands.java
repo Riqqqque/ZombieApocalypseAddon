@@ -8,6 +8,7 @@ import net.minecraft.commands.Commands;
 import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.DifficultyManager;
+import com.rique.zombieapocalypse.HordeManager;
 import com.rique.zombieapocalypse.ZombieTowering;
 
 public final class TowerCommands {
@@ -37,6 +38,9 @@ public final class TowerCommands {
                                 ? "Zombie towering can start immediately when enabled."
                                 : "Zombie towering starts on day " + value + '.',
                         0, 1, 5, 10, 15, 30, 50, 100))
+                .then(CommandUtil.toggleSetting("events", Config.COMMON.zombieToweringDuringEvents::get,
+                        value -> Config.set(Config.COMMON.zombieToweringDuringEvents, value),
+                        "Zombie towering during hordes and blood moons before the start day"))
                 .then(CommandUtil.intSetting("interval", "ticks", 1, 72000,
                         Config.COMMON.zombieToweringInterval::get,
                         value -> Config.set(Config.COMMON.zombieToweringInterval, value),
@@ -184,14 +188,16 @@ public final class TowerCommands {
         long currentDay = DifficultyManager.getCurrentDay(source.getLevel());
         int startDay = Config.COMMON.zombieToweringStartDay.get();
         boolean enabled = Config.COMMON.enableZombieTowering.get();
-        boolean active = enabled && currentDay >= startDay;
+        boolean duringEvents = Config.COMMON.zombieToweringDuringEvents.get();
+        boolean active = HordeManager.isAbilityActive(source.getLevel(), enabled, startDay, duringEvents);
 
         StringBuilder status = new StringBuilder();
         status.append("Zombie towering settings:\n");
         status.append("Enabled: ").append(CommandUtil.onOff(enabled)).append('\n');
-        status.append("Active today: ").append(CommandUtil.onOff(active))
+        status.append("Active now: ").append(CommandUtil.onOff(active))
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
+        status.append("Also during hordes and blood moons: ").append(CommandUtil.onOff(duringEvents)).append('\n');
         status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieToweringInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieToweringChance.get())).append('\n');
         status.append("Max target distance: ")

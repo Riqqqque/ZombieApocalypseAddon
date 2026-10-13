@@ -88,14 +88,10 @@ public final class ZombieBlockPlacer {
             return false;
         }
 
-        if (!Config.COMMON.enableZombieBlockPlacing.get()) {
-            return false;
-        }
-
-        if (!isBlockPlacingActive(
-                true,
-                DifficultyManager.getCurrentDay(level),
-                Config.COMMON.zombieBlockPlacingStartDay.get())) {
+        if (!HordeManager.isAbilityActive(level,
+                Config.COMMON.enableZombieBlockPlacing.get(),
+                Config.COMMON.zombieBlockPlacingStartDay.get(),
+                Config.COMMON.zombieBlockPlacingDuringEvents.get())) {
             return false;
         }
 
@@ -197,7 +193,7 @@ public final class ZombieBlockPlacer {
     }
 
     static boolean isBlockPlacingActive(boolean enabled, long currentDay, int startDay) {
-        return enabled && currentDay >= Math.max(0, startDay);
+        return HordeManager.isAbilityActive(enabled, currentDay, startDay, false, false);
     }
 
     static boolean hasPlacementBudget(int placedCount, int maxPerZombie) {

@@ -52,8 +52,9 @@ public final class HordeManager {
     }
 
     public static EventState getEventState(ServerLevel level) {
+        int extraZombies = extraZombiesPerWave(level);
         if (!Config.COMMON.enableDaySpawning.get()) {
-            return new EventState(false, false, 1.0, Config.COMMON.zombiesPerSpawn.get());
+            return new EventState(false, false, 1.0, Config.COMMON.zombiesPerSpawn.get() + extraZombies);
         }
 
         ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
@@ -74,9 +75,20 @@ public final class HordeManager {
                 bloodMoonActive,
                 Config.COMMON.zombiesPerSpawn.get(),
                 Config.COMMON.hordeZombiesPerSpawn.get(),
-                Config.COMMON.bloodMoonZombiesPerSpawn.get());
+                Config.COMMON.bloodMoonZombiesPerSpawn.get()) + extraZombies;
 
         return new EventState(hordeActive, bloodMoonActive, spawnMultiplier, zombiesPerSpawn);
+    }
+
+    /**
+     * Wave size added by difficulty scaling, on top of the normal, horde, or blood moon size.
+     */
+    public static int extraZombiesPerWave(ServerLevel level) {
+        int maxExtra = Config.COMMON.maxExtraZombiesPerWave.get();
+        if (maxExtra <= 0) {
+            return 0;
+        }
+        return SpawnMath.scaledExtraZombies(maxExtra, DifficultyManager.getScalingFactor(level));
     }
 
     public static void tick(ServerLevel overworldLevel) {
@@ -482,6 +494,40 @@ public final class HordeManager {
                 && ApocalypseWorldData.get(level.getServer()).isBloodMoonActive();
     }
 
+    public static boolean isSiegeEventActive(ServerLevel level) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            return false;
+        }
+
+        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
+        return state.isHordeActive() || state.isBloodMoonActive();
+    }
+
+    /**
+     * Start-day gate shared by block breaking, block placing, and towering. An ability is on
+     * from its start day, and before that only during hordes and blood moons when
+     * {@code duringEvents} is set.
+     */
+    public static boolean isAbilityActive(ServerLevel level, boolean enabled, int startDay, boolean duringEvents) {
+        if (!enabled) {
+            return false;
+        }
+
+        long currentDay = DifficultyManager.getCurrentDay(level);
+        boolean beforeStart = currentDay < Math.max(0, startDay);
+        return isAbilityActive(true, currentDay, startDay, duringEvents,
+                beforeStart && duringEvents && isSiegeEventActive(level));
+    }
+
+    static boolean isAbilityActive(
+            boolean enabled,
+            long currentDay,
+            int startDay,
+            boolean duringEvents,
+            boolean siegeEventActive) {
+        return enabled && (currentDay >= Math.max(0, startDay) || (duringEvents && siegeEventActive));
+    }
+
     public static boolean isBloodMoonForced(ServerLevel level) {
         return Config.COMMON.enableDaySpawning.get()
                 && ApocalypseWorldData.get(level.getServer()).isForcedBloodMoonPending();
@@ -522,17 +568,7 @@ public final class HordeManager {
     }
 
     public static int getZombiesPerSpawn(ServerLevel level) {
-        if (!Config.COMMON.enableDaySpawning.get()) {
-            return Config.COMMON.zombiesPerSpawn.get();
-        }
-
-        ApocalypseWorldData state = ApocalypseWorldData.get(level.getServer());
-        return selectEventWaveSize(
-                state.isHordeActive(),
-                state.isBloodMoonActive(),
-                Config.COMMON.zombiesPerSpawn.get(),
-                Config.COMMON.hordeZombiesPerSpawn.get(),
-                Config.COMMON.bloodMoonZombiesPerSpawn.get());
+        return getEventState(level).zombiesPerSpawn();
     }
 
     static int selectEventWaveSize(

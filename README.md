@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.5.0 | `zombieapocalypseaddon-2.5.0.jar` |
-| 1.20.1 | NeoForge | 1.8.1 | `zombieapocalypseaddon-neoforge-1.20.1-1.8.1.jar` |
-| 1.20.1 | Forge | 1.8.1 | `zombieapocalypseaddon-forge-1.20.1-1.8.1.jar` |
+| 1.21.1 | NeoForge | 2.6.0 | `zombieapocalypseaddon-2.6.0.jar` |
+| 1.20.1 | NeoForge | 1.9.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.9.0.jar` |
+| 1.20.1 | Forge | 1.9.0 | `zombieapocalypseaddon-forge-1.20.1-1.9.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -48,6 +48,9 @@ Most questions are one command away:
 | Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables the protection if you ever want it off. |
 | Stop custom spawns during the day | `/za spawn daytime off` (night waves and blood moons still work) |
 | Have hordes arrive at nightfall | `/za events dusk on` |
+| Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` (strength rises on days 11, 21, 31...) |
+| Get bigger waves as the days go on | `/za scaling extrazombies 4` (up to 4 extra zombies per wave at full strength, hordes included) |
+| Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, then set a high `startday` for when they may do it all the time. See [Siege Nights](#siege-nights). |
 | Remove baby zombies | `/za spawn babychance 0` |
 | Make it easier overall | `/za preset casual` or `/za spawn chance 0.25` |
 | Make it harder overall | `/za preset hardcore` |
@@ -156,9 +159,31 @@ This setting checks block light, not sunlight. It does not disable daytime waves
 
 Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Scheduled hordes roll at dawn by default; `/za events dusk on` moves the roll to dusk so the horde arrives with nightfall. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
+### Siege Nights
+
+Hordes can act as siege nights that make the world harder each time. This setup sends a horde at nightfall every 10th day, lets zombies break and build only during those nights, makes them stronger and more numerous the morning after each one, and from day 50 lets them break and build all the time:
+
+```mcfunction
+/za events on
+/za events interval 10
+/za events chance 1
+/za events dusk on
+/za events duration 10
+/za scaling steps 10
+/za scaling extrazombies 4
+/za breaking on
+/za breaking startday 50
+/za breaking events on
+/za placing on
+/za placing startday 50
+/za placing events on
+```
+
+Run them in this order, because each `on` loads that feature's defaults. Horde duration is in real minutes, and 10 lasts from dusk to about dawn. Blood moons count as event nights too, so zombies also break and build during them; use `/za bloodmoon off` if only the scheduled sieges should allow it. `/za towering events on` works the same way for zombie stacks.
+
 ### Difficulty Progression
 
-Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` now exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
+Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` now exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. Strength climbs a little every day by default; `/za scaling steps <days>` makes it rise in jumps instead, on the morning after every step day. `/za scaling extrazombies <count>` adds up to that many zombies to every custom wave, including horde and blood moon waves, as strength rises. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
 
 Most servers should use a preset or the basic `[scaling]` section and leave `[attributes]` unchanged.
 
@@ -190,7 +215,7 @@ All three systems are disabled by default:
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
 - **Towering:** crowded zombies form real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps are ignored. The default smart limit follows the target's block Y level plus one, then moves riders one at a time to collision-free floor positions when the target stays reachable on the ground. No blocks are changed.
 
-Each feature has a start day, live commands, conservative defaults, and protection checks. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
+Each feature has a start day, live commands, conservative defaults, and protection checks. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
 
 ### Optional Animal Hunting
 
@@ -291,9 +316,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.5.0 |
-| NeoForge | 1.20.1 | 1.8.1 |
-| Forge | 1.20.1 | 1.8.1 |
+| NeoForge | 1.21.1 | 2.6.0 |
+| NeoForge | 1.20.1 | 1.9.0 |
+| Forge | 1.20.1 | 1.9.0 |
 
 Build all targets on Windows with:
 

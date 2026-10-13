@@ -48,6 +48,9 @@ Most things players ask for are one command away:
 | Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables it. |
 | Stop custom spawns during the day | `/za spawn daytime off` |
 | Have hordes arrive at nightfall | `/za events dusk on` |
+| Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` |
+| Get bigger waves as the days go on | `/za scaling extrazombies 4` |
+| Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, plus a high `startday` (see Siege Nights below) |
 | Remove baby zombies | `/za spawn babychance 0` |
 | Make it easier or harder overall | `/za preset casual` or `/za preset hardcore` |
 | Let zombies break stone and ores | `/za breaking on`, then `/za breaking toolblocks on` and `/za breaking hardness 50` |
@@ -68,7 +71,9 @@ Every `on` loads safe defaults first, so features work immediately.
 - Natural and manual horde events
 - Random and forced blood moons
 - Morning day-counter announcements and manual day control
-- Day-based health, speed, armor, and equipment scaling
+- Day-based health, speed, armor, and equipment scaling, rising daily or in jumps every few days
+- Optional bigger waves as difficulty rises, including hordes and blood moons
+- Siege nights: let block breaking, placing, and towering run only during hordes and blood moons until a chosen day
 - Armor and weapon tiers that accept items from any mod, such as Epic Knights, with an adjustable gear drop chance
 - Advanced per-attribute, per-variant, biome, and dimension tuning
 - Optional zombie block breaking with conservative safety rules
@@ -160,9 +165,31 @@ For night-only custom spawning, run `/za spawn daytime off`. Normal night waves 
 
 Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes roll at dawn by default, or at dusk with `/za events dusk on`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
-Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
+Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. `/za scaling steps <days>` makes strength rise in jumps on the morning after every step day instead of a little each day, and `/za scaling extrazombies <count>` adds zombies to every wave as strength rises. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
 
 Scaled zombies draw armor and weapons from four tiers. Tier 1 is most common early and later days favor tiers 3 and 4. The tiers start with vanilla gear, and items from any mod can be added: hold an item and run `/za gear add <tier>`, or list item IDs in `tier1Gear` to `tier4Gear`. Slots are detected automatically, shields are never used, and `/za gear preview <tier>` spawns a zombie wearing a tier. `gearDropChance` controls how often that gear drops.
+
+## Siege Nights
+
+Hordes can act as siege nights that make the world harder each time. This sends a horde at nightfall every 10th day, lets zombies break and build only during those nights, makes them stronger and more numerous the morning after each one, and from day 50 lets them break and build all the time:
+
+```
+/za events on
+/za events interval 10
+/za events chance 1
+/za events dusk on
+/za events duration 10
+/za scaling steps 10
+/za scaling extrazombies 4
+/za breaking on
+/za breaking startday 50
+/za breaking events on
+/za placing on
+/za placing startday 50
+/za placing events on
+```
+
+Run them in this order, because each `on` loads that feature's defaults. Duration is in real minutes; 10 lasts from dusk to about dawn. Blood moons count as event nights too, so use `/za bloodmoon off` if only the scheduled sieges should allow breaking and building. `/za towering events on` works the same way.
 
 ## Optional Base Pressure
 
@@ -172,7 +199,7 @@ Block breaking, block placing, and towering are independent and disabled by defa
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
 - Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. The normal preset grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken.
 
-Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. The older `dayone` aliases remain supported.
+Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. The older `dayone` aliases remain supported.
 
 Tower controls include `/za towering stacksize <count>` (`0` means no count cap), `/za towering maxperplayer <count>`, `/za towering dynamic <on|off>`, `/za towering offset <blocks>`, `/za towering smartdismount <on|off>`, `/za towering pace <ticks>`, and optional jump controls. Mounting and dismounting use loader-correct rider positions and reject blocked spaces instead of putting zombies inside floors or ceilings. `/za towering unlimited` removes both count and height caps and disables automatic collapse; very tall passenger chains can affect server performance.
 

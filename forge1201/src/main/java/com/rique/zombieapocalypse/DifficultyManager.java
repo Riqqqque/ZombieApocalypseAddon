@@ -60,7 +60,7 @@ public final class DifficultyManager {
         }
 
         return SpawnMath.computeLinearScale(
-                getCurrentDay(level),
+                SpawnMath.steppedScalingDay(getCurrentDay(level), Config.COMMON.scalingStepDays.get()),
                 Config.COMMON.scalingStartDay.get(),
                 Config.COMMON.maxScalingDay.get());
     }
@@ -552,11 +552,17 @@ public final class DifficultyManager {
         String attrScaling = Config.COMMON.scaleAttributesWithDifficulty.get() ? "ON" : "OFF";
         String variantProfiles = Config.COMMON.enableVariantAttributeProfiles.get() ? "ON" : "OFF";
         String contextProfiles = Config.COMMON.enableBiomeDimensionAttributeMultipliers.get() ? "ON" : "OFF";
+        int stepDays = Config.COMMON.scalingStepDays.get();
+        String steps = stepDays <= 0
+                ? "daily"
+                : "every " + stepDays + " days, next rise on day " + SpawnMath.nextScalingStepDay(currentDay, stepDays);
+        int maxExtra = Config.COMMON.maxExtraZombiesPerWave.get();
 
         return String.format(
                 "Difficulty scaling status:\n"
                         + "Enabled: %s | Current day: %d | Current strength: %d%%\n"
-                        + "Progression: starts day %d, full strength day %d\n"
+                        + "Progression: starts day %d, full strength day %d | Rises: %s\n"
+                        + "Extra zombies per wave: +%d now, +%d at full strength\n"
                         + "Current legacy bonuses: speed +%d%%, health +%d\n"
                         + "Full-strength gear chances: armor %.0f%%, weapon %.0f%% | drop %s per item\n"
                         + "Advanced attributes: %s | Day scaling: %s | Variant profiles: %s | Context profiles: %s\n"
@@ -567,6 +573,9 @@ public final class DifficultyManager {
                 percentage,
                 Config.COMMON.scalingStartDay.get(),
                 Config.COMMON.maxScalingDay.get(),
+                steps,
+                SpawnMath.scaledExtraZombies(maxExtra, factor),
+                maxExtra,
                 speedBonusPercent,
                 healthBonus,
                 Config.COMMON.maxArmorChance.get() * 100.0,

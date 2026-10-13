@@ -36,6 +36,22 @@ public final class ScalingCommands {
                         value -> Config.set(Config.COMMON.maxScalingDay, value),
                         value -> "Difficulty scaling reaches full strength on day " + value + '.',
                         1, 10, 25, 50, 100, 365, 1000))
+                .then(CommandUtil.intSetting("steps", "days", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
+                        Config.COMMON.scalingStepDays::get,
+                        value -> Config.set(Config.COMMON.scalingStepDays, value),
+                        value -> value <= 0
+                                ? "Difficulty scaling rises a little every day."
+                                : "Difficulty scaling rises once every " + value
+                                        + " days, on the morning after each step (day " + (value + 1) + ", "
+                                        + (2 * value + 1) + ", ...).",
+                        0, 5, 7, 10, 15, 30))
+                .then(CommandUtil.intSetting("extrazombies", "count", 0, 50,
+                        Config.COMMON.maxExtraZombiesPerWave::get,
+                        value -> Config.set(Config.COMMON.maxExtraZombiesPerWave, value),
+                        value -> value <= 0
+                                ? "Difficulty scaling no longer changes wave size."
+                                : "Every custom wave gets up to " + value + " extra zombies at full strength.",
+                        0, 1, 2, 3, 5, 10))
                 .then(CommandUtil.doubleSetting("speed", "boost", 0.0, 1.0,
                         Config.COMMON.maxSpeedBoost::get,
                         value -> Config.set(Config.COMMON.maxSpeedBoost, value),

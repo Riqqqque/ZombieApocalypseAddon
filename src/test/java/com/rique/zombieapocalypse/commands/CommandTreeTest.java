@@ -139,6 +139,11 @@ class CommandTreeTest {
         assertAdmin("zbloodmoon", "multiplier", "multiplier");
         assertAdmin("zscaling", "startday", "day");
         assertAdmin("zscaling", "maxday", "day");
+        assertAdmin("zscaling", "steps", "days");
+        assertAdmin("zscaling", "extrazombies", "count");
+        assertAdmin("zblockbreak", "events", "state");
+        assertAdmin("zblockplace", "events", "state");
+        assertAdmin("ztower", "events", "state");
         assertAdmin("zstats", "clear");
         assertAdmin("zblockbreak", "dayone");
         assertAdmin("zblockplace", "block", "id");
@@ -216,6 +221,8 @@ class CommandTreeTest {
         assertIntegerRange(1, 10_080, "zhorde", "duration", "minutes");
         assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "startday", "day");
         assertIntegerRange(1, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "maxday", "day");
+        assertIntegerRange(0, ConfigLimits.MAX_APOCALYPSE_DAY, "zscaling", "steps", "days");
+        assertIntegerRange(0, 50, "zscaling", "extrazombies", "count");
         assertIntegerRange(1, 4, "zgear", "add", "tier");
         assertIntegerRange(1, 4, "zgear", "remove", "tier");
         assertIntegerRange(1, 4, "zgear", "preview", "tier");

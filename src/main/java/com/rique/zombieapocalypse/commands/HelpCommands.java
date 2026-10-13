@@ -107,6 +107,8 @@ public final class HelpCommands {
                         + "/za day set <day> - change the apocalypse day safely\n"
                         + "/za spawn scaling on|off - toggle day-based scaling\n"
                         + "/za scaling startday|maxday - set the progression window\n"
+                        + "/za scaling steps <days> - raise strength in jumps every few days; 0 climbs daily\n"
+                        + "/za scaling extrazombies <count> - bigger waves as strength rises, events included\n"
                         + "/za scaling speed|health|armorchance|weaponchance - tune full-strength bonuses\n"
                         + "/za gear - choose which armor and weapons zombies get, including modded items\n"
                         + "/za spawn attributes on|off - toggle advanced attribute tuning\n"
@@ -149,6 +151,7 @@ public final class HelpCommands {
                         + "Each on command loads safe, usable defaults and starts on the current day.\n"
                         + "Use <command> startday <day> to delay a feature.\n"
                         + "Use <command> dayone to enable it immediately.\n"
+                        + "Use <command> events on to also allow it during hordes and blood moons before the start day.\n"
                         + "Block breaking and placing respect mobGriefing by default.",
                 false);
         return 1;

@@ -43,6 +43,7 @@ class ConfigSpecTest {
         assertAccepts(Config.COMMON.zombieToweringStartDay, ConfigLimits.MAX_APOCALYPSE_DAY);
         assertAccepts(Config.COMMON.scalingStartDay, ConfigLimits.MAX_APOCALYPSE_DAY);
         assertAccepts(Config.COMMON.maxScalingDay, ConfigLimits.MAX_APOCALYPSE_DAY);
+        assertAccepts(Config.COMMON.scalingStepDays, ConfigLimits.MAX_APOCALYPSE_DAY);
         assertAccepts(Config.COMMON.huntStartDay, ConfigLimits.MAX_APOCALYPSE_DAY);
     }
 
@@ -121,6 +122,21 @@ class ConfigSpecTest {
         assertRejects(Config.COMMON.gearDropChance, 1.1);
         assertAccepts(Config.COMMON.tier1Gear, "");
         assertAccepts(Config.COMMON.tier4Gear, "example:knight_helmet, example:knight_helmet");
+    }
+
+    @Test
+    void siegeProgressionDefaultsKeepExistingBehavior() {
+        assertEquals(false, defaultValue(Config.COMMON.zombieBlockBreakingDuringEvents));
+        assertEquals(false, defaultValue(Config.COMMON.zombieBlockPlacingDuringEvents));
+        assertEquals(false, defaultValue(Config.COMMON.zombieToweringDuringEvents));
+        assertEquals(0, defaultValue(Config.COMMON.scalingStepDays));
+        assertEquals(0, defaultValue(Config.COMMON.maxExtraZombiesPerWave));
+
+        assertAccepts(Config.COMMON.scalingStepDays, 0);
+        assertRejects(Config.COMMON.scalingStepDays, -1);
+        assertAccepts(Config.COMMON.maxExtraZombiesPerWave, 50);
+        assertRejects(Config.COMMON.maxExtraZombiesPerWave, 51);
+        assertRejects(Config.COMMON.maxExtraZombiesPerWave, -1);
     }
 
     private static void assertAccepts(ModConfigSpec.ConfigValue<?> setting, Object value) {

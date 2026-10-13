@@ -15,6 +15,7 @@ import net.minecraft.world.entity.monster.Zombie;
 import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.ConfigLimits;
 import com.rique.zombieapocalypse.DifficultyManager;
+import com.rique.zombieapocalypse.HordeManager;
 import com.rique.zombieapocalypse.ZombieBlockPlacer;
 import com.rique.zombieapocalypse.ZombieClassMobs;
 
@@ -43,6 +44,9 @@ public final class BlockPlaceCommands {
                                 ? "Zombie block placing can start immediately when enabled."
                                 : "Zombie block placing starts on day " + value + '.',
                         0, 1, 5, 10, 15, 30, 50, 100))
+                .then(CommandUtil.toggleSetting("events", Config.COMMON.zombieBlockPlacingDuringEvents::get,
+                        value -> Config.set(Config.COMMON.zombieBlockPlacingDuringEvents, value),
+                        "Zombie block placing during hordes and blood moons before the start day"))
                 .then(CommandUtil.intSetting("interval", "ticks", 20, 72000,
                         Config.COMMON.zombieBlockPlacingInterval::get,
                         value -> Config.set(Config.COMMON.zombieBlockPlacingInterval, value),
@@ -165,15 +169,17 @@ public final class BlockPlaceCommands {
         long currentDay = DifficultyManager.getCurrentDay(source.getLevel());
         int startDay = Config.COMMON.zombieBlockPlacingStartDay.get();
         boolean enabled = Config.COMMON.enableZombieBlockPlacing.get();
-        boolean active = enabled && currentDay >= startDay;
+        boolean duringEvents = Config.COMMON.zombieBlockPlacingDuringEvents.get();
+        boolean active = HordeManager.isAbilityActive(source.getLevel(), enabled, startDay, duringEvents);
         int limit = Config.COMMON.zombieBlockPlacingMaxPerZombie.get();
 
         StringBuilder status = new StringBuilder();
         status.append("Zombie block placing settings:\n");
         status.append("Enabled: ").append(CommandUtil.onOff(enabled)).append('\n');
-        status.append("Active today: ").append(CommandUtil.onOff(active))
+        status.append("Active now: ").append(CommandUtil.onOff(active))
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
+        status.append("Also during hordes and blood moons: ").append(CommandUtil.onOff(duringEvents)).append('\n');
         status.append("Block: ").append(Config.COMMON.zombieBlockPlacingBlock.get()).append('\n');
         status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieBlockPlacingInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieBlockPlacingChance.get())).append('\n');

@@ -115,10 +115,7 @@ public final class ZombieTowering {
             return false;
         }
 
-        if (!isToweringActive(
-                Config.COMMON.enableZombieTowering.get(),
-                DifficultyManager.getCurrentDay(level),
-                Config.COMMON.zombieToweringStartDay.get())) {
+        if (!isToweringActive(level)) {
             return false;
         }
 
@@ -295,8 +292,15 @@ public final class ZombieTowering {
         return isAddonStackRider(zombie);
     }
 
+    static boolean isToweringActive(ServerLevel level) {
+        return HordeManager.isAbilityActive(level,
+                Config.COMMON.enableZombieTowering.get(),
+                Config.COMMON.zombieToweringStartDay.get(),
+                Config.COMMON.zombieToweringDuringEvents.get());
+    }
+
     static boolean isToweringActive(boolean enabled, long currentDay, int startDay) {
-        return enabled && currentDay >= Math.max(0, startDay);
+        return HordeManager.isAbilityActive(enabled, currentDay, startDay, false, false);
     }
 
     static boolean isTargetDistanceAllowed(double distanceSquared, int maxDistance) {
@@ -436,10 +440,7 @@ public final class ZombieTowering {
         }
         Zombie top = zombie;
 
-        if (!isToweringActive(
-                Config.COMMON.enableZombieTowering.get(),
-                DifficultyManager.getCurrentDay(level),
-                Config.COMMON.zombieToweringStartDay.get())
+        if (!isToweringActive(level)
                 || !isHealthyTower(root)) {
             releaseTower(root);
             return true;

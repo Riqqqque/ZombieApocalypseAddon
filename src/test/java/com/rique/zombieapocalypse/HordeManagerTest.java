@@ -18,6 +18,19 @@ class HordeManagerTest {
     }
 
     @Test
+    void abilitiesCanUnlockDuringEventsBeforeTheirStartDay() {
+        // Off unless the main switch is on.
+        assertFalse(HordeManager.isAbilityActive(false, 60, 50, true, true));
+        // Before the start day: only during an event, and only with the option on.
+        assertFalse(HordeManager.isAbilityActive(true, 10, 50, false, true));
+        assertFalse(HordeManager.isAbilityActive(true, 10, 50, true, false));
+        assertTrue(HordeManager.isAbilityActive(true, 10, 50, true, true));
+        // From the start day on: always.
+        assertTrue(HordeManager.isAbilityActive(true, 50, 50, false, false));
+        assertTrue(HordeManager.isAbilityActive(true, 51, 50, true, false));
+    }
+
+    @Test
     void duskHordesIgnoreNightOnlyModeButKeepGracePeriod() {
         assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 0, true));
         assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 10, true));

@@ -65,12 +65,10 @@ public final class ZombieBlockBreaker {
             return false;
         }
 
-        if (!Config.COMMON.enableZombieBlockBreaking.get()) {
-            return false;
-        }
-
-        if (!isBlockBreakingActive(true, DifficultyManager.getCurrentDay(level),
-                Config.COMMON.zombieBlockBreakingStartDay.get())) {
+        if (!HordeManager.isAbilityActive(level,
+                Config.COMMON.enableZombieBlockBreaking.get(),
+                Config.COMMON.zombieBlockBreakingStartDay.get(),
+                Config.COMMON.zombieBlockBreakingDuringEvents.get())) {
             return false;
         }
 
@@ -107,7 +105,7 @@ public final class ZombieBlockBreaker {
     }
 
     static boolean isBlockBreakingActive(boolean enabled, long currentDay, int startDay) {
-        return enabled && currentDay >= Math.max(0, startDay);
+        return HordeManager.isAbilityActive(enabled, currentDay, startDay, false, false);
     }
 
     static boolean isScheduledTick(long gameTime, int entityId, int intervalTicks) {
