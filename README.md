@@ -291,6 +291,12 @@ Important rules:
 
 See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide) for examples and safe ranges.
 
+## Server Use
+
+- **Singleplayer and private servers for you and your friends:** go ahead, no permission needed.
+- **Anything bigger** - public servers, community or network servers, or servers with donations, ranks, or paid perks: ask first. Send me a message on CurseForge or Modrinth with what the server is and how players get the mod.
+- **Always:** players download the mod from its official Modrinth or CurseForge page. Do not re-host the jar or publish modified builds. Config changes, datapacks, and separate add-ons that depend on this mod without copying its code or assets are fine.
+
 ## Safe Removal
 
 Before temporarily or permanently removing the mod, run:
