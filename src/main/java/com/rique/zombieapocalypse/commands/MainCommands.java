@@ -1,15 +1,25 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerLevel;
 
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigGuard;
+import com.rique.zombieapocalypse.ZombieBlockPlacer;
 import com.rique.zombieapocalypse.DifficultyManager;
 import com.rique.zombieapocalypse.HordeManager;
 import com.rique.zombieapocalypse.SpawnMath;
@@ -37,7 +47,14 @@ public final class MainCommands {
         root.then(Commands.literal("commands")
                 .executes(context -> HelpCommands.showAllHelp(context.getSource())));
         root.then(Commands.literal("config")
-                .executes(context -> showConfigHelp(context.getSource())));
+                .executes(context -> showConfigHelp(context.getSource()))
+                .then(CommandUtil.admin(Commands.literal("reset")
+                        .executes(context -> showResetHelp(context.getSource()))
+                        .then(Commands.argument("section", StringArgumentType.word())
+                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(resetTargets(), builder))
+                                .executes(context -> resetSection(
+                                        context.getSource(),
+                                        StringArgumentType.getString(context, "section")))))));
 
         LiteralArgumentBuilder<CommandSourceStack> presets = Commands.literal("preset")
                 .executes(context -> showPresets(context.getSource()));
@@ -111,8 +128,68 @@ public final class MainCommands {
                         + "Start with [dayspawning], [variants], [horde], [bloodmoon], and [scaling].\n"
                         + "Zombie armor and weapon lists (tier1Gear to tier4Gear) are in [scaling]; /za gear edits them in game.\n"
                         + "Leave [compatibility] and [attributes] at their defaults unless you need advanced tuning.\n"
-                        + "For a fast setup, use /za preset casual, standard, or hardcore. Stop the server before manual edits.",
+                        + "In-game commands are always safe and save right away. Feature on commands keep your other settings.\n"
+                        + "Edit the file with the server stopped, or from the title screen in singleplayer.\n"
+                        + "/za config reset <section> - put one section back to its defaults\n"
+                        + "/za preset casual|standard|hardcore - replace the main settings with a ready-made setup",
                 false);
+        return 1;
+    }
+
+    private static List<String> resetTargets() {
+        List<String> targets = new ArrayList<>(Config.sections());
+        targets.add("all");
+        return targets;
+    }
+
+    private static int showResetHelp(CommandSourceStack source) {
+        CommandUtil.feedback(source,
+                "Config reset:\n"
+                        + "/za config reset <section> puts every setting in that section back to its default.\n"
+                        + "/za config reset all puts the whole config back to its defaults.\n"
+                        + "Sections: " + String.join(", ", Config.sections()),
+                false);
+        return 1;
+    }
+
+    private static int resetSection(CommandSourceStack source, String input) {
+        String section = input.toLowerCase(Locale.ROOT);
+        boolean all = section.equals("all");
+        if (!all && !Config.sections().contains(section)) {
+            CommandUtil.failure(source, "Unknown config section '" + input + "'. Sections: "
+                    + String.join(", ", Config.sections()) + ", or all.");
+            return 0;
+        }
+
+        Map<List<String>, Object> current = Config.currentValues();
+        Map<List<String>, Object> defaults = Config.defaultValues();
+        Map<List<String>, Object> changes = new LinkedHashMap<>();
+        defaults.forEach((path, defaultValue) -> {
+            boolean inSection = all || path.get(0).equals(section);
+            if (inSection && !ConfigGuard.sameValue(current.get(path), defaultValue)) {
+                changes.put(path, defaultValue);
+            }
+        });
+
+        String target = all ? "The whole config" : "[" + section + "]";
+        if (changes.isEmpty()) {
+            CommandUtil.feedback(source, target + " already matches the defaults.", false);
+            return 1;
+        }
+        if (!CommandUtil.applied(source, () -> Config.setAll(changes))) {
+            return 0;
+        }
+        if (all || section.equals("blockplacing")) {
+            ZombieBlockPlacer.clearRuntimeState();
+        }
+
+        List<String> names = changes.keySet().stream().map(path -> path.get(path.size() - 1)).toList();
+        String listed = names.size() <= 12
+                ? String.join(", ", names)
+                : String.join(", ", names.subList(0, 12)) + ", and " + (names.size() - 12) + " more";
+        CommandUtil.feedback(source,
+                target + ": reset " + CommandUtil.count(changes.size(), "setting") + " to defaults.\n" + listed,
+                true);
         return 1;
     }
 

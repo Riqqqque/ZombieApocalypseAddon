@@ -3,11 +3,22 @@ package com.rique.zombieapocalypse;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import java.nio.file.Path;
+
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public final class Config {
 
@@ -72,9 +83,125 @@ public final class Config {
         }
 
         var loaded = config.getLoadedConfig();
+        if (adoptUnreloadedEdits(config.getFullPath(), loaded.config())) {
+            COMMON_SPEC.afterReload();
+            ConfigGuard.fileEdited();
+        }
         changes.forEach(loaded.config()::set);
         loaded.save();
         COMMON_SPEC.afterReload();
+        ConfigGuard.saved();
+    }
+
+    /**
+     * The save below writes the whole in-memory config. If someone edited the file and NeoForge has
+     * not reloaded it yet, that save would quietly undo their edit, so valid values that differ on
+     * disk are taken into memory first. A file that does not parse or is missing more than a few
+     * settings is ignored, because it is either mid-save or broken.
+     */
+    private static boolean adoptUnreloadedEdits(Path path, CommentedConfig memory) {
+        Map<List<String>, Object> fromDisk = new LinkedHashMap<>();
+        try (CommentedFileConfig disk = CommentedFileConfig.builder(path).sync().build()) {
+            disk.load();
+            int missing = 0;
+            for (List<String> settingPath : defaultValues().keySet()) {
+                Object value = disk.get(settingPath);
+                if (value == null) {
+                    missing++;
+                } else if (COMMON_SPEC.getSpec().get(settingPath) instanceof ModConfigSpec.ValueSpec spec
+                        && spec.test(value)
+                        && !ConfigGuard.sameValue(value, memory.get(settingPath))) {
+                    fromDisk.put(settingPath, value);
+                }
+            }
+            if (missing > 3) {
+                return false;
+            }
+        } catch (RuntimeException e) {
+            return false;
+        }
+        fromDisk.forEach(memory::set);
+        return !fromDisk.isEmpty();
+    }
+
+    public static void reloaded(ModConfig config) {
+        bind(config);
+    }
+
+    /** Puts a setting back to its default value. */
+    public static <T> void reset(ModConfigSpec.ConfigValue<T> setting) {
+        set(setting, setting.getDefault());
+    }
+
+    /** Saves several settings by path in one write, the same way single changes are saved. */
+    public static void setAll(Map<List<String>, Object> values) {
+        Map<List<String>, Object> pending = PENDING_CHANGES.get();
+        if (pending == null) {
+            edit(() -> setAll(values));
+            return;
+        }
+        values.forEach((path, value) -> pending.put(List.copyOf(path), value));
+    }
+
+    /** Current value of every setting, keyed by its path. */
+    public static Map<List<String>, Object> currentValues() {
+        Map<List<String>, Object> values = new LinkedHashMap<>();
+        forEachValue(COMMON_SPEC.getValues(), value -> values.put(value.getPath(), value.get()));
+        return values;
+    }
+
+    /** Default value of every setting, keyed by its path. */
+    public static Map<List<String>, Object> defaultValues() {
+        Map<List<String>, Object> values = new LinkedHashMap<>();
+        forEachValue(COMMON_SPEC.getValues(), value -> values.put(value.getPath(), value.getDefault()));
+        return values;
+    }
+
+    /** Top-level config sections, such as dayspawning or blockbreaking. */
+    public static List<String> sections() {
+        return COMMON_SPEC.getValues().entrySet().stream().map(UnmodifiableConfig.Entry::getKey).toList();
+    }
+
+    public static boolean isLoaded() {
+        ModConfig config = loadedConfig;
+        return config != null && config.getLoadedConfig() != null;
+    }
+
+    /** Runs the task on the server thread when a server is running, otherwise right away. */
+    public static void runOnServerThread(Runnable task) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            task.run();
+        } else {
+            server.execute(task);
+        }
+    }
+
+    /** Tells online operators about a config problem the mod handled on its own. */
+    public static void notifyOperators(String message) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            return;
+        }
+        server.execute(() -> {
+            Component text = Component.literal("[Zombie Apocalypse] " + message).withStyle(ChatFormatting.GOLD);
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (player.hasPermissions(2)) {
+                    player.sendSystemMessage(text);
+                }
+            }
+        });
+    }
+
+    private static void forEachValue(UnmodifiableConfig values, Consumer<ModConfigSpec.ConfigValue<?>> action) {
+        for (UnmodifiableConfig.Entry child : values.entrySet()) {
+            Object entry = child.getRawValue();
+            if (entry instanceof UnmodifiableConfig section) {
+                forEachValue(section, action);
+            } else if (entry instanceof ModConfigSpec.ConfigValue<?> value) {
+                action.accept(value);
+            }
+        }
     }
 
     public static final class Common {
@@ -382,7 +509,9 @@ public final class Config {
                     "Fast setup in game: /za preset casual, /za preset standard, or /za preset hardcore.",
                     "Check the important live settings with /za status. Use /za help for short command topics.",
                     "20 ticks = 1 second. Chances use decimals: 0.25 = 25%, 0.50 = 50%, and 1.0 = 100%.",
-                    "Stop the server before editing this file manually. Advanced settings are safe to leave at their defaults."))
+                    "In-game /za commands save right away and never reset your other settings. /za config reset <section> restores defaults.",
+                    "Edits to this file are picked up while the game runs, but editing with the server stopped is safest.",
+                    "Advanced settings are safe to leave at their defaults."))
                     .push("general");
             preventSunBurn = builder
                     .comment(
@@ -487,7 +616,7 @@ public final class Config {
                     "CUSTOM DAY/NIGHT SPAWNING",
                     "This is the main pressure system. It creates extra zombie waves around survival players.",
                     "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
-                    "Quick setup: /za spawn on loads the standard day/night spawning preset.",
+                    "In game: /za spawn on turns custom waves on and keeps every value below as you set it.",
                     "Use enableDaytimeSpawning = false for permanent night-only custom waves.",
                     "Use maxBlockLightForSpawning if you want player-placed lights to protect bases from custom waves.",
                     "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
@@ -636,7 +765,7 @@ public final class Config {
                     "ZOMBIE BLOCK BREAKING",
                     "Optional destructive behavior for zombie-class mobs.",
                     "Safe beginner setup: leave this disabled unless your server wants base pressure.",
-                    "Quick setup: /za breaking on enables a protected, balanced preset immediately.",
+                    "In game: /za breaking on turns it on with your values below. /za breaking dayone also starts it today.",
                     "When enabled, zombies only try on a timer and chance roll, so this avoids every-zombie every-tick scans.",
                     "The defaults protect chests, furnaces, modded machines, light sources, tool-required blocks, and unbreakable blocks.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -741,7 +870,7 @@ public final class Config {
                     "ZOMBIE BLOCK PLACING",
                     "Optional siege behavior that lets zombie-class mobs place simple building blocks to reach targets.",
                     "Safe beginner setup: leave this disabled. It is separate from zombie block breaking.",
-                    "Quick setup: /za placing on enables limited cobblestone steps and bridges immediately.",
+                    "In game: /za placing on turns it on with your values below. /za placing dayone also starts it today.",
                     "Placement honors mobGriefing and loader block-place events by default, so protection mods can cancel it.",
                     "Each zombie has a configurable placement limit to prevent unlimited terrain clutter.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -858,7 +987,7 @@ public final class Config {
                     "Safe beginner setup: leave this disabled. It never places or breaks blocks.",
                     "Towering requires a valid target and a nearby crowd, and is day-gated to prevent early-world pressure.",
                     "Normal ground combat and ordinary player jumps do not trigger a tower with the default obstacle rule.",
-                    "Quick setup: /za towering on enables a balanced stack preset immediately.",
+                    "In game: /za towering on turns it on with your values below. /za towering dayone also starts it today.",
                     "Checks are staggered by entity ID so large hordes do not all scan on the same tick."))
                     .push("towering");
             enableZombieTowering = builder
@@ -1008,7 +1137,7 @@ public final class Config {
                     "HORDE EVENTS",
                     "Scheduled high-pressure events that temporarily increase custom spawning.",
                     "Safe beginner setup: keep interval and duration at defaults until you know your server can handle more.",
-                    "Quick setup: /za events on enables a balanced scheduled-horde preset.",
+                    "In game: /za events on turns scheduled hordes on and keeps every value below as you set it.",
                     "Performance warning: hordeZombiesPerSpawn, hordeSpawnMultiplier, and eventSpawnInterval are the big lag knobs.",
                     "Hardcore setup: increase one setting at a time, not all at once."))
                     .push("horde");
@@ -1086,7 +1215,7 @@ public final class Config {
                     "Random night events that raise zombie pressure until dawn.",
                     "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
                     "Safe beginner setup: keep chance low and avoid huge multipliers.",
-                    "Quick setup: /za bloodmoon on enables a balanced random-event preset."))
+                    "In game: /za bloodmoon on turns random blood moons on and keeps every value below as you set it."))
                     .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
@@ -1120,7 +1249,7 @@ public final class Config {
                     "DAY-BASED DIFFICULTY SCALING",
                     "Makes the apocalypse get harder as the world day counter rises.",
                     "Safe beginner setup: keep scalingStartDay above 0 so new worlds get a short grace period.",
-                    "Quick setup: /za scaling on loads balanced day 3-50 progression.",
+                    "In game: /za scaling on turns scaling on and keeps every value below as you set it.",
                     "Hardcore setup: lower scalingStartDay or maxScalingDay, but test before combining with strong hordes."))
                     .push("scaling");
             enableDifficultyScaling = builder
@@ -1229,7 +1358,7 @@ public final class Config {
                     "ADVANCED ATTRIBUTE SYSTEM",
                     "Deep stat tuning for zombie-class mobs when they enter the world.",
                     "Beginner advice: leave this on with default numbers unless you are building a custom difficulty profile.",
-                    "Quick setup: /za attributes on loads conservative scaling values and required dependencies.",
+                    "In game: /za attributes on turns the attribute system on and keeps every value below as you set it.",
                     "Hardcore setup: use small multiplier changes first. 1.20 is already 20% stronger.",
                     "Warning: extreme health, speed, follow range, or knockback values can feel broken or hurt performance."))
                     .push("attributes");

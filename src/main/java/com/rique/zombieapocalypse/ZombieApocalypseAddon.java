@@ -18,9 +18,15 @@ public class ZombieApocalypseAddon {
 
     private void onConfigLoading(ModConfigEvent.Loading event) {
         Config.bind(event.getConfig());
+        if (event.getConfig().getSpec() == Config.COMMON_SPEC) {
+            ConfigGuard.loaded(event.getConfig().getFullPath());
+        }
     }
 
     private void onConfigReloading(ModConfigEvent.Reloading event) {
-        Config.bind(event.getConfig());
+        Config.reloaded(event.getConfig());
+        if (event.getConfig().getSpec() == Config.COMMON_SPEC) {
+            ConfigGuard.reloaded(event.getConfig().getFullPath());
+        }
     }
 }

@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.6.0 | `zombieapocalypseaddon-2.6.0.jar` |
-| 1.20.1 | NeoForge | 1.9.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.9.0.jar` |
-| 1.20.1 | Forge | 1.9.0 | `zombieapocalypseaddon-forge-1.20.1-1.9.0.jar` |
+| 1.21.1 | NeoForge | 2.7.0 | `zombieapocalypseaddon-2.7.0.jar` |
+| 1.20.1 | NeoForge | 1.10.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.10.0.jar` |
+| 1.20.1 | Forge | 1.10.0 | `zombieapocalypseaddon-forge-1.20.1-1.10.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -62,7 +62,7 @@ Most questions are one command away:
 | Check what is currently running | `/za` for the dashboard, `/za spawn` for spawn settings |
 | Keep my settings for every new world | Nothing - they are stored once in the common config and apply to all worlds automatically. |
 
-Every `on` loads safe defaults first, so features work immediately. Details are in the sections below.
+Every `on` command keeps your other settings. If one value would stop the feature from working, such as a 0% chance, `on` fixes just that value and tells you what it changed. `/za config reset <section>` puts a whole section back to its defaults when you want that. Details are in the sections below.
 
 ## Gameplay Presets
 
@@ -100,7 +100,8 @@ Start with these:
 |---|---|
 | `/za` | Short dashboard for the current day, waves, events, scaling, and optional siege features. |
 | `/za preset <casual\|standard\|hardcore>` | Apply a safe gameplay preset. |
-| `/za config` | Show the config path and beginner sections. |
+| `/za config` | Show the config path, the beginner sections, and how to edit safely. |
+| `/za config reset <section\|all>` | Put one config section, or the whole config, back to its defaults. |
 | `/za help` or `/zhelp` | Show quick help. |
 | `/za help <topic>` | Show focused help for one system. |
 | `/za spawn` | Show the important custom-spawn settings. |
@@ -131,7 +132,7 @@ Help topics are `start`, `spawning`, `events`, `difficulty`, `gear`, `bases`, `h
 
 Press Tab after `/za` to see every command family. Tab completion suggests only the clear `on` and `off` states, plus current and common numeric values, attribute keys, online players, and registered block and item IDs. Existing `true` and `false` inputs still work in old scripts. Running a setting without a value shows its current value. The original `/z...` commands remain supported.
 
-Feature-level `on` commands load safe defaults so the feature works immediately instead of inheriting a zero chance, future start day, or broken dependency. This includes `/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, `/za hunt on`, and `/za compatibility on`.
+Feature `on` commands (`/za spawn on`, `/za events on`, `/za bloodmoon on`, `/za scaling on`, `/za attributes on`, `/za breaking on`, `/za placing on`, `/za towering on`, `/za hunt on`, `/za compatibility on`, and the `enabled on` forms) only turn the feature on. They also turn on a switch the feature depends on, such as custom waves for hordes, and fix a value that would leave the feature doing nothing, such as a 0% chance or a missing placing block. They report every extra change, and everything else you tuned stays as it is. Features with a start day wait for it; `dayone` turns the feature on and starts it today.
 
 The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) includes every subcommand and range.
 
@@ -215,7 +216,7 @@ All three systems are disabled by default:
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
 - **Towering:** crowded zombies form real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps are ignored. The default smart limit follows the target's block Y level plus one, then moves riders one at a time to collision-free floor positions when the target stays reachable on the ground. No blocks are changed.
 
-Each feature has a start day, live commands, conservative defaults, and protection checks. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. Turning a feature on from its main command loads its balanced immediate preset; the detailed settings can then be adjusted individually.
+Each feature has a start day, live commands, conservative defaults, and protection checks. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. `on` keeps your settings and waits for the start day; `dayone` turns the feature on and starts it today.
 
 ### Optional Animal Hunting
 
@@ -283,7 +284,9 @@ Usually leave these sections unchanged:
 
 Important rules:
 
-- Stop the server before manual config edits.
+- In-game commands save right away and never reset other settings. Prefer them over editing the file.
+- File edits are picked up while the game runs, but editing with the server stopped is safest. If the loader ever resets settings while reading a half-saved file, the mod puts them back and tells online operators.
+- `/za config reset <section>` restores defaults on purpose. The loader keeps older copies of the file as `.bak` files in the config folder.
 - `20` ticks equals one second.
 - Chances use `0.0` to `1.0`; for example, `0.25` means 25%.
 - Change one performance-heavy setting at a time and test with multiple players.
@@ -322,9 +325,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.6.0 |
-| NeoForge | 1.20.1 | 1.9.0 |
-| Forge | 1.20.1 | 1.9.0 |
+| NeoForge | 1.21.1 | 2.7.0 |
+| NeoForge | 1.20.1 | 1.10.0 |
+| Forge | 1.20.1 | 1.10.0 |
 
 Build all targets on Windows with:
 

@@ -162,6 +162,7 @@ class CommandTreeTest {
         assertAdmin("zattr", "toggle");
         assertAdmin("zburn", "state");
         assertAdmin("za", "preset", "casual");
+        assertAdmin("za", "config", "reset");
         assertAdmin("zhunt", "on");
         assertAdmin("zhunt", "off");
         assertAdmin("zhunt", "enabled", "state");

@@ -25,7 +25,8 @@ public final class CompatibilityCommands {
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
                 .then(CommandUtil.toggleSetting("modded", Config.COMMON.enableModdedZombieCompatibility::get,
-                        CompatibilityCommands::setEnabledValue, "Automatic modded zombie recognition"))
+                        value -> Config.set(Config.COMMON.enableModdedZombieCompatibility, value),
+                        "Automatic modded zombie recognition"))
                 .then(CommandUtil.toggleSetting("difficulty", Config.COMMON.applyDifficultyToModdedZombies::get,
                         value -> Config.set(Config.COMMON.applyDifficultyToModdedZombies, value), "Addon difficulty for modded zombies"))
                 .then(CommandUtil.toggleSetting("ai", Config.COMMON.applyAiFeaturesToModdedZombies::get,
@@ -43,24 +44,13 @@ public final class CompatibilityCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableCompatibility();
-            CommandUtil.feedback(source,
-                    "Mod compatibility: ON\nRecommended conflict protection, equipment preservation, and external-rule safeguards were enabled.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableModdedZombieCompatibility, false);
-            CommandUtil.feedback(source, "Mod compatibility: OFF", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Mod compatibility",
+                    () -> Config.set(Config.COMMON.enableModdedZombieCompatibility, false), null);
         }
-        return 1;
-    }
-
-    private static void setEnabledValue(boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableCompatibility();
-        } else {
-            Config.set(Config.COMMON.enableModdedZombieCompatibility, false);
-        }
+        return CommandUtil.turnOn(source, "Mod compatibility", "compatibility",
+                FeaturePresets::enableCompatibility,
+                () -> "Use /za compatibility to see each safeguard.");
     }
 
     private static int showStatus(CommandSourceStack source) {

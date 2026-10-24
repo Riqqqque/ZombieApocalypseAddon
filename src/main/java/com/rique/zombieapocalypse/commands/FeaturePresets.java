@@ -1,239 +1,308 @@
 package com.rique.zombieapocalypse.commands;
 
-import com.rique.zombieapocalypse.Config;
+import java.util.ArrayList;
+import java.util.List;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+
+import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.SpawnMath;
+import com.rique.zombieapocalypse.ZombieBlockPlacer;
+
+/**
+ * What the feature "on" commands change.
+ *
+ * Turning a feature on flips its switch, plus any switch it depends on, and repairs only values
+ * that would keep it from doing anything at all, such as a 0% chance. Everything else an admin
+ * tuned, in game or in the config file, stays as it is. Each method returns a plain-language note
+ * for every extra change so the command can report it. /za config reset restores whole sections.
+ */
 final class FeaturePresets {
 
     private FeaturePresets() {
     }
 
-    static void enableSpawning() {
-        Config.Common config = Config.COMMON;
+    static List<String> enableSpawning() {
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
-            applySpawnBaseline(config, true);
-            Config.set(config.enableZombieVariants, true);
-            Config.set(config.babyZombieChance, 0.05);
-            Config.set(config.enableNightBoost, true);
-            Config.set(config.nightSpawnMultiplier, 1.50);
+            Config.set(Config.COMMON.enableDaySpawning, true);
+            repairSpawning(notes);
         });
+        return notes;
     }
 
-    static void enableHordes() {
+    static List<String> enableHordes() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
-            applySpawnBaseline(config, true);
             Config.set(config.enableHordeEvents, true);
-            Config.set(config.hordeIntervalDays, 5);
-            Config.set(config.hordeStartChance, 0.50);
-            Config.set(config.hordeDurationMinutes, 5);
-            Config.set(config.hordeSpawnMultiplier, 3.0);
-            Config.set(config.hordeZombiesPerSpawn, 5);
-            Config.set(config.eventSpawnInterval, 20);
-            Config.set(config.enableEventNotifications, true);
+            requireCustomWaves(notes, "Hordes");
+            if (config.hordeStartChance.get() <= 0.0) {
+                Config.reset(config.hordeStartChance);
+                notes.add(repaired("Horde start chance", "0%", CommandUtil.percent(config.hordeStartChance.getDefault()),
+                        "so scheduled hordes could never start"));
+            }
         });
+        if (!config.enableDaytimeSpawning.get() && !config.hordeStartsAtDusk.get()) {
+            notes.add("Night-only mode is on, so scheduled dawn hordes stay paused. /za events dusk on makes them arrive at nightfall instead.");
+        }
+        return notes;
     }
 
-    static void enableVariants() {
+    static List<String> enableBloodMoons() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
+        Config.edit(() -> {
+            Config.set(config.enableBloodMoon, true);
+            requireCustomWaves(notes, "Blood moons");
+            if (config.bloodMoonChance.get() <= 0.0) {
+                Config.reset(config.bloodMoonChance);
+                notes.add(repaired("Blood moon chance", "0%", CommandUtil.percent(config.bloodMoonChance.getDefault()),
+                        "so blood moons could never happen"));
+            }
+        });
+        return notes;
+    }
+
+    static List<String> enableVariants() {
+        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
             Config.set(config.enableZombieVariants, true);
-            Config.set(config.huskChance, 0.15);
-            Config.set(config.drownedChance, 0.10);
-            Config.set(config.babyZombieChance, 0.05);
-            Config.set(config.zombieVillagerChance, 0.05);
+            if (config.huskChance.get() <= 0.0
+                    && config.drownedChance.get() <= 0.0
+                    && config.zombieVillagerChance.get() <= 0.0) {
+                Config.reset(config.huskChance);
+                Config.reset(config.drownedChance);
+                Config.reset(config.zombieVillagerChance);
+                notes.add("Husk, drowned, and zombie villager chances were all 0%, so variants could never spawn."
+                        + " They are back to their defaults.");
+            }
         });
+        return notes;
     }
 
-    static void enableNightBoost() {
-        Config.edit(() -> {
-            Config.set(Config.COMMON.enableNightBoost, true);
-            Config.set(Config.COMMON.nightSpawnMultiplier, 1.50);
-        });
-    }
-
-    static void enableBloodMoons() {
+    static List<String> enableNightBoost() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
-            applySpawnBaseline(config, false);
-            Config.set(config.enableBloodMoon, true);
-            Config.set(config.bloodMoonChance, 0.15);
-            Config.set(config.bloodMoonSpawnMultiplier, 5.0);
-            Config.set(config.bloodMoonZombiesPerSpawn, 4);
-            Config.set(config.eventSpawnInterval, 20);
-            Config.set(config.enableEventNotifications, true);
+            Config.set(config.enableNightBoost, true);
+            if (config.nightSpawnMultiplier.get() <= 1.0) {
+                Config.reset(config.nightSpawnMultiplier);
+                notes.add(repaired("Night spawn multiplier", "1.00x", CommandUtil.multiplier(config.nightSpawnMultiplier.getDefault()),
+                        "which adds nothing"));
+            }
         });
+        return notes;
     }
 
-    static void enableScaling() {
+    static List<String> enableScaling() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
             Config.set(config.enableDifficultyScaling, true);
-            Config.set(config.scalingStartDay, 3);
-            Config.set(config.maxScalingDay, 50);
-            Config.set(config.maxSpeedBoost, 0.20);
-            Config.set(config.maxHealthBoost, 10);
-            Config.set(config.maxArmorChance, 0.30);
-            Config.set(config.maxWeaponChance, 0.20);
+            if (config.maxSpeedBoost.get() <= 0.0
+                    && config.maxHealthBoost.get() <= 0
+                    && config.maxArmorChance.get() <= 0.0
+                    && config.maxWeaponChance.get() <= 0.0) {
+                Config.reset(config.maxSpeedBoost);
+                Config.reset(config.maxHealthBoost);
+                Config.reset(config.maxArmorChance);
+                Config.reset(config.maxWeaponChance);
+                notes.add("Speed, health, armor, and weapon bonuses were all 0, so scaling could not change anything."
+                        + " They are back to their defaults.");
+            }
         });
+        return notes;
     }
 
-    static void enableBlockBreaking() {
-        Config.Common config = Config.COMMON;
+    static List<String> enableAttributes() {
+        List<String> notes = new ArrayList<>();
+        Config.set(Config.COMMON.enableAttributeModifiers, true);
+        if (Config.COMMON.scaleAttributesWithDifficulty.get() && !Config.COMMON.enableDifficultyScaling.get()) {
+            notes.add("Day scaling is off, so attribute scaling stays at day-0 strength. /za scaling on turns it on.");
+        }
+        return notes;
+    }
+
+    /** Turns on one advanced-attribute option, plus the attribute system it belongs to. */
+    static List<String> enableAttributeOption(Runnable setOption) {
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
-            Config.set(config.enableZombieBlockBreaking, true);
-            Config.set(config.zombieBlockBreakingStartDay, 0);
-            Config.set(config.zombieBlockBreakingInterval, 100);
-            Config.set(config.zombieBlockBreakingChance, 0.20);
-            Config.set(config.zombieBlockBreakingRange, 1);
-            Config.set(config.zombieBlockBreakingMaxHardness, 3.0);
-            Config.set(config.zombieBlockBreakingDropBlocks, false);
-            Config.set(config.zombieBlockBreakingRequireTarget, true);
-            Config.set(config.zombieBlockBreakingRequireObstacle, true);
-            Config.set(config.zombieBlockBreakingRespectMobGriefing, true);
-            Config.set(config.zombieBlockBreakingAllowBlockEntities, false);
-            Config.set(config.zombieBlockBreakingAllowToolRequiredBlocks, false);
-            Config.set(config.zombieBlockBreakingAllowLightBlocks, false);
+            setOption.run();
+            if (!Config.COMMON.enableAttributeModifiers.get()) {
+                Config.set(Config.COMMON.enableAttributeModifiers, true);
+                notes.add("Advanced attributes were off, and this option needs them, so they are on now.");
+            }
         });
+        return notes;
     }
 
-    static void enableBlockPlacing() {
+    static List<String> enableCompatibility() {
+        Config.set(Config.COMMON.enableModdedZombieCompatibility, true);
+        return List.of();
+    }
+
+    static List<String> enableBiomeModifiers() {
         Config.Common config = Config.COMMON;
-        Config.edit(() -> {
-            Config.set(config.enableZombieBlockPlacing, true);
-            Config.set(config.zombieBlockPlacingStartDay, 0);
-            Config.set(config.zombieBlockPlacingInterval, 100);
-            Config.set(config.zombieBlockPlacingChance, 0.15);
-            Config.set(config.zombieBlockPlacingBlock, "minecraft:cobblestone");
-            Config.set(config.zombieBlockPlacingMaxPerZombie, 8);
-            Config.set(config.zombieBlockPlacingMaxTargetDistance, 32);
-            Config.set(config.zombieBlockPlacingRequireTarget, true);
-            Config.set(config.zombieBlockPlacingRequireObstacle, true);
-            Config.set(config.zombieBlockPlacingRespectMobGriefing, true);
-            Config.set(config.zombieBlockPlacingAllowBridges, true);
-            Config.set(config.zombieBlockPlacingAllowSteps, true);
-            Config.set(config.zombieBlockPlacingReplaceFluids, false);
-            Config.set(config.zombieBlockPlacingReplaceReplaceableBlocks, false);
-        });
-    }
-
-    static void enableTowering() {
-        configureTowering(false);
-    }
-
-    static void enableUnlimitedTowering() {
-        configureTowering(true);
-    }
-
-    private static void configureTowering(boolean unlimited) {
-        Config.Common config = Config.COMMON;
-        Config.edit(() -> {
-            Config.set(config.enableZombieTowering, true);
-            Config.set(config.zombieToweringStartDay, 0);
-            Config.set(config.zombieToweringInterval, 20);
-            Config.set(config.zombieToweringChance, 0.45);
-            Config.set(config.zombieToweringMaxTargetDistance, 32);
-            Config.set(config.zombieToweringMinNearbyZombies, 2);
-            Config.set(config.zombieToweringCrowdRadius, 2.25);
-            Config.set(config.zombieToweringMaxStackSize, 0);
-            Config.set(config.zombieToweringMaxTowersPerPlayer, 3);
-            Config.set(config.zombieToweringDynamicHeightEnabled, !unlimited);
-            Config.set(config.zombieToweringTargetHeightOffset, 1);
-            Config.set(config.zombieToweringSmartDismountEnabled, !unlimited);
-            Config.set(config.zombieToweringJumpingEnabled, false);
-            Config.set(config.zombieToweringJumpCooldownTicks, 10);
-            Config.set(config.zombieToweringDismountDistance, 2.75);
-            Config.set(config.zombieToweringVerticalBoost, 0.48);
-            Config.set(config.zombieToweringForwardBoost, 0.18);
-            Config.set(config.zombieToweringMaxHeightAboveTarget, unlimited ? 0 : 8);
-            Config.set(config.zombieToweringRequireObstacle, true);
-        });
-    }
-
-    static void enableAttributes() {
-        Config.Common config = Config.COMMON;
-        Config.edit(() -> {
-            Config.set(config.enableAttributeModifiers, true);
-            Config.set(config.enableDifficultyScaling, true);
-            Config.set(config.scaleAttributesWithDifficulty, true);
-            Config.set(config.enableVariantAttributeProfiles, true);
-            Config.set(config.enableBiomeDimensionAttributeMultipliers, true);
-            Config.set(config.scalingStartDay, 3);
-            Config.set(config.maxScalingDay, 50);
-            Config.set(config.maxSpeedBoost, 0.20);
-            Config.set(config.maxHealthBoost, 10);
-            Config.set(config.maxArmorChance, 0.30);
-            Config.set(config.maxWeaponChance, 0.20);
-            Config.set(config.maxHealthScaleMultiplier, 0.25);
-            Config.set(config.maxHealthScaleBonus, 0.0);
-            Config.set(config.maxAttackScaleMultiplier, 0.15);
-            Config.set(config.maxAttackScaleBonus, 0.0);
-            Config.set(config.maxSpeedScaleMultiplier, 0.0);
-            Config.set(config.maxSpeedScaleBonus, 0.0);
-            Config.set(config.maxArmorScaleMultiplier, 0.15);
-            Config.set(config.maxArmorScaleBonus, 0.0);
-            Config.set(config.maxFollowRangeScaleMultiplier, 0.25);
-            Config.set(config.maxFollowRangeScaleBonus, 0.0);
-            Config.set(config.maxKnockbackResistanceScaleMultiplier, 0.10);
-            Config.set(config.maxKnockbackResistanceScaleBonus, 0.0);
-        });
-    }
-
-    static void enableCompatibility() {
-        Config.Common config = Config.COMMON;
-        Config.edit(() -> {
-            Config.set(config.enableModdedZombieCompatibility, true);
-            Config.set(config.applyDifficultyToModdedZombies, true);
-            Config.set(config.applyAiFeaturesToModdedZombies, true);
-            Config.set(config.respectExternalSpawnRules, true);
-            Config.set(config.respectExternalZombieAi, true);
-            Config.set(config.respectExternalDifficulty, true);
-            Config.set(config.respectZombieDoorBreakingAbility, true);
-            Config.set(config.preserveExistingZombieEquipment, true);
-        });
-    }
-
-    static void enableBiomeModifiers() {
-        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
             Config.set(config.enableBiomeModifiers, true);
-            Config.set(config.desertHuskBonus, 0.50);
-            Config.set(config.waterDrownedBonus, 0.40);
-            Config.set(config.mushroomSafeZone, true);
+            if (config.desertHuskBonus.get() <= 0.0
+                    && config.waterDrownedBonus.get() <= 0.0
+                    && !config.mushroomSafeZone.get()) {
+                Config.reset(config.desertHuskBonus);
+                Config.reset(config.waterDrownedBonus);
+                Config.reset(config.mushroomSafeZone);
+                notes.add("Every biome modifier was off or 0%, so biomes could not change anything. They are back to their defaults.");
+            }
         });
+        return notes;
     }
 
-    static void enableDeathCooldown() {
+    static List<String> enableDeathCooldown() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
             Config.set(config.enableDeathCooldown, true);
-            Config.set(config.deathCooldownSeconds, 30);
-            Config.set(config.cooldownSpawnReduction, 0.50);
+            if (config.cooldownSpawnReduction.get() <= 0.0) {
+                Config.reset(config.cooldownSpawnReduction);
+                notes.add(repaired("Cooldown spawn reduction", "0%", CommandUtil.percent(config.cooldownSpawnReduction.getDefault()),
+                        "so the cooldown changed nothing"));
+            }
         });
+        return notes;
     }
 
-    static void enableSpawnEffects() {
+    static List<String> enableSpawnEffects() {
         Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
         Config.edit(() -> {
             Config.set(config.enableSpawnEffects, true);
-            Config.set(config.spawnSound, true);
-            Config.set(config.spawnParticles, true);
+            if (!config.spawnSound.get() && !config.spawnParticles.get()) {
+                Config.reset(config.spawnSound);
+                Config.reset(config.spawnParticles);
+                notes.add("Spawn sound and particles were both off, so effects could not show. Both are on again.");
+            }
         });
+        return notes;
     }
 
-    private static void applySpawnBaseline(Config.Common config, boolean enableDaytime) {
-        Config.set(config.enableDaySpawning, true);
-        Config.set(config.daySpawnInterval, 120);
-        Config.set(config.daySpawnChance, 0.50);
-        Config.set(config.maxDayZombiesPerPlayer, 50);
-        Config.set(config.zombiesPerSpawn, 2);
-        Config.set(config.spawnRange, 30);
-        Config.set(config.minSpawnDistance, 12);
-        Config.set(config.spawnAttemptsPerZombie, 10);
-        Config.set(config.requireOpenSkyForOverworldSpawns, true);
-        Config.set(config.maxBlockLightForSpawning, 0);
-        if (enableDaytime) {
-            Config.set(config.enableDaytimeSpawning, true);
-            Config.set(config.daylightSpawnStartDay, 0);
+    static List<String> enableBlockBreaking(boolean startNow) {
+        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
+        Config.edit(() -> {
+            Config.set(config.enableZombieBlockBreaking, true);
+            if (startNow) {
+                Config.set(config.zombieBlockBreakingStartDay, 0);
+            }
+            if (config.zombieBlockBreakingChance.get() <= 0.0) {
+                Config.reset(config.zombieBlockBreakingChance);
+                notes.add(repaired("Block breaking chance", "0%", CommandUtil.percent(config.zombieBlockBreakingChance.getDefault()),
+                        "so zombies could never break anything"));
+            }
+            if (config.zombieBlockBreakingMaxHardness.get() <= 0.0) {
+                Config.reset(config.zombieBlockBreakingMaxHardness);
+                notes.add(repaired("Max hardness", "0", CommandUtil.number(config.zombieBlockBreakingMaxHardness.getDefault()),
+                        "so no real block could be broken"));
+            }
+        });
+        return notes;
+    }
+
+    static List<String> enableBlockPlacing(ServerLevel level, BlockPos validationPos, boolean startNow) {
+        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
+        Config.edit(() -> {
+            Config.set(config.enableZombieBlockPlacing, true);
+            if (startNow) {
+                Config.set(config.zombieBlockPlacingStartDay, 0);
+            }
+            if (config.zombieBlockPlacingChance.get() <= 0.0) {
+                Config.reset(config.zombieBlockPlacingChance);
+                notes.add(repaired("Block placing chance", "0%", CommandUtil.percent(config.zombieBlockPlacingChance.getDefault()),
+                        "so zombies could never place anything"));
+            }
+            if (!config.zombieBlockPlacingAllowBridges.get() && !config.zombieBlockPlacingAllowSteps.get()) {
+                Config.reset(config.zombieBlockPlacingAllowBridges);
+                Config.reset(config.zombieBlockPlacingAllowSteps);
+                notes.add("Bridges and steps were both off, so zombies had nothing to build. Both are on again.");
+            }
+            String block = config.zombieBlockPlacingBlock.get();
+            if (level != null && ZombieBlockPlacer.validatePlacementBlock(level, validationPos, block) != null) {
+                Config.reset(config.zombieBlockPlacingBlock);
+                notes.add("The placing block " + block + " is missing or unsafe, so placing was paused. It is "
+                        + config.zombieBlockPlacingBlock.getDefault() + " again.");
+            }
+        });
+        return notes;
+    }
+
+    static List<String> enableTowering(boolean startNow) {
+        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
+        Config.edit(() -> {
+            Config.set(config.enableZombieTowering, true);
+            if (startNow) {
+                Config.set(config.zombieToweringStartDay, 0);
+            }
+            repairTowering(notes);
+        });
+        return notes;
+    }
+
+    /** Unlimited mode: towering on with no count or height caps and no automatic collapse. */
+    static List<String> enableUnlimitedTowering() {
+        Config.Common config = Config.COMMON;
+        List<String> notes = new ArrayList<>();
+        Config.edit(() -> {
+            Config.set(config.enableZombieTowering, true);
+            Config.set(config.zombieToweringMaxStackSize, 0);
+            Config.set(config.zombieToweringMaxHeightAboveTarget, 0);
+            Config.set(config.zombieToweringDynamicHeightEnabled, false);
+            Config.set(config.zombieToweringSmartDismountEnabled, false);
+            Config.set(config.zombieToweringJumpingEnabled, false);
+            repairTowering(notes);
+        });
+        return notes;
+    }
+
+    private static void repairTowering(List<String> notes) {
+        Config.Common config = Config.COMMON;
+        if (config.zombieToweringChance.get() <= 0.0) {
+            Config.reset(config.zombieToweringChance);
+            notes.add(repaired("Towering chance", "0%", CommandUtil.percent(config.zombieToweringChance.getDefault()),
+                    "so towers could never form"));
         }
+    }
+
+    /** Hordes and blood moons strengthen custom waves, so they need the main spawning switch. */
+    private static void requireCustomWaves(List<String> notes, String feature) {
+        if (!Config.COMMON.enableDaySpawning.get()) {
+            Config.set(Config.COMMON.enableDaySpawning, true);
+            notes.add("Custom zombie waves were off. " + feature + " need them, so they are on again.");
+        }
+        repairSpawning(notes);
+    }
+
+    private static void repairSpawning(List<String> notes) {
+        Config.Common config = Config.COMMON;
+        if (config.daySpawnChance.get() <= 0.0) {
+            Config.reset(config.daySpawnChance);
+            notes.add(repaired("Spawn chance", "0%", CommandUtil.percent(config.daySpawnChance.getDefault()),
+                    "so no waves could spawn"));
+        }
+        if (SpawnMath.isSpawnDistanceImpossible(config.minSpawnDistance.get(), config.spawnRange.get())) {
+            int before = config.minSpawnDistance.get();
+            Config.reset(config.minSpawnDistance);
+            notes.add(repaired("Minimum spawn distance", before + " blocks",
+                    config.minSpawnDistance.getDefault() + " blocks",
+                    "which is farther than spawn range " + config.spawnRange.get() + " allows, so spawning was paused"));
+        }
+    }
+
+    private static String repaired(String setting, String from, String to, String reason) {
+        return setting + " was " + from + ", " + reason + ". It is now " + to + '.';
     }
 }

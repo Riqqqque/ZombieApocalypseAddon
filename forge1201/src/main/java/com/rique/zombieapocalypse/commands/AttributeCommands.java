@@ -155,16 +155,13 @@ public final class AttributeCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableAttributes();
-            CommandUtil.feedback(source,
-                    "Advanced attributes: ON\nBalanced health, attack, armor, follow-range, and knockback scaling preset loaded. Speed scaling stays conservative.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableAttributeModifiers, false);
-            CommandUtil.feedback(source, "Advanced attributes: OFF", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Advanced attributes",
+                    () -> Config.set(Config.COMMON.enableAttributeModifiers, false), null);
         }
-        return 1;
+        return CommandUtil.turnOn(source, "Advanced attributes", "attributes",
+                FeaturePresets::enableAttributes,
+                () -> "Use /za attributes to review the multipliers and profiles.");
     }
 
     private static void setBooleanSetting(
@@ -172,7 +169,8 @@ public final class AttributeCommands {
             ForgeConfigSpec.BooleanValue setting,
             boolean enabled) {
         if (enabled && BOOLEAN_SETTINGS.containsKey(key)) {
-            FeaturePresets.enableAttributes();
+            FeaturePresets.enableAttributeOption(() -> Config.set(setting, true));
+            return;
         }
         Config.set(setting, enabled);
     }

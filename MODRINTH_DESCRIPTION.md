@@ -59,7 +59,7 @@ Most things players ask for are one command away:
 | Change how often zombie gear drops | `/za gear dropchance 0.25` (default `0.085`) |
 | Keep my settings for every new world | Nothing - the common config applies to all worlds automatically. |
 
-Every `on` loads safe defaults first, so features work immediately.
+Every `on` command keeps your other settings. If one value would stop the feature from working, such as a 0% chance, `on` fixes just that value and tells you what it changed. `/za config reset <section>` puts a whole section back to its defaults when you want that.
 
 ## Main Features
 
@@ -136,7 +136,7 @@ Every system is available below `/za`:
 
 Run any setting name without a value to read its current value. Use `on` and `off` for switches; `true` and `false` still work for existing command blocks and scripts. All original `/z...` command roots remain supported.
 
-Feature-level `on` commands load balanced working defaults automatically. You can enable spawning, events, blood moons, scaling, attributes, compatibility, block breaking, block placing, towering, or animal hunting without first repairing old chances, day gates, or dependent settings.
+Feature `on` commands only turn the feature on, plus any switch it depends on. If a value would leave the feature doing nothing, such as a 0% chance, they fix just that value and say so. Everything else you tuned stays as it is, and `/za config reset <section>` restores defaults when you want them.
 
 See the [full command reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands) for every subcommand and range.
 
@@ -199,7 +199,7 @@ Block breaking, block placing, and towering are independent and disabled by defa
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
 - Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. The normal preset grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken.
 
-Administrators can use `on` for an immediate balanced preset, use detailed commands afterward for custom tuning, or use `off` at any time. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. The older `dayone` aliases remain supported.
+Administrators can use `on` to turn a feature on with their own settings (it waits for the feature's start day), `dayone` to also start it today, and `off` at any time. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. The older `dayone` aliases remain supported.
 
 Tower controls include `/za towering stacksize <count>` (`0` means no count cap), `/za towering maxperplayer <count>`, `/za towering dynamic <on|off>`, `/za towering offset <blocks>`, `/za towering smartdismount <on|off>`, `/za towering pace <ticks>`, and optional jump controls. Mounting and dismounting use loader-correct rider positions and reject blocked spaces instead of putting zombies inside floors or ceilings. `/za towering unlimited` removes both count and height caps and disables automatic collapse; very tall passenger chains can affect server performance.
 
@@ -242,6 +242,8 @@ The generated file begins with a **START HERE** section. For a normal setup, foc
 Leave `[compatibility]`, `[attributes]`, variant profiles, and context profiles at their defaults unless you specifically need deep tuning.
 
 Every setting includes a plain-language description, examples, safe ranges, feature dependencies, and performance warnings where relevant. Remember that 20 ticks equals one second and chances use decimals from `0.0` to `1.0`.
+
+In-game commands save right away and never reset other settings. File edits are picked up while the game runs, though editing with the server stopped is safest. If the loader ever resets settings while reading a half-saved file, the mod puts them back and tells online operators.
 
 See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide) for practical examples.
 

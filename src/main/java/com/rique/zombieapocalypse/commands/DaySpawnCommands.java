@@ -1,5 +1,7 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.List;
+
 import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -7,6 +9,7 @@ import net.minecraft.commands.Commands;
 
 import com.rique.zombieapocalypse.Config;
 import com.rique.zombieapocalypse.ConfigLimits;
+import com.rique.zombieapocalypse.DifficultyManager;
 import com.rique.zombieapocalypse.HordeManager;
 import com.rique.zombieapocalypse.SpawnMath;
 
@@ -26,10 +29,10 @@ public final class DaySpawnCommands {
                         .executes(context -> setSpawning(context.getSource(), true))))
                 .then(CommandUtil.admin(Commands.literal("off")
                         .executes(context -> setSpawning(context.getSource(), false))))
-                .then(CommandUtil.toggleSetting(
+                .then(CommandUtil.switchSetting(
                         "enabled",
                         Config.COMMON.enableDaySpawning::get,
-                        DaySpawnCommands::setSpawningEnabled,
+                        DaySpawnCommands::setSpawning,
                         "Custom zombie waves"))
                 .then(Commands.literal("daytime")
                         .executes(context -> {
@@ -101,11 +104,11 @@ public final class DaySpawnCommands {
                         -1, 0, 7, 15))
                 .then(CommandUtil.toggleSetting("sky", Config.COMMON.requireOpenSkyForOverworldSpawns::get,
                         value -> Config.set(Config.COMMON.requireOpenSkyForOverworldSpawns, value), "Require open sky in overworld"))
-                .then(CommandUtil.toggleSetting("variants", Config.COMMON.enableZombieVariants::get,
+                .then(CommandUtil.featureToggle("variants", Config.COMMON.enableZombieVariants::get,
                         DaySpawnCommands::setVariantsEnabled, "Zombie variants"))
-                .then(CommandUtil.toggleSetting("nightboost", Config.COMMON.enableNightBoost::get,
+                .then(CommandUtil.featureToggle("nightboost", Config.COMMON.enableNightBoost::get,
                         DaySpawnCommands::setNightBoostEnabled, "Night boost"))
-                .then(CommandUtil.toggleSetting("horde", Config.COMMON.enableHordeEvents::get,
+                .then(CommandUtil.featureToggle("horde", Config.COMMON.enableHordeEvents::get,
                         DaySpawnCommands::setHordesEnabled, "Scheduled hordes"))
                 .then(CommandUtil.toggleSetting("daycounter", Config.COMMON.enableDayCounterAnnouncements::get,
                         value -> Config.set(Config.COMMON.enableDayCounterAnnouncements, value), "Morning day counter"))
@@ -114,27 +117,27 @@ public final class DaySpawnCommands {
                         value -> Config.set(Config.COMMON.hordeStartChance, value),
                         value -> "Horde start chance: " + CommandUtil.percent(value),
                         0.0, 0.25, 0.5, 0.75, 1.0))
-                .then(CommandUtil.toggleSetting("bloodmoon", Config.COMMON.enableBloodMoon::get,
+                .then(CommandUtil.featureToggle("bloodmoon", Config.COMMON.enableBloodMoon::get,
                         DaySpawnCommands::setBloodMoonsEnabled, "Random blood moons"))
-                .then(CommandUtil.toggleSetting("scaling", Config.COMMON.enableDifficultyScaling::get,
+                .then(CommandUtil.featureToggle("scaling", Config.COMMON.enableDifficultyScaling::get,
                         DaySpawnCommands::setScalingEnabled, "Difficulty scaling"))
-                .then(CommandUtil.toggleSetting("attributes", Config.COMMON.enableAttributeModifiers::get,
+                .then(CommandUtil.featureToggle("attributes", Config.COMMON.enableAttributeModifiers::get,
                         DaySpawnCommands::setAttributesEnabled, "Attribute modifiers"))
-                .then(CommandUtil.toggleSetting("attributescaling", Config.COMMON.scaleAttributesWithDifficulty::get,
+                .then(CommandUtil.featureToggle("attributescaling", Config.COMMON.scaleAttributesWithDifficulty::get,
                         DaySpawnCommands::setAttributeScalingEnabled, "Attribute scaling with difficulty"))
-                .then(CommandUtil.toggleSetting("variantprofiles", Config.COMMON.enableVariantAttributeProfiles::get,
+                .then(CommandUtil.featureToggle("variantprofiles", Config.COMMON.enableVariantAttributeProfiles::get,
                         DaySpawnCommands::setVariantProfilesEnabled, "Variant attribute profiles"))
-                .then(CommandUtil.toggleSetting("contextprofiles", Config.COMMON.enableBiomeDimensionAttributeMultipliers::get,
+                .then(CommandUtil.featureToggle("contextprofiles", Config.COMMON.enableBiomeDimensionAttributeMultipliers::get,
                         DaySpawnCommands::setContextProfilesEnabled, "Biome/dimension context profiles"))
-                .then(CommandUtil.toggleSetting("biomes", Config.COMMON.enableBiomeModifiers::get,
+                .then(CommandUtil.featureToggle("biomes", Config.COMMON.enableBiomeModifiers::get,
                         DaySpawnCommands::setBiomeModifiersEnabled, "Biome modifiers"))
                 .then(CommandUtil.toggleSetting("nether", Config.COMMON.netherSpawning::get,
                         value -> Config.set(Config.COMMON.netherSpawning, value), "Nether spawning"))
                 .then(CommandUtil.toggleSetting("end", Config.COMMON.endSpawning::get,
                         value -> Config.set(Config.COMMON.endSpawning, value), "End spawning"))
-                .then(CommandUtil.toggleSetting("cooldown", Config.COMMON.enableDeathCooldown::get,
+                .then(CommandUtil.featureToggle("cooldown", Config.COMMON.enableDeathCooldown::get,
                         DaySpawnCommands::setDeathCooldownEnabled, "Death cooldown"))
-                .then(CommandUtil.toggleSetting("effects", Config.COMMON.enableSpawnEffects::get,
+                .then(CommandUtil.featureToggle("effects", Config.COMMON.enableSpawnEffects::get,
                         DaySpawnCommands::setSpawnEffectsEnabled, "Spawn effects"))
                 .then(CommandUtil.toggleSetting("debug", Config.COMMON.enableDebugLogging::get,
                         value -> Config.set(Config.COMMON.enableDebugLogging, value), "Debug logging")));
@@ -151,28 +154,29 @@ public final class DaySpawnCommands {
     }
 
     private static int setSpawning(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableSpawning();
-            CommandUtil.feedback(source,
-                    "Custom zombie waves: ON\nStandard preset loaded: 50% chance every 6 seconds, 2 zombies per wave, safe distances, and day/night spawning.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableDaySpawning, false);
-            HordeManager.stopAllEvents(source.getLevel());
-            CommandUtil.feedback(source, "Custom zombie waves: OFF\nAny active or queued spawn events were stopped.", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Custom zombie waves", () -> {
+                Config.set(Config.COMMON.enableDaySpawning, false);
+                HordeManager.stopAllEvents(source.getLevel());
+            }, "Any active or queued spawn events were stopped.");
         }
-        return 1;
+        return CommandUtil.turnOn(source, "Custom zombie waves", "dayspawning",
+                FeaturePresets::enableSpawning,
+                () -> CommandUtil.percent(Config.COMMON.daySpawnChance.get()) + " chance every "
+                        + CommandUtil.ticks(Config.COMMON.daySpawnInterval.get()) + ", "
+                        + CommandUtil.count(Config.COMMON.zombiesPerSpawn.get(), "zombie") + " per wave"
+                        + (Config.COMMON.enableDaytimeSpawning.get() ? ", day and night." : ", night only."));
     }
 
     private static int setDaytimeSpawning(CommandSourceStack source, boolean enabled) {
-        Config.edit(() -> {
-            Config.set(Config.COMMON.enableDaytimeSpawning, enabled);
-            if (enabled) {
-                Config.set(Config.COMMON.daylightSpawnStartDay, 0);
-            }
-        });
+        if (!CommandUtil.applied(source, () -> Config.set(Config.COMMON.enableDaytimeSpawning, enabled))) {
+            return 0;
+        }
         String message = enabled
-                ? "Daytime custom waves: ON. Daytime spawning starts immediately."
+                ? "Daytime custom waves: ON. " + CommandUtil.startLine(
+                        DifficultyManager.getCurrentDay(source.getLevel()),
+                        Config.COMMON.daylightSpawnStartDay.get(),
+                        "/za spawn daylightstart 0")
                 : Config.COMMON.hordeStartsAtDusk.get()
                         ? "Daytime custom waves: OFF (night-only). Night waves, blood moons, and dusk hordes still work."
                         : "Daytime custom waves: OFF (night-only). Night waves and blood moons still work; scheduled dawn hordes are paused.";
@@ -180,108 +184,102 @@ public final class DaySpawnCommands {
         return 1;
     }
 
-    private static void setSpawningEnabled(CommandSourceStack source, boolean enabled) {
+    private static List<String> setVariantsEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableSpawning();
-        } else {
-            Config.set(Config.COMMON.enableDaySpawning, false);
-            HordeManager.stopAllEvents(source.getLevel());
+            return FeaturePresets.enableVariants();
         }
+        Config.set(Config.COMMON.enableZombieVariants, false);
+        return List.of();
     }
 
-    private static void setVariantsEnabled(boolean enabled) {
+    private static List<String> setNightBoostEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableVariants();
-        } else {
-            Config.set(Config.COMMON.enableZombieVariants, false);
+            return FeaturePresets.enableNightBoost();
         }
+        Config.set(Config.COMMON.enableNightBoost, false);
+        return List.of();
     }
 
-    private static void setNightBoostEnabled(boolean enabled) {
+    private static List<String> setHordesEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableNightBoost();
-        } else {
-            Config.set(Config.COMMON.enableNightBoost, false);
+            return FeaturePresets.enableHordes();
         }
+        Config.set(Config.COMMON.enableHordeEvents, false);
+        HordeManager.stopHorde(source.getLevel());
+        return List.of();
     }
 
-    private static void setHordesEnabled(CommandSourceStack source, boolean enabled) {
+    private static List<String> setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableHordes();
-        } else {
-            Config.set(Config.COMMON.enableHordeEvents, false);
-            HordeManager.stopHorde(source.getLevel());
+            return FeaturePresets.enableBloodMoons();
         }
+        Config.set(Config.COMMON.enableBloodMoon, false);
+        HordeManager.stopBloodMoon(source.getLevel());
+        return List.of();
     }
 
-    private static void setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
+    private static List<String> setScalingEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableBloodMoons();
-        } else {
-            Config.set(Config.COMMON.enableBloodMoon, false);
-            HordeManager.stopBloodMoon(source.getLevel());
+            return FeaturePresets.enableScaling();
         }
+        Config.set(Config.COMMON.enableDifficultyScaling, false);
+        return List.of();
     }
 
-    private static void setScalingEnabled(boolean enabled) {
+    private static List<String> setAttributesEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableScaling();
-        } else {
-            Config.set(Config.COMMON.enableDifficultyScaling, false);
+            return FeaturePresets.enableAttributes();
         }
+        Config.set(Config.COMMON.enableAttributeModifiers, false);
+        return List.of();
     }
 
-    private static void setAttributesEnabled(boolean enabled) {
+    private static List<String> setAttributeScalingEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableAttributes();
-        } else {
-            Config.set(Config.COMMON.enableAttributeModifiers, false);
+            return FeaturePresets.enableAttributeOption(() -> Config.set(Config.COMMON.scaleAttributesWithDifficulty, true));
         }
+        Config.set(Config.COMMON.scaleAttributesWithDifficulty, false);
+        return List.of();
     }
 
-    private static void setAttributeScalingEnabled(boolean enabled) {
+    private static List<String> setVariantProfilesEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableAttributes();
+            return FeaturePresets.enableAttributeOption(() -> Config.set(Config.COMMON.enableVariantAttributeProfiles, true));
         }
-        Config.set(Config.COMMON.scaleAttributesWithDifficulty, enabled);
+        Config.set(Config.COMMON.enableVariantAttributeProfiles, false);
+        return List.of();
     }
 
-    private static void setVariantProfilesEnabled(boolean enabled) {
+    private static List<String> setContextProfilesEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableAttributes();
+            return FeaturePresets.enableAttributeOption(() -> Config.set(Config.COMMON.enableBiomeDimensionAttributeMultipliers, true));
         }
-        Config.set(Config.COMMON.enableVariantAttributeProfiles, enabled);
+        Config.set(Config.COMMON.enableBiomeDimensionAttributeMultipliers, false);
+        return List.of();
     }
 
-    private static void setContextProfilesEnabled(boolean enabled) {
+    private static List<String> setBiomeModifiersEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableAttributes();
+            return FeaturePresets.enableBiomeModifiers();
         }
-        Config.set(Config.COMMON.enableBiomeDimensionAttributeMultipliers, enabled);
+        Config.set(Config.COMMON.enableBiomeModifiers, false);
+        return List.of();
     }
 
-    private static void setBiomeModifiersEnabled(boolean enabled) {
+    private static List<String> setDeathCooldownEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableBiomeModifiers();
-        } else {
-            Config.set(Config.COMMON.enableBiomeModifiers, false);
+            return FeaturePresets.enableDeathCooldown();
         }
+        Config.set(Config.COMMON.enableDeathCooldown, false);
+        return List.of();
     }
 
-    private static void setDeathCooldownEnabled(boolean enabled) {
+    private static List<String> setSpawnEffectsEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
-            FeaturePresets.enableDeathCooldown();
-        } else {
-            Config.set(Config.COMMON.enableDeathCooldown, false);
+            return FeaturePresets.enableSpawnEffects();
         }
-    }
-
-    private static void setSpawnEffectsEnabled(boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableSpawnEffects();
-        } else {
-            Config.set(Config.COMMON.enableSpawnEffects, false);
-        }
+        Config.set(Config.COMMON.enableSpawnEffects, false);
+        return List.of();
     }
 
     private static int showStatus(CommandSourceStack source, boolean detailed) {

@@ -1,6 +1,9 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -10,6 +13,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -96,10 +100,123 @@ final class CommandUtil {
                 .then(admin(toggleArgument("state")
                         .executes(context -> {
                             boolean enabled = getToggle(context, "state");
-                            setter.accept(context.getSource(), enabled);
+                            if (!applied(context.getSource(), () -> setter.accept(context.getSource(), enabled))) {
+                                return 0;
+                            }
                             feedback(context.getSource(), label + ": " + onOff(enabled), true);
                             return 1;
                         })));
+    }
+
+    @FunctionalInterface
+    interface NotedToggleConsumer {
+        List<String> accept(CommandSourceStack source, boolean value);
+    }
+
+    @FunctionalInterface
+    interface SourceToggleCommand {
+        int run(CommandSourceStack source, boolean value);
+    }
+
+    /** A feature switch whose "on" may repair a broken value; those repairs are listed after the state. */
+    static LiteralArgumentBuilder<CommandSourceStack> featureToggle(
+            String literal,
+            BooleanSupplier getter,
+            NotedToggleConsumer setter,
+            String label) {
+        return Commands.literal(literal)
+                .executes(context -> {
+                    feedback(context.getSource(), label + ": " + onOff(getter.getAsBoolean()), false);
+                    return 1;
+                })
+                .then(admin(toggleArgument("state")
+                        .executes(context -> {
+                            boolean enabled = getToggle(context, "state");
+                            List<List<String>> notes = new ArrayList<>();
+                            if (!applied(context.getSource(), () -> notes.add(setter.accept(context.getSource(), enabled)))) {
+                                return 0;
+                            }
+                            feedback(context.getSource(), withNotes(label + ": " + onOff(enabled), notes.get(0)), true);
+                            return 1;
+                        })));
+    }
+
+    /** A switch that runs the family's own on/off command, so both forms give the same feedback. */
+    static LiteralArgumentBuilder<CommandSourceStack> switchSetting(
+            String literal,
+            BooleanSupplier getter,
+            SourceToggleCommand command,
+            String label) {
+        return Commands.literal(literal)
+                .executes(context -> {
+                    feedback(context.getSource(), label + ": " + onOff(getter.getAsBoolean()), false);
+                    return 1;
+                })
+                .then(admin(toggleArgument("state")
+                        .executes(context -> command.run(context.getSource(), getToggle(context, "state")))));
+    }
+
+    /** Runs a config change and reports a save problem as a normal command error. */
+    static boolean applied(CommandSourceStack source, Runnable change) {
+        try {
+            change.run();
+            return true;
+        } catch (IllegalStateException | IllegalArgumentException | UncheckedIOException e) {
+            failure(source, "Could not save the setting: " + e.getMessage());
+            return false;
+        }
+    }
+
+    static String withNotes(String headline, List<String> notes) {
+        if (notes == null || notes.isEmpty()) {
+            return headline;
+        }
+        return headline + '\n' + String.join("\n", notes);
+    }
+
+    /** One line saying whether a start-day feature runs today, and how to start it now if not. */
+    static String startLine(long currentDay, int startDay, String startNowCommand) {
+        if (currentDay >= startDay) {
+            return "Active now (current day " + currentDay + ", start day " + startDay + ").";
+        }
+        return "Starts on day " + startDay + " (today is day " + currentDay + "). " + startNowCommand + " starts it now.";
+    }
+
+    /** Footer for feature "on" commands, so admins know nothing else was overwritten. */
+    static String keptLine(String section) {
+        return "Your other settings were kept. /za config reset " + section + " restores this section's defaults.";
+    }
+
+    /**
+     * Turns a feature on and reports the result: the state, when it runs (for start-day features),
+     * any value that had to be repaired, and a reminder that nothing else changed.
+     */
+    static int turnOn(
+            CommandSourceStack source,
+            String label,
+            String section,
+            Supplier<List<String>> enable,
+            Supplier<String> startLine) {
+        List<String> notes = new ArrayList<>();
+        if (!applied(source, () -> notes.addAll(enable.get()))) {
+            return 0;
+        }
+        StringBuilder message = new StringBuilder(label).append(": ON");
+        if (startLine != null) {
+            message.append('\n').append(startLine.get());
+        }
+        notes.forEach(note -> message.append('\n').append(note));
+        message.append('\n').append(keptLine(section));
+        feedback(source, message.toString(), true);
+        return 1;
+    }
+
+    static int turnOff(CommandSourceStack source, String label, Runnable disable, String detail) {
+        if (!applied(source, disable)) {
+            return 0;
+        }
+        feedback(source, detail == null ? label + ": OFF" : label + ": OFF\n" + detail, true);
+        return 1;
     }
 
     static LiteralArgumentBuilder<CommandSourceStack> intSetting(
@@ -133,7 +250,9 @@ final class CommandUtil {
                         .suggests(CommandSuggestions.integers(getter, commonValues))
                         .executes(context -> {
                             int value = IntegerArgumentType.getInteger(context, argument);
-                            setter.accept(context.getSource(), value);
+                            if (!applied(context.getSource(), () -> setter.accept(context.getSource(), value))) {
+                                return 0;
+                            }
                             feedback(context.getSource(), message.apply(value), true);
                             return 1;
                         })));
@@ -157,7 +276,9 @@ final class CommandUtil {
                         .suggests(CommandSuggestions.doubles(getter, commonValues))
                         .executes(context -> {
                             double value = DoubleArgumentType.getDouble(context, argument);
-                            setter.accept(value);
+                            if (!applied(context.getSource(), () -> setter.accept(value))) {
+                                return 0;
+                            }
                             feedback(context.getSource(), message.apply(value), true);
                             return 1;
                         })));

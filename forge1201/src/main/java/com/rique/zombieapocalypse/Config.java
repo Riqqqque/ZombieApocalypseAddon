@@ -1,18 +1,38 @@
 package com.rique.zombieapocalypse;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.FileWatcher;
+import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.core.io.WritingMode;
+import com.electronwill.nightconfig.toml.TomlFormat;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
+import com.mojang.logging.LogUtils;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 public final class Config {
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     public static final ForgeConfigSpec COMMON_SPEC;
     public static final Common COMMON;
     private static final ThreadLocal<Map<List<String>, Object>> PENDING_CHANGES = new ThreadLocal<>();
@@ -73,26 +93,301 @@ public final class Config {
             throw new IllegalStateException("Zombie Apocalypse config is not loaded yet.");
         }
 
-        CommentedFileConfig file = CommentedFileConfig.builder(config.getFullPath())
+        Path path = config.getFullPath();
+        CommentedFileConfig file = CommentedFileConfig.builder(path)
                 .sync()
                 .preserveInsertionOrder()
-                .writingMode(WritingMode.REPLACE)
                 .build();
-        file.load();
+        try {
+            file.load();
+        } catch (ParsingException e) {
+            throw new IllegalStateException("The config file has a syntax error, so the change was not saved. Fix "
+                    + path.getFileName() + " or delete it to regenerate it. (" + e.getMessage() + ")", e);
+        }
+        if (file.valueMap().isEmpty()) {
+            // The file was deleted or emptied while the game ran. Start from the settings in use,
+            // not from an empty file, so this change does not turn everything else into defaults.
+            currentValues().forEach(file::set);
+            COMMON_SPEC.correct(file);
+        }
         changes.forEach(file::set);
-        file.save();
+        writeAtomically(file, path);
 
-        // Forge's file watcher reloads its own config object on another thread after this save.
-        // Reloading or correcting that shared object here races the watcher and can reset whole
-        // sections to defaults, so serve values from this complete copy until the watcher's reload
-        // event points the spec back at Forge's object.
+        // Values are served from this complete copy. Forge's own object is not reloaded because
+        // the mod watches this file itself (see startWatching).
         COMMON_SPEC.setConfig(file);
+        ConfigGuard.saved();
+    }
+
+    /**
+     * Writes the whole file to a temporary sibling and moves it into place, so nothing can read it
+     * half written. Windows refuses the move while another program has the file open, so it retries
+     * briefly and, as a last resort, writes the file in place.
+     */
+    private static void writeAtomically(CommentedFileConfig file, Path path) {
+        Path temp = path.resolveSibling(path.getFileName() + ".tmp");
+        TomlFormat.instance().createWriter().write(file, temp, WritingMode.REPLACE);
+        try {
+            IOException lastFailure = null;
+            for (int attempt = 0; attempt < 10; attempt++) {
+                try {
+                    try {
+                        Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                    } catch (AtomicMoveNotSupportedException e) {
+                        Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    rememberFileState(path);
+                    return;
+                } catch (IOException e) {
+                    lastFailure = e;
+                    sleepQuietly(100L);
+                }
+            }
+            try {
+                Files.write(path, Files.readAllBytes(temp));
+                Files.deleteIfExists(temp);
+                rememberFileState(path);
+            } catch (IOException e) {
+                e.addSuppressed(lastFailure);
+                throw e;
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not save " + path.getFileName()
+                    + ". Another program may be holding the file open.", e);
+        }
     }
 
     public static void reloaded(ModConfig config) {
         bind(config);
         if (config.getSpec() == COMMON_SPEC && config.getConfigData() != null) {
             COMMON_SPEC.setConfig(config.getConfigData());
+        }
+    }
+
+    // File watching. Forge 1.20.1's watcher (NightConfig 3.6.4) skips any change Windows reports as
+    // more than one write, which a normal editor save usually is, so hand edits were often ignored.
+    // When it does notice a save it can read the file half written and reset the missing settings
+    // to defaults. The mod removes that watch for its own file and polls instead: a change is only
+    // applied once the file has stopped changing, a file that does not parse is never applied, and
+    // operators are told what changed.
+
+    private static final long WATCH_INTERVAL_MILLIS = 1000L;
+    private static final int MAX_MISSING_SETTINGS_TO_REPAIR = 3;
+    private static volatile Thread watcher;
+    private static volatile FileState appliedState = FileState.NONE;
+    private static volatile FileState pendingState = FileState.NONE;
+    private static volatile FileState reportedBrokenState = FileState.NONE;
+
+    private record FileState(long modified, long size) {
+        static final FileState NONE = new FileState(-1L, -1L);
+
+        static FileState of(Path path) {
+            try {
+                return new FileState(Files.getLastModifiedTime(path).toMillis(), Files.size(path));
+            } catch (IOException e) {
+                return NONE;
+            }
+        }
+    }
+
+    public static void startWatching(ModConfig config) {
+        if (config.getSpec() != COMMON_SPEC) {
+            return;
+        }
+        Path path = config.getFullPath();
+        FileWatcher.defaultInstance().removeWatch(path);
+        rememberFileState(path);
+        synchronized (Config.class) {
+            if (watcher == null) {
+                Thread thread = new Thread(Config::watchLoop, "Zombie Apocalypse config watcher");
+                thread.setDaemon(true);
+                thread.start();
+                watcher = thread;
+            }
+        }
+    }
+
+    private static void rememberFileState(Path path) {
+        FileState state = FileState.of(path);
+        appliedState = state;
+        pendingState = state;
+    }
+
+    private static void watchLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            sleepQuietly(WATCH_INTERVAL_MILLIS);
+            try {
+                checkForEdit();
+            } catch (RuntimeException e) {
+                LOGGER.error("[ZombieApocalypse] Config file check failed", e);
+            }
+        }
+    }
+
+    private static void checkForEdit() {
+        ModConfig config = loadedConfig;
+        if (config == null || config.getConfigData() == null) {
+            return;
+        }
+        Path path = config.getFullPath();
+        FileState now = FileState.of(path);
+        if (now.equals(appliedState) || now.equals(FileState.NONE) || now.equals(reportedBrokenState)) {
+            pendingState = now;
+            return;
+        }
+        if (!now.equals(pendingState)) {
+            // Still changing. Wait until it holds still for a full interval.
+            pendingState = now;
+            return;
+        }
+        reloadEditedFile(path, now);
+    }
+
+    private static synchronized void reloadEditedFile(Path path, FileState state) {
+        CommentedFileConfig file = CommentedFileConfig.builder(path)
+                .sync()
+                .preserveInsertionOrder()
+                .build();
+        try {
+            file.load();
+        } catch (ParsingException e) {
+            if (!state.equals(reportedBrokenState)) {
+                reportedBrokenState = state;
+                String message = "The config file has a syntax error, so your last edit was not applied and the"
+                        + " current settings stay in use. Fix it and save again. (" + e.getMessage() + ")";
+                LOGGER.warn("[ZombieApocalypse] {}", message);
+                notifyOperators(message);
+            }
+            return;
+        }
+
+        if (file.valueMap().isEmpty()) {
+            if (!state.equals(reportedBrokenState)) {
+                reportedBrokenState = state;
+                String message = "The config file is empty, so it was ignored and the current settings stay in use."
+                        + " Use /za config reset all for defaults.";
+                LOGGER.warn("[ZombieApocalypse] {}", message);
+                notifyOperators(message);
+            }
+            return;
+        }
+
+        long missing = defaultValues().keySet().stream().filter(settingPath -> !file.contains(settingPath)).count();
+        if (missing > MAX_MISSING_SETTINGS_TO_REPAIR) {
+            // Most likely a save that has not finished, or a file cut short. Applying it would turn
+            // every missing setting into its default, so keep what is in use and wait for a full file.
+            if (!state.equals(reportedBrokenState)) {
+                reportedBrokenState = state;
+                String message = "The config file is missing " + missing + " settings, so it looks incomplete and was"
+                        + " not applied. The current settings stay in use. Save the full file again, or use"
+                        + " /za config reset <section> to restore defaults on purpose.";
+                LOGGER.warn("[ZombieApocalypse] {}", message);
+                notifyOperators(message);
+            }
+            return;
+        }
+
+        List<String> corrections = new java.util.ArrayList<>();
+        if (!COMMON_SPEC.isCorrect(file)) {
+            COMMON_SPEC.correct(file, (action, settingPath, incorrect, corrected) ->
+                    corrections.add(String.join(".", settingPath) + " (" + incorrect + " -> " + corrected + ")"));
+        }
+        if (!corrections.isEmpty()) {
+            writeAtomically(file, path);
+            String message = "Fixed " + corrections.size() + (corrections.size() == 1 ? " setting" : " settings")
+                    + " in the config file that were missing or out of range: "
+                    + String.join(", ", corrections.subList(0, Math.min(5, corrections.size())))
+                    + (corrections.size() > 5 ? ", ..." : "");
+            LOGGER.warn("[ZombieApocalypse] {}", message);
+            notifyOperators(message);
+        } else {
+            appliedState = state;
+        }
+
+        COMMON_SPEC.setConfig(file);
+        ConfigGuard.fileEdited();
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Puts a setting back to its default value. */
+    public static <T> void reset(ForgeConfigSpec.ConfigValue<T> setting) {
+        set(setting, setting.getDefault());
+    }
+
+    /** Saves several settings by path in one write, the same way single changes are saved. */
+    public static void setAll(Map<List<String>, Object> values) {
+        Map<List<String>, Object> pending = PENDING_CHANGES.get();
+        if (pending == null) {
+            edit(() -> setAll(values));
+            return;
+        }
+        values.forEach((path, value) -> pending.put(List.copyOf(path), value));
+    }
+
+    /** Current value of every setting, keyed by its path. */
+    public static Map<List<String>, Object> currentValues() {
+        Map<List<String>, Object> values = new LinkedHashMap<>();
+        forEachValue(COMMON_SPEC.getValues(), value -> values.put(value.getPath(), value.get()));
+        return values;
+    }
+
+    /** Default value of every setting, keyed by its path. */
+    public static Map<List<String>, Object> defaultValues() {
+        Map<List<String>, Object> values = new LinkedHashMap<>();
+        forEachValue(COMMON_SPEC.getValues(), value -> values.put(value.getPath(), value.getDefault()));
+        return values;
+    }
+
+    /** Top-level config sections, such as dayspawning or blockbreaking. */
+    public static List<String> sections() {
+        return List.copyOf(COMMON_SPEC.getValues().valueMap().keySet());
+    }
+
+    public static boolean isLoaded() {
+        ModConfig config = loadedConfig;
+        return config != null && config.getConfigData() != null;
+    }
+
+    /** Runs the task on the server thread when a server is running, otherwise right away. */
+    public static void runOnServerThread(Runnable task) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            task.run();
+        } else {
+            server.execute(task);
+        }
+    }
+
+    /** Tells online operators about a config problem the mod handled on its own. */
+    public static void notifyOperators(String message) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            return;
+        }
+        server.execute(() -> {
+            Component text = Component.literal("[Zombie Apocalypse] " + message).withStyle(ChatFormatting.GOLD);
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (player.hasPermissions(2)) {
+                    player.sendSystemMessage(text);
+                }
+            }
+        });
+    }
+
+    private static void forEachValue(UnmodifiableConfig values, Consumer<ForgeConfigSpec.ConfigValue<?>> action) {
+        for (Object entry : values.valueMap().values()) {
+            if (entry instanceof UnmodifiableConfig section) {
+                forEachValue(section, action);
+            } else if (entry instanceof ForgeConfigSpec.ConfigValue<?> value) {
+                action.accept(value);
+            }
         }
     }
 
@@ -401,7 +696,9 @@ public final class Config {
                     "Fast setup in game: /za preset casual, /za preset standard, or /za preset hardcore.",
                     "Check the important live settings with /za status. Use /za help for short command topics.",
                     "20 ticks = 1 second. Chances use decimals: 0.25 = 25%, 0.50 = 50%, and 1.0 = 100%.",
-                    "Stop the server before editing this file manually. Advanced settings are safe to leave at their defaults."))
+                    "In-game /za commands save right away and never reset your other settings. /za config reset <section> restores defaults.",
+                    "Edits to this file are picked up while the game runs, but editing with the server stopped is safest.",
+                    "Advanced settings are safe to leave at their defaults."))
                     .push("general");
             preventSunBurn = builder
                     .comment(
@@ -506,7 +803,7 @@ public final class Config {
                     "CUSTOM DAY/NIGHT SPAWNING",
                     "This is the main pressure system. It creates extra zombie waves around survival players.",
                     "Safe beginner setup: keep the defaults, then lower daySpawnChance if the world feels too packed.",
-                    "Quick setup: /za spawn on loads the standard day/night spawning preset.",
+                    "In game: /za spawn on turns custom waves on and keeps every value below as you set it.",
                     "Use enableDaytimeSpawning = false for permanent night-only custom waves.",
                     "Use maxBlockLightForSpawning if you want player-placed lights to protect bases from custom waves.",
                     "Performance warning: low intervals, high wave size, high caps, and high attempts can lag weak servers.",
@@ -655,7 +952,7 @@ public final class Config {
                     "ZOMBIE BLOCK BREAKING",
                     "Optional destructive behavior for zombie-class mobs.",
                     "Safe beginner setup: leave this disabled unless your server wants base pressure.",
-                    "Quick setup: /za breaking on enables a protected, balanced preset immediately.",
+                    "In game: /za breaking on turns it on with your values below. /za breaking dayone also starts it today.",
                     "When enabled, zombies only try on a timer and chance roll, so this avoids every-zombie every-tick scans.",
                     "The defaults protect chests, furnaces, modded machines, light sources, tool-required blocks, and unbreakable blocks.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -760,7 +1057,7 @@ public final class Config {
                     "ZOMBIE BLOCK PLACING",
                     "Optional siege behavior that lets zombie-class mobs place simple building blocks to reach targets.",
                     "Safe beginner setup: leave this disabled. It is separate from zombie block breaking.",
-                    "Quick setup: /za placing on enables limited cobblestone steps and bridges immediately.",
+                    "In game: /za placing on turns it on with your values below. /za placing dayone also starts it today.",
                     "Placement honors mobGriefing and loader block-place events by default, so protection mods can cancel it.",
                     "Each zombie has a configurable placement limit to prevent unlimited terrain clutter.",
                     "Use start day 0 if you want it active immediately after enabling."))
@@ -877,7 +1174,7 @@ public final class Config {
                     "Safe beginner setup: leave this disabled. It never places or breaks blocks.",
                     "Towering requires a valid target and a nearby crowd, and is day-gated to prevent early-world pressure.",
                     "Normal ground combat and ordinary player jumps do not trigger a tower with the default obstacle rule.",
-                    "Quick setup: /za towering on enables a balanced stack preset immediately.",
+                    "In game: /za towering on turns it on with your values below. /za towering dayone also starts it today.",
                     "Checks are staggered by entity ID so large hordes do not all scan on the same tick."))
                     .push("towering");
             enableZombieTowering = builder
@@ -1027,7 +1324,7 @@ public final class Config {
                     "HORDE EVENTS",
                     "Scheduled high-pressure events that temporarily increase custom spawning.",
                     "Safe beginner setup: keep interval and duration at defaults until you know your server can handle more.",
-                    "Quick setup: /za events on enables a balanced scheduled-horde preset.",
+                    "In game: /za events on turns scheduled hordes on and keeps every value below as you set it.",
                     "Performance warning: hordeZombiesPerSpawn, hordeSpawnMultiplier, and eventSpawnInterval are the big lag knobs.",
                     "Hardcore setup: increase one setting at a time, not all at once."))
                     .push("horde");
@@ -1105,7 +1402,7 @@ public final class Config {
                     "Random night events that raise zombie pressure until dawn.",
                     "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
                     "Safe beginner setup: keep chance low and avoid huge multipliers.",
-                    "Quick setup: /za bloodmoon on enables a balanced random-event preset."))
+                    "In game: /za bloodmoon on turns random blood moons on and keeps every value below as you set it."))
                     .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
@@ -1139,7 +1436,7 @@ public final class Config {
                     "DAY-BASED DIFFICULTY SCALING",
                     "Makes the apocalypse get harder as the world day counter rises.",
                     "Safe beginner setup: keep scalingStartDay above 0 so new worlds get a short grace period.",
-                    "Quick setup: /za scaling on loads balanced day 3-50 progression.",
+                    "In game: /za scaling on turns scaling on and keeps every value below as you set it.",
                     "Hardcore setup: lower scalingStartDay or maxScalingDay, but test before combining with strong hordes."))
                     .push("scaling");
             enableDifficultyScaling = builder
@@ -1248,7 +1545,7 @@ public final class Config {
                     "ADVANCED ATTRIBUTE SYSTEM",
                     "Deep stat tuning for zombie-class mobs when they enter the world.",
                     "Beginner advice: leave this on with default numbers unless you are building a custom difficulty profile.",
-                    "Quick setup: /za attributes on loads conservative scaling values and required dependencies.",
+                    "In game: /za attributes on turns the attribute system on and keeps every value below as you set it.",
                     "Hardcore setup: use small multiplier changes first. 1.20 is already 20% stronger.",
                     "Warning: extreme health, speed, follow range, or knockback values can feel broken or hurt performance."))
                     .push("attributes");

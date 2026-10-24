@@ -12,6 +12,23 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 class ConfigSpecTest {
 
     @Test
+    void resetSectionsMatchTheNamesFeatureCommandsPointTo() {
+        assertTrue(Config.sections().containsAll(java.util.List.of(
+                "dayspawning", "horde", "bloodmoon", "scaling", "attributes", "compatibility",
+                "blockbreaking", "blockplacing", "towering")));
+        assertFalse(Config.sections().contains("all"));
+    }
+
+    @Test
+    void defaultValuesCoverEverySettingWithItsDefault() {
+        var defaults = Config.defaultValues();
+        assertEquals(0.5, defaults.get(java.util.List.of("dayspawning", "daySpawnChance")));
+        assertEquals(false, defaults.get(java.util.List.of("blockbreaking", "enableZombieBlockBreaking")));
+        assertTrue(defaults.containsKey(java.util.List.of("attributes", "variants", "husk", "healthMultiplier")));
+        assertTrue(defaults.size() > 150);
+    }
+
+    @Test
     void toweringDefaultsAreBalancedAndReviewedRangesAreAccepted() {
         assertEquals(0, defaultValue(Config.COMMON.zombieToweringMaxStackSize));
         assertEquals(3, defaultValue(Config.COMMON.zombieToweringMaxTowersPerPlayer));

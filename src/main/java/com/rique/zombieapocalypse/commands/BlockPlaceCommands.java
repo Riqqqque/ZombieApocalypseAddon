@@ -1,5 +1,7 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.List;
+
 import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.core.BlockPos;
@@ -30,13 +32,13 @@ public final class BlockPlaceCommands {
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
                 .then(CommandUtil.admin(Commands.literal("on")
-                        .executes(context -> setEnabled(context.getSource(), true))))
+                        .executes(context -> setEnabled(context.getSource(), true, false))))
                 .then(CommandUtil.admin(Commands.literal("off")
-                        .executes(context -> setEnabled(context.getSource(), false))))
+                        .executes(context -> setEnabled(context.getSource(), false, false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
-                        .executes(context -> setEnabled(context.getSource(), true))))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieBlockPlacing::get,
-                        BlockPlaceCommands::setEnabledValue, "Zombie block placing"))
+                        .executes(context -> setEnabled(context.getSource(), true, true))))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableZombieBlockPlacing::get,
+                        (source, enabled) -> setEnabled(source, enabled, false), "Zombie block placing"))
                 .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.zombieBlockPlacingStartDay::get,
                         value -> Config.set(Config.COMMON.zombieBlockPlacingStartDay, value),
@@ -124,27 +126,20 @@ public final class BlockPlaceCommands {
         return 1;
     }
 
-    private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableBlockPlacing();
-            ZombieBlockPlacer.clearRuntimeState();
-            CommandUtil.feedback(source,
-                    "Zombie block placing: ON\nBalanced cobblestone step/bridge preset loaded and active immediately. mobGriefing and protection events are respected.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableZombieBlockPlacing, false);
-            CommandUtil.feedback(source, "Zombie block placing: OFF", true);
+    private static int setEnabled(CommandSourceStack source, boolean enabled, boolean startNow) {
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Zombie block placing",
+                    () -> Config.set(Config.COMMON.enableZombieBlockPlacing, false), null);
         }
-        return 1;
-    }
-
-    private static void setEnabledValue(boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableBlockPlacing();
-            ZombieBlockPlacer.clearRuntimeState();
-        } else {
-            Config.set(Config.COMMON.enableZombieBlockPlacing, false);
-        }
+        return CommandUtil.turnOn(source, "Zombie block placing", "blockplacing",
+                () -> {
+                    List<String> notes = FeaturePresets.enableBlockPlacing(
+                            source.getLevel(), BlockPos.containing(source.getPosition()), startNow);
+                    ZombieBlockPlacer.clearRuntimeState();
+                    return notes;
+                },
+                () -> CommandUtil.startLine(DifficultyManager.getCurrentDay(source.getLevel()),
+                        Config.COMMON.zombieBlockPlacingStartDay.get(), "/za placing dayone"));
     }
 
     private static int showStatus(CommandSourceStack source) {

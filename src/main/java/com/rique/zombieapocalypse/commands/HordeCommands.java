@@ -39,8 +39,8 @@ public final class HordeCommands {
                         })))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableHordeEvents::get,
-                        HordeCommands::setHordesEnabledValue, "Scheduled hordes"))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableHordeEvents::get,
+                        HordeCommands::setHordesEnabled, "Scheduled hordes"))
                 .then(CommandUtil.toggleSetting("dusk", Config.COMMON.hordeStartsAtDusk::get,
                         value -> Config.set(Config.COMMON.hordeStartsAtDusk, value),
                         "Scheduled hordes start at dusk"))
@@ -90,8 +90,8 @@ public final class HordeCommands {
                         .executes(context -> startBloodMoon(context.getSource()))))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableBloodMoon::get,
-                        HordeCommands::setBloodMoonsEnabledValue, "Random blood moons"))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableBloodMoon::get,
+                        HordeCommands::setBloodMoonsEnabled, "Random blood moons"))
                 .then(CommandUtil.doubleSetting("chance", "chance", 0.0, 1.0,
                         Config.COMMON.bloodMoonChance::get,
                         value -> Config.set(Config.COMMON.bloodMoonChance, value),
@@ -157,49 +157,29 @@ public final class HordeCommands {
     }
 
     private static int setHordesEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableHordes();
-            CommandUtil.feedback(source,
-                    "Scheduled hordes: ON\nBalanced event preset loaded. Custom day/night waves were enabled so scheduled dawn hordes can run.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableHordeEvents, false);
-            HordeManager.stopHorde(source.getLevel());
-            CommandUtil.feedback(source, "Scheduled hordes: OFF\nAny active horde was stopped.", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Scheduled hordes", () -> {
+                Config.set(Config.COMMON.enableHordeEvents, false);
+                HordeManager.stopHorde(source.getLevel());
+            }, "Any active horde was stopped.");
         }
-        return 1;
-    }
-
-    private static void setHordesEnabledValue(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableHordes();
-        } else {
-            Config.set(Config.COMMON.enableHordeEvents, false);
-            HordeManager.stopHorde(source.getLevel());
-        }
+        return CommandUtil.turnOn(source, "Scheduled hordes", "horde",
+                FeaturePresets::enableHordes,
+                () -> "Every " + CommandUtil.count(Config.COMMON.hordeIntervalDays.get(), "day") + " at "
+                        + CommandUtil.percent(Config.COMMON.hordeStartChance.get()) + " chance, "
+                        + (Config.COMMON.hordeStartsAtDusk.get() ? "at dusk." : "at dawn."));
     }
 
     private static int setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableBloodMoons();
-            CommandUtil.feedback(source,
-                    "Random blood moons: ON\nBalanced night-event preset loaded. Custom zombie waves were enabled automatically.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableBloodMoon, false);
-            HordeManager.stopBloodMoon(source.getLevel());
-            CommandUtil.feedback(source, "Random blood moons: OFF\nAny active or queued blood moon was stopped.", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Random blood moons", () -> {
+                Config.set(Config.COMMON.enableBloodMoon, false);
+                HordeManager.stopBloodMoon(source.getLevel());
+            }, "Any active or queued blood moon was stopped.");
         }
-        return 1;
-    }
-
-    private static void setBloodMoonsEnabledValue(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableBloodMoons();
-        } else {
-            Config.set(Config.COMMON.enableBloodMoon, false);
-            HordeManager.stopBloodMoon(source.getLevel());
-        }
+        return CommandUtil.turnOn(source, "Random blood moons", "bloodmoon",
+                FeaturePresets::enableBloodMoons,
+                () -> "Nightly chance: " + CommandUtil.percent(Config.COMMON.bloodMoonChance.get()) + '.');
     }
 
     private static int showStatus(CommandSourceStack source) {

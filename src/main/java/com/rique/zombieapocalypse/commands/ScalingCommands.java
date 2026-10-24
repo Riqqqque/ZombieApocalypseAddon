@@ -24,8 +24,8 @@ public final class ScalingCommands {
                         .executes(context -> setEnabled(context.getSource(), false))))
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableDifficultyScaling::get,
-                        ScalingCommands::setEnabledValue, "Difficulty scaling"))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableDifficultyScaling::get,
+                        ScalingCommands::setEnabled, "Difficulty scaling"))
                 .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.scalingStartDay::get,
                         value -> Config.set(Config.COMMON.scalingStartDay, value),
@@ -75,24 +75,15 @@ public final class ScalingCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableScaling();
-            CommandUtil.feedback(source,
-                    "Difficulty scaling: ON\nBalanced day 3-50 progression preset loaded.",
-                    true);
-        } else {
-            Config.set(Config.COMMON.enableDifficultyScaling, false);
-            CommandUtil.feedback(source, "Difficulty scaling: OFF", true);
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Difficulty scaling",
+                    () -> Config.set(Config.COMMON.enableDifficultyScaling, false), null);
         }
-        return 1;
-    }
-
-    private static void setEnabledValue(boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableScaling();
-        } else {
-            Config.set(Config.COMMON.enableDifficultyScaling, false);
-        }
+        return CommandUtil.turnOn(source, "Difficulty scaling", "scaling",
+                FeaturePresets::enableScaling,
+                () -> "Progression: day " + Config.COMMON.scalingStartDay.get() + " to day "
+                        + Config.COMMON.maxScalingDay.get() + " (today is day "
+                        + DifficultyManager.getCurrentDay(source.getLevel()) + ").");
     }
 
     private static int showStatus(CommandSourceStack source) {

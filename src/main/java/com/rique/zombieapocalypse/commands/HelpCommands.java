@@ -82,12 +82,12 @@ public final class HelpCommands {
         CommandUtil.feedback(source,
                 "Event commands:\n"
                         + "/za events - show horde and blood moon status\n"
-                        + "/za events on|off - enable scheduled hordes with balanced defaults\n"
+                        + "/za events on|off - turn scheduled hordes on or off (your horde settings are kept)\n"
                         + "/za events start|stop - control a horde\n"
                         + "/za events interval|chance|duration - tune the schedule\n"
                         + "/za events dusk on|off - start scheduled hordes at dusk instead of dawn\n"
                         + "/za events multiplier|amount|spawninterval - tune event pressure\n"
-                        + "/za bloodmoon on|off - enable random blood moons with balanced defaults\n"
+                        + "/za bloodmoon on|off - turn random blood moons on or off (your settings are kept)\n"
                         + "/za bloodmoon start - start one now or queue it for tonight\n"
                         + "/za bloodmoon chance|multiplier|amount - tune blood moons\n"
                         + "/za spawn horde on|off - enable scheduled hordes\n"
@@ -148,9 +148,9 @@ public final class HelpCommands {
                         + "/za towering smartdismount on|off - safely collapse towers on reachable ground\n"
                         + "/za towering jumping on|off - control whether top zombies leap to attack\n"
                         + "/za towering pace <ticks> - delay between tower growth, dismounts, and jumps\n"
-                        + "Each on command loads safe, usable defaults and starts on the current day.\n"
+                        + "Each on command keeps your settings and only fixes a value that would stop the feature from working.\n"
                         + "Use <command> startday <day> to delay a feature.\n"
-                        + "Use <command> dayone to enable it immediately.\n"
+                        + "Each feature waits for its start day. Use <command> dayone to start it today.\n"
                         + "Use <command> events on to also allow it during hordes and blood moons before the start day.\n"
                         + "Block breaking and placing respect mobGriefing by default.",
                 false);

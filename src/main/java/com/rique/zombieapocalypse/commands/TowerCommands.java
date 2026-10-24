@@ -22,15 +22,15 @@ public final class TowerCommands {
                 .then(Commands.literal("status")
                         .executes(context -> showStatus(context.getSource())))
                 .then(CommandUtil.admin(Commands.literal("on")
-                        .executes(context -> setEnabled(context.getSource(), true))))
+                        .executes(context -> setEnabled(context.getSource(), true, false))))
                 .then(CommandUtil.admin(Commands.literal("off")
-                        .executes(context -> setEnabled(context.getSource(), false))))
+                        .executes(context -> setEnabled(context.getSource(), false, false))))
                 .then(CommandUtil.admin(Commands.literal("dayone")
-                        .executes(context -> setEnabled(context.getSource(), true))))
+                        .executes(context -> setEnabled(context.getSource(), true, true))))
                 .then(CommandUtil.admin(Commands.literal("unlimited")
                         .executes(context -> enableUnlimited(context.getSource()))))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableZombieTowering::get,
-                        TowerCommands::setEnabledValue, "Zombie towering"))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableZombieTowering::get,
+                        (source, enabled) -> setEnabled(source, enabled, false), "Zombie towering"))
                 .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
                         Config.COMMON.zombieToweringStartDay::get,
                         value -> Config.set(Config.COMMON.zombieToweringStartDay, value),
@@ -127,16 +127,17 @@ public final class TowerCommands {
                         "Require obstacle or raised/covered target")));
     }
 
-    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+    private static int setEnabled(CommandSourceStack source, boolean enabled, boolean startNow) {
         if (enabled) {
-            FeaturePresets.enableTowering();
-            CommandUtil.feedback(source,
-                    "Zombie towering: ON\nSmart preset loaded: towers only form for useful obstacles or raised targets, grow to target Y + 1, and separate onto safe ground.",
-                    true);
-            return 1;
+            return CommandUtil.turnOn(source, "Zombie towering", "towering",
+                    () -> FeaturePresets.enableTowering(startNow),
+                    () -> CommandUtil.startLine(DifficultyManager.getCurrentDay(source.getLevel()),
+                            Config.COMMON.zombieToweringStartDay.get(), "/za towering dayone"));
         }
 
-        Config.set(Config.COMMON.enableZombieTowering, false);
+        if (!CommandUtil.applied(source, () -> Config.set(Config.COMMON.enableZombieTowering, false))) {
+            return 0;
+        }
         int released = ZombieTowering.releaseAll(source.getServer());
         CommandUtil.feedback(source,
                 "Zombie towering: OFF\nReleased " + released + " loaded stack "
@@ -145,21 +146,17 @@ public final class TowerCommands {
         return 1;
     }
 
-    private static void setEnabledValue(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            FeaturePresets.enableTowering();
-        } else {
-            Config.set(Config.COMMON.enableZombieTowering, false);
-            ZombieTowering.releaseAll(source.getServer());
-        }
-    }
-
     private static int enableUnlimited(CommandSourceStack source) {
-        FeaturePresets.enableUnlimitedTowering();
-        CommandUtil.feedback(source,
-                "Zombie towering: UNLIMITED\nCount and height caps are off. Smart dismounting and jump attacks are off. Very tall towers can affect server performance.",
-                true);
-        return 1;
+        int result = CommandUtil.turnOn(source, "Zombie towering (unlimited)", "towering",
+                FeaturePresets::enableUnlimitedTowering,
+                () -> CommandUtil.startLine(DifficultyManager.getCurrentDay(source.getLevel()),
+                        Config.COMMON.zombieToweringStartDay.get(), "/za towering dayone"));
+        if (result > 0) {
+            CommandUtil.feedback(source,
+                    "Count and height caps, smart dismounting, and jump attacks are off. Very tall towers can affect server performance.",
+                    true);
+        }
+        return result;
     }
 
     private static void setMaximumStackSize(CommandSourceStack source, int value) {
