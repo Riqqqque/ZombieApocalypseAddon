@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.7.0 | `zombieapocalypseaddon-2.7.0.jar` |
-| 1.20.1 | NeoForge | 1.10.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.10.0.jar` |
-| 1.20.1 | Forge | 1.10.0 | `zombieapocalypseaddon-forge-1.20.1-1.10.0.jar` |
+| 1.21.1 | NeoForge | 2.8.0 | `zombieapocalypseaddon-2.8.0.jar` |
+| 1.20.1 | NeoForge | 1.11.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.11.0.jar` |
+| 1.20.1 | Forge | 1.11.0 | `zombieapocalypseaddon-forge-1.20.1-1.11.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -47,7 +47,9 @@ Most questions are one command away:
 |---|---|
 | Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables the protection if you ever want it off. |
 | Stop custom spawns during the day | `/za spawn daytime off` (night waves and blood moons still work) |
-| Have hordes arrive at nightfall | `/za events dusk on` |
+| Have hordes arrive at dawn instead of nightfall | `/za events dusk off` (hordes arrive at dusk by default) |
+| Make the first day dangerous too | `/za spawn daylightstart 0` (day 0 is safe in daylight by default) |
+| Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` (strength rises on days 11, 21, 31...) |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` (up to 4 extra zombies per wave at full strength, hordes included) |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, then set a high `startday` for when they may do it all the time. See [Siege Nights](#siege-nights). |
@@ -66,31 +68,47 @@ Every `on` command keeps your other settings. If one value would stop the featur
 
 ## Gameplay Presets
 
-Presets turn daytime custom waves on and change the main spawning, event, and basic scaling settings. They also restore a safe spawn range, minimum distance, attempt count, and open-sky rule so an old impossible distance setup cannot break a preset. They never enable block breaking, block placing, towering, or overwrite advanced attribute values.
+Presets replace the main spawning, event, and basic scaling settings in one step. They also restore a safe spawn range (30), minimum distance (12), attempt count (10), and the open-sky rule, so an old impossible distance setup cannot break a preset.
 
-| Command | Best for | Main behavior |
-|---|---|---|
-| `/za preset casual` | Casual groups and new worlds | Fewer zombies, day-10 daylight grace, no baby zombies, and torch-protected bases. |
-| `/za preset standard` | Most survival servers | Recommended default pressure and progression. |
-| `/za preset hardcore` | Tested challenge worlds | Faster waves, larger events, and quicker difficulty growth. |
+| Command | Best for |
+|---|---|
+| `/za preset casual` | Casual groups and new worlds: fewer zombies, a 10-day daylight grace, no baby zombies. |
+| `/za preset standard` | Most survival servers. A fresh install already uses it. |
+| `/za preset hardcore` | Tested challenge worlds: faster waves, bigger events, quicker difficulty growth. |
+
+| | Casual | Standard (fresh install) | Hardcore |
+|---|---|---|---|
+| Wave checks | every 9 s, 25% chance | every 6 s, 50% chance | every 4 s, 75% chance |
+| Zombies per wave / cap near each player | 1 / 30 | 2 / 50 | 3 / 80 |
+| Daytime waves start on | day 10 | day 1 | day 0 |
+| Lit areas | any light blocks waves | any light blocks waves | light is ignored |
+| Night spawn chance | x1.25 | x1.5 | x2.0 |
+| Baby zombies | 0% | 5% | 8% |
+| Hordes (at dusk) | every 7 days, 25% chance, 6 min | every 5 days, 50% chance, 10 min | every 3 days, 75% chance, 12 min |
+| Horde strength | x2.0 chance, 3 per wave | x3.0 chance, 5 per wave | x4.0 chance, 8 per wave |
+| Blood moons | 5% of nights, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
+| Difficulty scaling | day 10 to 75 | day 3 to 50 | day 1 to 40 |
+| Full-strength bonuses | +10% speed, +6 health, 15% armor, 10% weapon | +20% speed, +10 health, 30% armor, 20% weapon | +30% speed, +16 health, 45% armor, 35% weapon |
+
+All three keep block breaking, block placing, towering, and animal hunting as you set them, and leave advanced attribute values alone. A preset replaces the settings in this table, so apply it first and tune afterward.
 
 Use `/za status` afterward to confirm what is active.
 
 ## Default Experience
 
-With the standard defaults:
+A fresh install uses the Standard preset:
 
-- Custom zombie waves can spawn near survival players during day and night.
-- Zombies ignore sunlight burning.
-- Normal waves attempt two zombies with a 50% chance every six seconds.
-- Nearby custom pressure is capped per player.
-- Nights receive extra spawn pressure.
-- Hordes and blood moons can happen naturally.
-- Difficulty begins scaling after a short grace period.
-- Death cooldowns reduce immediate repeat pressure after a player dies.
-- Zombie variants, kill tracking, milestones, effects, and bonus drops are enabled.
-- Lit bases are protected: custom waves need complete block darkness, so torches and lanterns keep areas safe.
-- World-damaging features remain off until an administrator enables them.
+- **First day:** daytime is safe on day 0 so players can gather gear. From day 1, waves can come day and night.
+- **Waves:** every 6 seconds each survival player has a 50% chance of a wave of 2 zombies at least 12 blocks away within a 30-block range, up to 50 zombies around that player. Nights raise the chance by half.
+- **Lit bases are safe:** custom waves need complete block darkness, so torches and lanterns protect an area.
+- **No sunlight burning:** zombies walk around in daylight.
+- **Hordes:** every 5th day there is a 50% chance of a horde at dusk. It lasts about the whole night, checks for waves every second at three times the chance, and sends 5 zombies per wave.
+- **Blood moons:** 15% of nights. Five times the wave chance and 4 zombies per wave until dawn.
+- **Getting harder:** from day 3 to day 50 zombies gain up to 20% speed and 10 health (5 hearts), and up to 30% wear armor and 20% carry weapons, with better tiers later on.
+- **Variants:** husks 15%, drowned 10%, zombie villagers 5%, baby zombies 5%. Deserts favor husks, water favors drowned, and mushroom fields are safe.
+- **After a death:** spawns near that player are halved for 30 seconds.
+- **Extras:** kill tracking, milestones, spawn sounds and particles, and bonus drops are on.
+- **Off until you turn them on:** block breaking, block placing, towering, animal hunting, and Nether and End spawning.
 
 ## Main Commands
 
@@ -107,7 +125,7 @@ Start with these:
 | `/za spawn` | Show the important custom-spawn settings. |
 | `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
 | `/za events` | Show current horde and blood moon status. |
-| `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
+| `/za events dusk <on\|off>` | Hordes arrive at dusk (default) or, with `off`, at dawn. |
 | `/za scaling` | Show current day-based difficulty progress. |
 | `/za gear` | Show the zombie gear tiers, today's tier odds, and the drop chance. |
 
@@ -142,7 +160,7 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, permanent daytime enablement, a temporary daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and `/za events start` must be used at night. Enable `/za events dusk on` to keep scheduled hordes in night-only mode; they roll at dusk and hit as night begins. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
+Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves, blood moons, and dusk hordes (the default) continue; `/za events start` must be used at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
 
 Use `/za spawn status all` only when you need every related toggle. The normal `/za spawn` output stays short.
 
@@ -158,7 +176,7 @@ This setting checks block light, not sunlight. It does not disable daytime waves
 
 ### Hordes and Blood Moons
 
-Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Scheduled hordes roll at dawn by default; `/za events dusk on` moves the roll to dusk so the horde arrives with nightfall. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes are scheduled high-pressure events. Blood moons are random night events. Each system has separate chance, timing, wave, and multiplier controls available in the config and through `/za events` or `/za bloodmoon`. Administrators can also start them manually. Scheduled hordes roll at dusk by default, so the horde arrives with nightfall and lasts about the night; `/za events dusk off` moves the roll to dawn. Events require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode keeps blood moons and nighttime manual hordes available, but pauses scheduled dawn hordes and blocks horde waves during daytime; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 ### Siege Nights
 
@@ -180,7 +198,7 @@ Hordes can act as siege nights that make the world harder each time. This setup 
 /za placing events on
 ```
 
-Run them in this order, because each `on` loads that feature's defaults. Horde duration is in real minutes, and 10 lasts from dusk to about dawn. Blood moons count as event nights too, so zombies also break and build during them; use `/za bloodmoon off` if only the scheduled sieges should allow it. `/za towering events on` works the same way for zombie stacks.
+`on` commands keep your other settings, so the order does not matter. Horde duration is in minutes of play, and 10 lasts from dusk to about dawn. Blood moons count as event nights too, so zombies also break and build during them; use `/za bloodmoon off` if only the scheduled sieges should allow it. `/za towering events on` works the same way for zombie stacks.
 
 ### Difficulty Progression
 
@@ -292,7 +310,7 @@ Important rules:
 - Change one performance-heavy setting at a time and test with multiple players.
 - Keep a world backup before enabling destructive behavior.
 
-See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide) for examples and safe ranges.
+See the [config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide) for examples, the [config reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Reference) for every setting with its default and range, and the [FAQ](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/FAQ) for common questions.
 
 ## Server Use
 
@@ -325,9 +343,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.7.0 |
-| NeoForge | 1.20.1 | 1.10.0 |
-| Forge | 1.20.1 | 1.10.0 |
+| NeoForge | 1.21.1 | 2.8.0 |
+| NeoForge | 1.20.1 | 1.11.0 |
+| Forge | 1.20.1 | 1.11.0 |
 
 Build all targets on Windows with:
 

@@ -31,11 +31,25 @@ For a fast setup, choose one gameplay preset:
 /za preset hardcore
 ```
 
-- **Casual:** fewer zombies, day-10 daylight grace, no baby zombies, and torch-protected bases.
-- **Standard:** recommended balance for most survival servers.
-- **Hardcore:** faster waves, larger events, and quicker difficulty growth.
+- **Casual:** fewer zombies, a 10-day daylight grace, no baby zombies.
+- **Standard:** the recommended balance. A fresh install already uses it.
+- **Hardcore:** faster waves, bigger events, and quicker difficulty growth.
 
-Presets turn daytime custom waves on and restore a safe spawn range, minimum distance, attempt count, and open-sky rule, so an old impossible distance setup cannot break the selected preset. They never enable block breaking, block placing, or towering, and they leave advanced attribute values alone.
+| | Casual | Standard (fresh install) | Hardcore |
+|---|---|---|---|
+| Wave checks | every 9 s, 25% chance | every 6 s, 50% chance | every 4 s, 75% chance |
+| Zombies per wave / cap near each player | 1 / 30 | 2 / 50 | 3 / 80 |
+| Daytime waves start on | day 10 | day 1 | day 0 |
+| Lit areas | any light blocks waves | any light blocks waves | light is ignored |
+| Night spawn chance | x1.25 | x1.5 | x2.0 |
+| Baby zombies | 0% | 5% | 8% |
+| Hordes (at dusk) | every 7 days, 25% chance, 6 min | every 5 days, 50% chance, 10 min | every 3 days, 75% chance, 12 min |
+| Horde strength | x2.0 chance, 3 per wave | x3.0 chance, 5 per wave | x4.0 chance, 8 per wave |
+| Blood moons | 5% of nights, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
+| Difficulty scaling | day 10 to 75 | day 3 to 50 | day 1 to 40 |
+| Full-strength bonuses | +10% speed, +6 health, 15% armor, 10% weapon | +20% speed, +10 health, 30% armor, 20% weapon | +30% speed, +16 health, 45% armor, 35% weapon |
+
+All three keep block breaking, block placing, towering, and animal hunting as you set them, and leave advanced attribute values alone. A preset replaces the settings in this table, so apply it first and tune afterward.
 
 Use `/za help` for short topic-based help instead of a wall of commands. Press Tab after `/za` to browse every system and get suggestions for states, values, players, attribute keys, and blocks.
 
@@ -47,7 +61,9 @@ Most things players ask for are one command away:
 |---|---|
 | Keep zombies out of my torch-lit base | Nothing - lit areas are protected by default. `/za spawn maxlight -1` disables it. |
 | Stop custom spawns during the day | `/za spawn daytime off` |
-| Have hordes arrive at nightfall | `/za events dusk on` |
+| Have hordes arrive at dawn instead of nightfall | `/za events dusk off` (hordes arrive at dusk by default) |
+| Make the first day dangerous too | `/za spawn daylightstart 0` (day 0 is safe in daylight by default) |
+| Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, plus a high `startday` (see Siege Nights below) |
@@ -92,7 +108,19 @@ Mushroom-field safe zones remain active even if biome variant weighting is turne
 
 ## What the Default Setup Does
 
-The standard setup attempts two zombies with a 50% wave chance every six seconds. It limits nearby pressure per player, increases pressure at night, enables natural events and progression, and keeps destructive features disabled.
+A fresh install uses the Standard preset:
+
+- **First day:** daytime is safe on day 0 so players can gather gear. From day 1, waves can come day and night.
+- **Waves:** every 6 seconds each survival player has a 50% chance of a wave of 2 zombies at least 12 blocks away within a 30-block range, up to 50 zombies around that player. Nights raise the chance by half.
+- **Lit bases are safe:** custom waves need complete block darkness, so torches and lanterns protect an area.
+- **No sunlight burning:** zombies walk around in daylight.
+- **Hordes:** every 5th day there is a 50% chance of a horde at dusk. It lasts about the whole night, checks for waves every second at three times the chance, and sends 5 zombies per wave.
+- **Blood moons:** 15% of nights. Five times the wave chance and 4 zombies per wave until dawn.
+- **Getting harder:** from day 3 to day 50 zombies gain up to 20% speed and 10 health (5 hearts), and up to 30% wear armor and 20% carry weapons, with better tiers later on.
+- **Variants:** husks 15%, drowned 10%, zombie villagers 5%, baby zombies 5%. Deserts favor husks, water favors drowned, and mushroom fields are safe.
+- **After a death:** spawns near that player are halved for 30 seconds.
+- **Extras:** kill tracking, milestones, spawn sounds and particles, and bonus drops are on.
+- **Off until you turn them on:** block breaking, block placing, towering, animal hunting, and Nether and End spawning.
 
 Player-built lights block the addon's custom waves by default - custom spawns need complete block darkness, so torches and lanterns protect bases. To let zombies spawn in dimmer spots, or ignore light entirely:
 
@@ -115,7 +143,7 @@ This checks block light only. It does not disable daytime waves by itself; use `
 | `/za spawn daytime <on\|off>` | Use `off` for permanent night-only custom waves. |
 | `/za spawn status all` | Show every spawn-related toggle. |
 | `/za events` | Show horde and blood moon status. |
-| `/za events dusk <on\|off>` | Start scheduled hordes at dusk instead of dawn. |
+| `/za events dusk <on\|off>` | Hordes arrive at dusk (default) or, with `off`, at dawn. |
 | `/za scaling` | Show day-based difficulty progress. |
 | `/za gear` | Show zombie gear tiers, today's tier odds, and the drop chance. |
 | `/za compatibility` | Show mixed-mod compatibility safeguards. |
@@ -159,11 +187,11 @@ Administrators can control:
 
 Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-For night-only custom spawning, run `/za spawn daytime off`. Normal night waves and blood moons continue. Scheduled dawn hordes pause, and manual hordes can be started at night. Enable `/za events dusk on` to keep scheduled hordes running in night-only mode; they roll at dusk and arrive as night begins. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
+For night-only custom spawning, run `/za spawn daytime off`. Normal night waves, blood moons, and dusk hordes (the default) continue, and manual hordes can be started at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
 
 ## Events and Progression
 
-Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes roll at dawn by default, or at dusk with `/za events dusk on`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
+Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes arrive at dusk by default and last about the night, or roll at dawn with `/za events dusk off`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
 Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. `/za scaling steps <days>` makes strength rise in jumps on the morning after every step day instead of a little each day, and `/za scaling extrazombies <count>` adds zombies to every wave as strength rises. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
 
@@ -189,7 +217,7 @@ Hordes can act as siege nights that make the world harder each time. This sends 
 /za placing events on
 ```
 
-Run them in this order, because each `on` loads that feature's defaults. Duration is in real minutes; 10 lasts from dusk to about dawn. Blood moons count as event nights too, so use `/za bloodmoon off` if only the scheduled sieges should allow breaking and building. `/za towering events on` works the same way.
+`on` commands keep your other settings, so the order does not matter. Duration is in minutes of play; 10 lasts from dusk to about dawn. Blood moons count as event nights too, so use `/za bloodmoon off` if only the scheduled sieges should allow breaking and building. `/za towering events on` works the same way.
 
 ## Optional Base Pressure
 

@@ -537,7 +537,7 @@ public final class Config {
                     "MOD COMPATIBILITY",
                     "Controls how this addon cooperates with other zombie, difficulty, AI, and spawn-control mods.",
                     "Beginner advice: skip this section and keep every default.",
-                    "Quick reset: /za compatibility on restores the recommended safeguards.",
+                    "Quick reset: /za config reset compatibility restores the recommended safeguards.",
                     "No compatibility option creates a hard dependency. Missing mods and missing optional entity IDs are ignored."))
                     .push("compatibility");
             enableModdedZombieCompatibility = builder
@@ -634,8 +634,8 @@ public final class Config {
                     .comment(
                             "Controls custom waves during daytime in dimensions with a normal day/night cycle.",
                             "true = custom waves can spawn during both day and night.",
-                            "false = night-only mode. Night waves and blood moons still work.",
-                            "Daytime horde waves are blocked, scheduled dawn hordes are paused, and /zhorde start is rejected during the day.",
+                            "false = night-only mode. Night waves, blood moons, and dusk hordes still work.",
+                            "Daytime horde waves are blocked, dawn hordes (hordeStartsAtDusk = false) are paused, and /zhorde start is rejected during the day.",
                             "The Nether, End, and other fixed-time dimensions still use their own dimension toggles.",
                             "daylightSpawnStartDay is only used while this setting is true.",
                             "Applying a gameplay preset turns daytime custom spawning back on.")
@@ -715,11 +715,12 @@ public final class Config {
             daylightSpawnStartDay = builder
                     .comment(
                             "Temporary grace period: blocks daytime custom spawning until the world reaches this day number.",
+                            "Default 1 = the first day (day 0) is safe in daylight so players can gather gear; nights are not.",
                             "0 = daytime spawning starts immediately.",
                             "Nighttime custom spawning still works before this day.",
                             "This value is kept but ignored while enableDaytimeSpawning is false.",
                             "Use enableDaytimeSpawning = false for permanent night-only spawning.")
-                    .defineInRange("daylightSpawnStartDay", 0, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
+                    .defineInRange("daylightSpawnStartDay", 1, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
             builder.pop();
 
             builder.comment(sectionComment(
@@ -1156,25 +1157,26 @@ public final class Config {
 
             hordeStartChance = builder
                     .comment(
-                            "Chance that a scheduled horde day actually starts a horde at dawn.",
-                            "When hordeStartsAtDusk is enabled, the chance is rolled at dusk instead.",
+                            "Chance that a scheduled horde day actually starts a horde.",
+                            "It is rolled at dusk, or at dawn when hordeStartsAtDusk is false.",
                             "0.0 = scheduled days never trigger, 1.0 = every scheduled day triggers.")
                     .defineInRange("hordeStartChance", 0.5, 0.0, 1.0);
 
             hordeStartsAtDusk = builder
                     .comment(
-                            "When true, scheduled hordes roll their start chance at dusk (around 18:00 in-game)",
-                            "instead of dawn, so the horde hits just as night begins.",
+                            "true (default) = scheduled hordes roll their start chance at dusk (around 18:00 in-game),",
+                            "so the horde hits just as night begins. false = they roll at dawn instead.",
                             "This also allows scheduled hordes while enableDaytimeSpawning is false, since the",
                             "horde begins at nightfall rather than during the day.",
                             "Manual horde commands are unaffected and still follow the normal daytime rules.")
-                    .define("hordeStartsAtDusk", false);
+                    .define("hordeStartsAtDusk", true);
 
             hordeDurationMinutes = builder
                     .comment(
-                            "How long a horde lasts in real-world minutes.",
+                            "How long a horde lasts, in minutes of play (1200 game ticks each).",
+                            "Default 10 lasts from dusk to about dawn when hordes start at dusk.",
                             "Longer hordes keep the stronger event settings active for more time.")
-                    .defineInRange("hordeDurationMinutes", 5, 1, 10080);
+                    .defineInRange("hordeDurationMinutes", 10, 1, 10080);
 
             hordeSpawnMultiplier = builder
                     .comment(

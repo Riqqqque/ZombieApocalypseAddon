@@ -1,23 +1,28 @@
 package com.rique.zombieapocalypse.commands;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rique.zombieapocalypse.Config;
+import com.rique.zombieapocalypse.ConfigGuard;
 
 public enum GameplayPreset {
 
     CASUAL(
             "Casual",
             "A slower start, fewer zombies, no baby zombies, and torch-protected bases.",
-            180, 0.25, 1, 30, 10, 7, 0.0,
-            7, 0.25, 4, 2.0, 3, 30,
+            180, 0.25, 1, 30, 10, 0, 0.0,
+            7, 0.25, 6, 2.0, 3, 30,
             0.05, 3.0, 2,
             10, 75, 0.10, 6, 0.15, 0.10,
             1.25),
 
     STANDARD(
             "Standard",
-            "The recommended default balance for most survival servers.",
-            120, 0.50, 2, 50, 0, 0, 0.05,
-            5, 0.50, 5, 3.0, 5, 20,
+            "The recommended balance for most survival servers. A fresh install starts here.",
+            120, 0.50, 2, 50, 1, 0, 0.05,
+            5, 0.50, 10, 3.0, 5, 20,
             0.15, 5.0, 4,
             3, 50, 0.20, 10, 0.30, 0.20,
             1.50),
@@ -26,7 +31,7 @@ public enum GameplayPreset {
             "Hardcore",
             "More frequent waves, stronger events, and faster difficulty growth.",
             80, 0.75, 3, 80, 0, -1, 0.08,
-            3, 0.75, 8, 4.0, 8, 15,
+            3, 0.75, 12, 4.0, 8, 15,
             0.25, 6.0, 6,
             1, 40, 0.30, 16, 0.45, 0.35,
             2.00);
@@ -122,86 +127,64 @@ public enum GameplayPreset {
         return description;
     }
 
-    public void apply() {
+    /** Every setting this preset controls, keyed by config path. A fresh install matches STANDARD. */
+    Map<List<String>, Object> settings() {
         Config.Common config = Config.COMMON;
-        Config.edit(() -> {
-            Config.set(config.enableDaySpawning, true);
-            Config.set(config.enableDaytimeSpawning, true);
-            Config.set(config.enableZombieVariants, true);
-            Config.set(config.enableNightBoost, true);
-            Config.set(config.enableHordeEvents, true);
-            Config.set(config.enableBloodMoon, true);
-            Config.set(config.enableDifficultyScaling, true);
+        Map<List<String>, Object> values = new LinkedHashMap<>();
+        values.put(config.enableDaySpawning.getPath(), true);
+        values.put(config.enableDaytimeSpawning.getPath(), true);
+        values.put(config.enableZombieVariants.getPath(), true);
+        values.put(config.enableNightBoost.getPath(), true);
+        values.put(config.enableHordeEvents.getPath(), true);
+        values.put(config.enableBloodMoon.getPath(), true);
+        values.put(config.enableDifficultyScaling.getPath(), true);
 
-            Config.set(config.daySpawnInterval, spawnInterval);
-            Config.set(config.daySpawnChance, spawnChance);
-            Config.set(config.zombiesPerSpawn, waveSize);
-            Config.set(config.maxDayZombiesPerPlayer, nearbyCap);
-            Config.set(config.spawnRange, SAFE_SPAWN_RANGE);
-            Config.set(config.minSpawnDistance, SAFE_MIN_SPAWN_DISTANCE);
-            Config.set(config.spawnAttemptsPerZombie, SAFE_SPAWN_ATTEMPTS);
-            Config.set(config.requireOpenSkyForOverworldSpawns, true);
-            Config.set(config.daylightSpawnStartDay, daylightStartDay);
-            Config.set(config.maxBlockLightForSpawning, maxBlockLight);
-            Config.set(config.babyZombieChance, babyChance);
+        values.put(config.daySpawnInterval.getPath(), spawnInterval);
+        values.put(config.daySpawnChance.getPath(), spawnChance);
+        values.put(config.zombiesPerSpawn.getPath(), waveSize);
+        values.put(config.maxDayZombiesPerPlayer.getPath(), nearbyCap);
+        values.put(config.spawnRange.getPath(), SAFE_SPAWN_RANGE);
+        values.put(config.minSpawnDistance.getPath(), SAFE_MIN_SPAWN_DISTANCE);
+        values.put(config.spawnAttemptsPerZombie.getPath(), SAFE_SPAWN_ATTEMPTS);
+        values.put(config.requireOpenSkyForOverworldSpawns.getPath(), true);
+        values.put(config.daylightSpawnStartDay.getPath(), daylightStartDay);
+        values.put(config.maxBlockLightForSpawning.getPath(), maxBlockLight);
+        values.put(config.babyZombieChance.getPath(), babyChance);
 
-            Config.set(config.hordeIntervalDays, hordeIntervalDays);
-            Config.set(config.hordeStartChance, hordeChance);
-            Config.set(config.hordeDurationMinutes, hordeDurationMinutes);
-            Config.set(config.hordeSpawnMultiplier, hordeMultiplier);
-            Config.set(config.hordeZombiesPerSpawn, hordeWaveSize);
-            Config.set(config.eventSpawnInterval, eventSpawnInterval);
+        values.put(config.hordeStartsAtDusk.getPath(), true);
+        values.put(config.hordeIntervalDays.getPath(), hordeIntervalDays);
+        values.put(config.hordeStartChance.getPath(), hordeChance);
+        values.put(config.hordeDurationMinutes.getPath(), hordeDurationMinutes);
+        values.put(config.hordeSpawnMultiplier.getPath(), hordeMultiplier);
+        values.put(config.hordeZombiesPerSpawn.getPath(), hordeWaveSize);
+        values.put(config.eventSpawnInterval.getPath(), eventSpawnInterval);
 
-            Config.set(config.bloodMoonChance, bloodMoonChance);
-            Config.set(config.bloodMoonSpawnMultiplier, bloodMoonMultiplier);
-            Config.set(config.bloodMoonZombiesPerSpawn, bloodMoonWaveSize);
+        values.put(config.bloodMoonChance.getPath(), bloodMoonChance);
+        values.put(config.bloodMoonSpawnMultiplier.getPath(), bloodMoonMultiplier);
+        values.put(config.bloodMoonZombiesPerSpawn.getPath(), bloodMoonWaveSize);
 
-            Config.set(config.scalingStartDay, scalingStartDay);
-            Config.set(config.maxScalingDay, maxScalingDay);
-            Config.set(config.maxSpeedBoost, maxSpeedBoost);
-            Config.set(config.maxHealthBoost, maxHealthBoost);
-            Config.set(config.maxArmorChance, maxArmorChance);
-            Config.set(config.maxWeaponChance, maxWeaponChance);
-            Config.set(config.nightSpawnMultiplier, nightSpawnMultiplier);
-        });
+        values.put(config.scalingStartDay.getPath(), scalingStartDay);
+        values.put(config.maxScalingDay.getPath(), maxScalingDay);
+        values.put(config.maxSpeedBoost.getPath(), maxSpeedBoost);
+        values.put(config.maxHealthBoost.getPath(), maxHealthBoost);
+        values.put(config.maxArmorChance.getPath(), maxArmorChance);
+        values.put(config.maxWeaponChance.getPath(), maxWeaponChance);
+        values.put(config.nightSpawnMultiplier.getPath(), nightSpawnMultiplier);
+        return values;
+    }
+
+    public void apply() {
+        Config.setAll(settings());
     }
 
     public boolean matchesCurrentSettings() {
-        Config.Common config = Config.COMMON;
-        return config.enableDaySpawning.get()
-                && config.enableDaytimeSpawning.get()
-                && config.enableZombieVariants.get()
-                && config.enableNightBoost.get()
-                && config.enableHordeEvents.get()
-                && config.enableBloodMoon.get()
-                && config.enableDifficultyScaling.get()
-                && config.daySpawnInterval.get() == spawnInterval
-                && same(config.daySpawnChance.get(), spawnChance)
-                && config.zombiesPerSpawn.get() == waveSize
-                && config.maxDayZombiesPerPlayer.get() == nearbyCap
-                && config.spawnRange.get() == SAFE_SPAWN_RANGE
-                && config.minSpawnDistance.get() == SAFE_MIN_SPAWN_DISTANCE
-                && config.spawnAttemptsPerZombie.get() == SAFE_SPAWN_ATTEMPTS
-                && config.requireOpenSkyForOverworldSpawns.get()
-                && config.daylightSpawnStartDay.get() == daylightStartDay
-                && config.maxBlockLightForSpawning.get() == maxBlockLight
-                && same(config.babyZombieChance.get(), babyChance)
-                && config.hordeIntervalDays.get() == hordeIntervalDays
-                && same(config.hordeStartChance.get(), hordeChance)
-                && config.hordeDurationMinutes.get() == hordeDurationMinutes
-                && same(config.hordeSpawnMultiplier.get(), hordeMultiplier)
-                && config.hordeZombiesPerSpawn.get() == hordeWaveSize
-                && config.eventSpawnInterval.get() == eventSpawnInterval
-                && same(config.bloodMoonChance.get(), bloodMoonChance)
-                && same(config.bloodMoonSpawnMultiplier.get(), bloodMoonMultiplier)
-                && config.bloodMoonZombiesPerSpawn.get() == bloodMoonWaveSize
-                && config.scalingStartDay.get() == scalingStartDay
-                && config.maxScalingDay.get() == maxScalingDay
-                && same(config.maxSpeedBoost.get(), maxSpeedBoost)
-                && config.maxHealthBoost.get() == maxHealthBoost
-                && same(config.maxArmorChance.get(), maxArmorChance)
-                && same(config.maxWeaponChance.get(), maxWeaponChance)
-                && same(config.nightSpawnMultiplier.get(), nightSpawnMultiplier);
+        Map<List<String>, Object> current = Config.currentValues();
+        for (Map.Entry<List<String>, Object> entry : settings().entrySet()) {
+            if (!ConfigGuard.sameValue(current.get(entry.getKey()), entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static String currentName() {
@@ -211,9 +194,5 @@ public enum GameplayPreset {
             }
         }
         return "Custom";
-    }
-
-    private static boolean same(double actual, double expected) {
-        return Double.compare(actual, expected) == 0;
     }
 }

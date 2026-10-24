@@ -48,7 +48,18 @@ public final class WorldCommands {
         ServerLevel overworld = server.overworld();
         long dayCounter = overworld.getDayTime() / 24000L;
         long timeOfDay = floorDayTime(overworld.getDayTime());
-        return "World day counter: " + dayCounter + " | Time of day: " + timeOfDay;
+        return "World day counter: " + dayCounter + " | Time: " + describeTime(timeOfDay) + "\n"
+                + "/za day set <day> changes the day without changing the time.\n"
+                + "Vanilla /time set also resets the day counter to 0; use /time add to skip time instead.";
+    }
+
+    /** Clock time and phase for a time of day in ticks, for example "13:30 (night)". */
+    static String describeTime(long timeOfDay) {
+        long ticks = floorDayTime(timeOfDay);
+        long hours = (ticks / 1000L + 6L) % 24L;
+        long minutes = (ticks % 1000L) * 60L / 1000L;
+        String phase = ticks < 12000L ? "day" : ticks < 13000L ? "dusk" : ticks < 23000L ? "night" : "dawn";
+        return String.format(java.util.Locale.ROOT, "%02d:%02d (%s)", hours, minutes, phase);
     }
 
     private static boolean setDayCounter(MinecraftServer server, long dayCounter) {
