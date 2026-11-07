@@ -363,6 +363,7 @@ public final class EventHandler {
                     finishSunBurnTick(zombie);
                 }
             }
+            ZombieTowering.positionStandingTowers(level);
             return;
         }
         if (event.phase != TickEvent.Phase.START) {

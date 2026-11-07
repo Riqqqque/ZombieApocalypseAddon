@@ -11,6 +11,17 @@ import net.minecraft.world.phys.Vec3;
 class ZombieToweringTest {
 
     @Test
+    void standingZombiesGoCenteredJustAboveTheHeadBelow() {
+        Vec3 position = ZombieTowering.standingPosition(10.5, 64.0, -3.25, 1.95);
+        assertEquals(10.5, position.x, 1.0E-9);
+        assertEquals(64.0 + 1.95 + ZombieTowering.STANDING_GAP, position.y, 1.0E-9);
+        assertEquals(-3.25, position.z, 1.0E-9);
+        // The gap must be larger than one tick of gravity (0.0784) so hitboxes never overlap.
+        assertTrue(ZombieTowering.STANDING_GAP > 0.08);
+        assertTrue(ZombieTowering.STANDING_GAP < 0.2);
+    }
+
+    @Test
     void toweringStartsOnlyWhenEnabledAndDayReached() {
         assertFalse(ZombieTowering.isToweringActive(false, 40, 20));
         assertFalse(ZombieTowering.isToweringActive(true, 19, 20));

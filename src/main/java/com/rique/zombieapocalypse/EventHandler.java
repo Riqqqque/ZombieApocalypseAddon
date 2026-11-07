@@ -231,9 +231,13 @@ public final class EventHandler {
 
     @SubscribeEvent
     public static void onLevelTickComplete(LevelTickEvent.Post event) {
-        if (event.getLevel() instanceof ServerLevel level && !SUN_BURN_CANDIDATES.isEmpty()) {
+        if (!(event.getLevel() instanceof ServerLevel level)) {
+            return;
+        }
+        if (!SUN_BURN_CANDIDATES.isEmpty()) {
             SUN_BURN_CANDIDATES.entrySet().removeIf(entry -> entry.getValue().level() == level);
         }
+        ZombieTowering.positionStandingTowers(level);
     }
 
     private static void prepareSunBurnTick(Zombie zombie) {

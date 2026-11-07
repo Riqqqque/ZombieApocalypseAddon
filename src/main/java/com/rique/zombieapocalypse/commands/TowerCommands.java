@@ -29,6 +29,15 @@ public final class TowerCommands {
                         .executes(context -> setEnabled(context.getSource(), true, true))))
                 .then(CommandUtil.admin(Commands.literal("unlimited")
                         .executes(context -> enableUnlimited(context.getSource()))))
+                .then(Commands.literal("pose")
+                        .executes(context -> {
+                            CommandUtil.feedback(context.getSource(), describePose(), false);
+                            return 1;
+                        })
+                        .then(CommandUtil.admin(Commands.literal("sit")
+                                .executes(context -> setPose(context.getSource(), false))))
+                        .then(CommandUtil.admin(Commands.literal("stand")
+                                .executes(context -> setPose(context.getSource(), true)))))
                 .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableZombieTowering::get,
                         (source, enabled) -> setEnabled(source, enabled, false), "Zombie towering"))
                 .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
@@ -146,6 +155,30 @@ public final class TowerCommands {
         return 1;
     }
 
+    private static String describePose() {
+        return Config.COMMON.zombieToweringStanding.get()
+                ? "Tower pose: STAND (zombies stand on each other's heads)"
+                : "Tower pose: SIT (zombies ride each other; smoothest movement)";
+    }
+
+    private static int setPose(CommandSourceStack source, boolean standing) {
+        boolean changed = Config.COMMON.zombieToweringStanding.get() != standing;
+        if (!CommandUtil.applied(source, () -> Config.set(Config.COMMON.zombieToweringStanding, standing))) {
+            return 0;
+        }
+        String message = describePose();
+        if (changed) {
+            int released = ZombieTowering.releaseAll(source.getServer());
+            message += "\nTook apart " + CommandUtil.count(released, "stacked zombie")
+                    + "; towers re-form in the new pose.";
+        }
+        if (standing) {
+            message += "\nStanding towers can look slightly wobbly while they move. Still towers look solid.";
+        }
+        CommandUtil.feedback(source, message, true);
+        return 1;
+    }
+
     private static int enableUnlimited(CommandSourceStack source) {
         int result = CommandUtil.turnOn(source, "Zombie towering (unlimited)", "towering",
                 FeaturePresets::enableUnlimitedTowering,
@@ -195,6 +228,7 @@ public final class TowerCommands {
                 .append(" (current day ").append(currentDay)
                 .append(", start day ").append(startDay).append(")\n");
         status.append("Also during hordes and blood moons: ").append(CommandUtil.onOff(duringEvents)).append('\n');
+        status.append("Pose: ").append(Config.COMMON.zombieToweringStanding.get() ? "STAND" : "SIT").append('\n');
         status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.zombieToweringInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.zombieToweringChance.get())).append('\n');
         status.append("Max target distance: ")

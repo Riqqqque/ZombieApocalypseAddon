@@ -71,6 +71,7 @@ Most things players ask for are one command away:
 | Make it easier or harder overall | `/za preset casual` or `/za preset hardcore` |
 | Let zombies break stone and ores | `/za breaking on`, then `/za breaking toolblocks on` and `/za breaking hardness 50` |
 | Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Make tower zombies stand on each other instead of sitting | `/za towering pose stand` (`/za towering pose sit` goes back) |
 | Give zombies armor or weapons from another mod | Hold the item and run `/za gear add <tier>`, then `/za gear preview <tier>` |
 | Change how often zombie gear drops | `/za gear dropchance 0.25` (default `0.085`) |
 | Keep my settings for every new world | Nothing - the common config applies to all worlds automatically. |
@@ -225,7 +226,7 @@ Block breaking, block placing, and towering are independent and disabled by defa
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
-- Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. The normal preset grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken.
+- Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. The normal preset grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken. Tower zombies ride each other and are drawn sitting by default; `/za towering pose stand` makes them stand on each other's heads instead. Standing towers can look slightly wobbly while they move.
 
 Administrators can use `on` to turn a feature on with their own settings (it waits for the feature's start day), `dayone` to also start it today, and `off` at any time. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. The older `dayone` aliases remain supported.
 

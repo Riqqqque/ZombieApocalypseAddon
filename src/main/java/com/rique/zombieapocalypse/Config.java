@@ -281,6 +281,7 @@ public final class Config {
         public final ModConfigSpec.BooleanValue enableZombieTowering;
         public final ModConfigSpec.IntValue zombieToweringStartDay;
         public final ModConfigSpec.BooleanValue zombieToweringDuringEvents;
+        public final ModConfigSpec.BooleanValue zombieToweringStanding;
         public final ModConfigSpec.IntValue zombieToweringInterval;
         public final ModConfigSpec.DoubleValue zombieToweringChance;
         public final ModConfigSpec.IntValue zombieToweringMaxTargetDistance;
@@ -1012,6 +1013,16 @@ public final class Config {
                             "Siege nights example: turn this on and set the start day to 50. Zombies tower only during events,",
                             "then all the time from day 50.")
                     .define("zombieToweringDuringEvents", false);
+
+            zombieToweringStanding = builder
+                    .comment(
+                            "How tower zombies look. false (default) = each zombie rides the one below and is drawn sitting;",
+                            "towers move smoothly. true = they stand on each other's heads instead.",
+                            "Standing towers can look slightly wobbly while they move, because the game sends mob",
+                            "positions to players a few times a second. Still towers look solid either way.",
+                            "Changing this takes existing towers apart; they re-form in the new pose.",
+                            "Command: /za towering pose sit|stand")
+                    .define("zombieToweringStanding", false);
 
             zombieToweringInterval = builder
                     .comment(

@@ -146,6 +146,7 @@ class ConfigSpecTest {
         assertEquals(false, defaultValue(Config.COMMON.zombieBlockBreakingDuringEvents));
         assertEquals(false, defaultValue(Config.COMMON.zombieBlockPlacingDuringEvents));
         assertEquals(false, defaultValue(Config.COMMON.zombieToweringDuringEvents));
+        assertEquals(false, defaultValue(Config.COMMON.zombieToweringStanding));
         assertEquals(0, defaultValue(Config.COMMON.scalingStepDays));
         assertEquals(0, defaultValue(Config.COMMON.maxExtraZombiesPerWave));
 

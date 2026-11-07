@@ -90,6 +90,12 @@ public final class ZombieTowering {
     private static final double MIN_TOWER_VERTICAL_GAP = 1.5;
     private static final double COLLISION_EPSILON = 1.0E-4;
     private static final int SAFE_DISMOUNT_RADIUS = 3;
+    // Standing zombies hover this far above the head below them. A zombie falls about 0.078 blocks in
+    // its own tick before the end-of-tick pass puts it back, so the gap keeps the two hitboxes from
+    // overlapping, which would make the game push the base sideways every tick.
+    static final double STANDING_GAP = 0.1;
+    // Guard for walking a tower: no real tower is anywhere near this tall.
+    private static final int MAX_CHAIN_STEPS = 1024;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, TowerMemory> TOWER_MEMORIES = new HashMap<>();
     private static long lastMemoryPruneTick = Long.MIN_VALUE;
@@ -109,7 +115,8 @@ public final class ZombieTowering {
 
         if (zombie.isNoAi()
                 || zombie.isPassenger()
-                || zombie.isVehicle()
+                || hasAnythingOnTop(zombie)
+                || TowerLinks.isLinked(zombie)
                 || zombie.isInWaterOrBubble()
                 || zombie.isInLava()) {
             return false;
@@ -220,13 +227,68 @@ public final class ZombieTowering {
             }
         }
         TOWER_MEMORIES.clear();
+        TowerLinks.clear();
         lastMemoryPruneTick = Long.MIN_VALUE;
         return released;
     }
 
     public static void clearRuntimeState() {
         TOWER_MEMORIES.clear();
+        TowerLinks.clear();
         lastMemoryPruneTick = Long.MIN_VALUE;
+    }
+
+    /**
+     * End-of-tick pass for standing towers: puts every standing zombie back on the head below it and
+     * marks the whole tower for a position update every tick, so players see the stack move as one.
+     * Runs after all entities ticked; the server sends positions at the start of the next tick, so
+     * players only ever see these snapped positions.
+     */
+    public static void positionStandingTowers(ServerLevel level) {
+        if (TowerLinks.isEmpty()) {
+            return;
+        }
+        List<UUID> uppers = TowerLinks.uppersIn(level.dimension());
+        if (uppers.isEmpty()) {
+            return;
+        }
+
+        Set<Zombie> roots = new LinkedHashSet<>();
+        for (UUID upperId : uppers) {
+            Entity entity = level.getEntity(upperId);
+            if (!(entity instanceof Zombie upper) || !upper.isAlive() || upper.isRemoved()) {
+                // Dead, unloaded, or gone. If it is ever loaded again, maintainStack drops its tag.
+                TowerLinks.unlink(upperId);
+                continue;
+            }
+            if (upper.isPassenger() || !isAddonStackRider(upper)) {
+                dropStandingLink(level, upper, false);
+                continue;
+            }
+            Zombie support = TowerLinks.supportOf(upper);
+            if (support == null) {
+                // The zombie below died or is gone. Put this one down on safe ground, the way the
+                // game dismounts a rider whose vehicle disappears, instead of letting it fall.
+                dropStandingLink(level, upper, true);
+                continue;
+            }
+            if (!TowerLinks.isLinked(support)) {
+                roots.add(support);
+            }
+        }
+
+        for (Zombie root : roots) {
+            root.hasImpulse = true;
+            Zombie current = root;
+            Zombie upper;
+            int steps = 0;
+            while ((upper = TowerLinks.upperOf(current)) != null
+                    && isAddonStackRider(upper)
+                    && steps++ < MAX_CHAIN_STEPS) {
+                placeStanding(upper, current);
+                current = upper;
+            }
+        }
     }
 
     public static int trimLoadedTowers(MinecraftServer server, int maximumStackSize) {
@@ -424,7 +486,9 @@ public final class ZombieTowering {
     }
 
     private static boolean maintainStack(ServerLevel level, Zombie zombie) {
-        if (!(zombie.getVehicle() instanceof Zombie)) {
+        if (supportOf(zombie) == null) {
+            // Its support is gone, or this is a standing zombie loaded back from disk.
+            TowerLinks.unlink(zombie);
             zombie.removeTag(STACK_RIDER_TAG);
             return false;
         }
@@ -441,7 +505,9 @@ public final class ZombieTowering {
         Zombie top = zombie;
 
         if (!isToweringActive(level)
-                || !isHealthyTower(root)) {
+                || !isHealthyTower(root)
+                || isStandingTower(root) != standingPose()) {
+            // The pose setting changed since this tower formed; it re-forms in the new pose.
             releaseTower(root);
             return true;
         }
@@ -607,7 +673,7 @@ public final class ZombieTowering {
             double dz = root.getZ() - zombie.getZ();
             double horizontalDistanceSquared = dx * dx + dz * dz;
             int stackSize = towerSize(root);
-            double predictedY = TowerRiderPosition.calculate(support, zombie).y;
+            double predictedY = stackedPosition(support, zombie, standingPose()).y;
             if (!isSupportPosition(
                     horizontalDistanceSquared,
                     zombie.getY() - root.getY(),
@@ -635,9 +701,12 @@ public final class ZombieTowering {
 
     private static boolean isValidSupport(ServerLevel level, Zombie root, Zombie support, int maxStackSize) {
         if (!isHealthyTower(root)
-                || support.isVehicle()
+                || hasAnythingOnTop(support)
                 || !canGrowStack(towerSize(root), maxStackSize)
                 || !hasStableBlockSupport(level, root)) {
+            return false;
+        }
+        if (towerSize(root) > 1 && isStandingTower(root) != standingPose()) {
             return false;
         }
         if (support.isPassenger() && !isAddonStackRider(support)) {
@@ -648,6 +717,9 @@ public final class ZombieTowering {
     }
 
     private static boolean joinTower(ServerLevel level, Zombie zombie, Zombie support) {
+        if (standingPose()) {
+            return joinTowerStanding(level, zombie, support);
+        }
         Vec3 originalPosition = zombie.position();
         Vec3 originalMovement = zombie.getDeltaMovement();
         Vec3 ridingPosition = TowerRiderPosition.calculate(support, zombie);
@@ -691,20 +763,116 @@ public final class ZombieTowering {
         return true;
     }
 
+    private static boolean joinTowerStanding(ServerLevel level, Zombie zombie, Zombie support) {
+        Vec3 originalPosition = zombie.position();
+        Vec3 originalMovement = zombie.getDeltaMovement();
+        Vec3 standingPosition = stackedPosition(support, zombie, true);
+        AABB standingBounds = zombie.getBoundingBox().move(
+                standingPosition.x - zombie.getX(),
+                standingPosition.y - zombie.getY(),
+                standingPosition.z - zombie.getZ());
+        if (hasBlockCollision(level, zombie, standingBounds)) {
+            return false;
+        }
+        if (!zombie.addTag(STACK_RIDER_TAG)) {
+            return false;
+        }
+        TowerLinks.link(zombie, support);
+        placeStanding(zombie, support);
+        if (hasEmbeddedBlockCollision(level, zombie)) {
+            TowerLinks.unlink(zombie);
+            zombie.removeTag(STACK_RIDER_TAG);
+            zombie.moveTo(
+                    originalPosition.x,
+                    originalPosition.y,
+                    originalPosition.z,
+                    zombie.getYRot(),
+                    zombie.getXRot());
+            zombie.setDeltaMovement(originalMovement);
+            zombie.hasImpulse = true;
+            return false;
+        }
+        zombie.getNavigation().stop();
+        return true;
+    }
+
+    private static boolean standingPose() {
+        return Config.COMMON.zombieToweringStanding.get();
+    }
+
+    /** A tower stands when its bottom zombie has a standing link above it instead of a rider. */
+    private static boolean isStandingTower(Zombie root) {
+        return TowerLinks.upperOf(root) != null;
+    }
+
+    /** The zombie this one is stacked on: its vehicle when sitting, its link when standing. */
+    private static Zombie supportOf(Zombie zombie) {
+        if (zombie.getVehicle() instanceof Zombie vehicle) {
+            return vehicle;
+        }
+        return TowerLinks.supportOf(zombie);
+    }
+
+    /** True when anything rides this zombie or stands on it. */
+    private static boolean hasAnythingOnTop(Zombie zombie) {
+        return zombie.isVehicle() || TowerLinks.upperOf(zombie) != null;
+    }
+
+    private static Vec3 stackedPosition(Zombie support, Zombie zombie, boolean standing) {
+        return standing
+                ? standingPosition(support.getX(), support.getY(), support.getZ(), support.getBbHeight())
+                : TowerRiderPosition.calculate(support, zombie);
+    }
+
+    /** Where a standing zombie goes: centered on the support, just above its head. */
+    static Vec3 standingPosition(double supportX, double supportY, double supportZ, double supportHeight) {
+        return new Vec3(supportX, supportY + supportHeight + STANDING_GAP, supportZ);
+    }
+
+    private static void placeStanding(Zombie upper, Zombie support) {
+        Vec3 position = stackedPosition(support, upper, true);
+        upper.setPos(position.x, position.y, position.z);
+        upper.setDeltaMovement(Vec3.ZERO);
+        upper.fallDistance = 0.0F;
+        upper.setOnGround(true);
+        upper.hasImpulse = true;
+    }
+
+    /**
+     * Ends a standing zombie's tower membership. With toSafeGround it is moved to a nearby safe
+     * spot when one exists; otherwise it stays where it is and falls normally.
+     */
+    private static void dropStandingLink(ServerLevel level, Zombie upper, boolean toSafeGround) {
+        TowerLinks.unlink(upper);
+        upper.removeTag(STACK_RIDER_TAG);
+        if (toSafeGround) {
+            Vec3 safePosition = findSafeGroundPosition(level, upper, upper, null, true);
+            if (safePosition != null) {
+                upper.moveTo(safePosition.x, safePosition.y, safePosition.z, upper.getYRot(), upper.getXRot());
+                upper.setDeltaMovement(Vec3.ZERO);
+            }
+        }
+        upper.fallDistance = 0.0F;
+        upper.hasImpulse = true;
+    }
+
     private static int stackSizeBelow(Zombie zombie) {
         int size = 1;
-        Entity current = zombie;
-        while (current.getVehicle() instanceof Zombie) {
+        Zombie current = zombie;
+        Zombie support;
+        while ((support = supportOf(current)) != null && size < MAX_CHAIN_STEPS) {
             size++;
-            current = current.getVehicle();
+            current = support;
         }
         return size;
     }
 
     private static Zombie towerRoot(Zombie zombie) {
         Zombie root = zombie;
-        while (root.getVehicle() instanceof Zombie vehicle && isAddonStackRider(root)) {
-            root = vehicle;
+        Zombie support;
+        int steps = 0;
+        while (isAddonStackRider(root) && (support = supportOf(root)) != null && steps++ < MAX_CHAIN_STEPS) {
+            root = support;
         }
         return root;
     }
@@ -741,6 +909,10 @@ public final class ZombieTowering {
     }
 
     private static Zombie directAddonRider(Zombie support) {
+        Zombie standing = TowerLinks.upperOf(support);
+        if (standing != null) {
+            return isAddonStackRider(standing) ? standing : null;
+        }
         List<Entity> passengers = support.getPassengers();
         if (passengers.size() != 1) {
             return null;
@@ -886,7 +1058,7 @@ public final class ZombieTowering {
         List<Zombie> possibleRoots = level.getEntitiesOfClass(
                 Zombie.class,
                 bounds,
-                zombie -> !zombie.isPassenger() && directAddonRider(zombie) != null);
+                zombie -> !zombie.isPassenger() && !TowerLinks.isLinked(zombie) && directAddonRider(zombie) != null);
         for (Zombie root : possibleRoots) {
             LivingEntity target = findLiveChainTarget(root);
             TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
@@ -903,6 +1075,7 @@ public final class ZombieTowering {
         for (Entity entity : level.getAllEntities()) {
             if (entity instanceof Zombie zombie
                     && !zombie.isPassenger()
+                    && !TowerLinks.isLinked(zombie)
                     && directAddonRider(zombie) != null) {
                 roots.add(zombie);
             }
@@ -990,8 +1163,13 @@ public final class ZombieTowering {
         if (!isAddonStackRider(zombie)) {
             return false;
         }
+        if (!zombie.isAlive() && TowerLinks.isLinked(zombie)) {
+            // Nothing to move. Just drop the tower bookkeeping for a dead standing zombie.
+            TowerLinks.unlink(zombie);
+            return false;
+        }
 
-        if (zombie.level() instanceof ServerLevel level && zombie.getVehicle() instanceof Zombie) {
+        if (zombie.level() instanceof ServerLevel level && supportOf(zombie) != null) {
             Zombie root = towerRoot(zombie);
             LivingEntity target = findLiveChainTarget(root);
             if (releaseStackRiderToGround(level, zombie, root, target)) {
@@ -1042,6 +1220,12 @@ public final class ZombieTowering {
             if (zombie.getVehicle() instanceof Zombie) {
                 return false;
             }
+        } else if (TowerLinks.isLinked(zombie)) {
+            Zombie support = TowerLinks.supportOf(zombie);
+            if (support != null) {
+                supportMovement = support.getDeltaMovement();
+            }
+            TowerLinks.unlink(zombie);
         }
         zombie.removeTag(STACK_RIDER_TAG);
         zombie.setDeltaMovement(computeSafeDismountMovement(supportMovement, Vec3.ZERO));
@@ -1197,7 +1381,11 @@ public final class ZombieTowering {
         if (rider == null) {
             return;
         }
-        support.positionRider(rider);
+        if (TowerLinks.isLinked(rider)) {
+            placeStanding(rider, support);
+        } else {
+            support.positionRider(rider);
+        }
         positionTowerRiders(rider);
     }
 

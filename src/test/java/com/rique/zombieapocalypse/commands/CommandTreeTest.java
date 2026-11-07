@@ -149,6 +149,8 @@ class CommandTreeTest {
         assertAdmin("zblockplace", "block", "id");
         assertAdmin("ztower", "enabled", "state");
         assertAdmin("ztower", "unlimited");
+        assertAdmin("ztower", "pose", "sit");
+        assertAdmin("ztower", "pose", "stand");
         assertAdmin("ztower", "stacksize", "zombies");
         assertAdmin("ztower", "maxperplayer", "towers");
         assertAdmin("ztower", "dynamic", "state");

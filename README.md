@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.8.0 | `zombieapocalypseaddon-2.8.0.jar` |
-| 1.20.1 | NeoForge | 1.11.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.11.0.jar` |
-| 1.20.1 | Forge | 1.11.0 | `zombieapocalypseaddon-forge-1.20.1-1.11.0.jar` |
+| 1.21.1 | NeoForge | 2.9.0 | `zombieapocalypseaddon-2.9.0.jar` |
+| 1.20.1 | NeoForge | 1.12.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.12.0.jar` |
+| 1.20.1 | Forge | 1.12.0 | `zombieapocalypseaddon-forge-1.20.1-1.12.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -59,6 +59,7 @@ Most questions are one command away:
 | Let zombies break stone and ores, not just wood | `/za breaking on` then `/za breaking toolblocks on` and `/za breaking hardness 50` |
 | Let zombies break chests and machines too | `/za breaking containers on` (think twice - they really will) |
 | Have zombies hunt animals and grow stronger | `/za hunt on` |
+| Make tower zombies stand on each other instead of sitting | `/za towering pose stand` (`/za towering pose sit` goes back) |
 | Give zombies armor or weapons from another mod | Hold the item and run `/za gear add <tier>` (tier 1 is common, tier 4 is rare). `/za gear preview <tier>` shows the result. |
 | Change how often zombie gear drops | `/za gear dropchance 0.25` (default `0.085`, the vanilla rate) |
 | Check what is currently running | `/za` for the dashboard, `/za spawn` for spawn settings |
@@ -232,7 +233,7 @@ All three systems are disabled by default:
 
 - **Block breaking:** bounded attempts with hardness, safety, target, obstacle, drop, and `mobGriefing` controls.
 - **Block placing:** limited solid blocks for one-block steps and gaps, with placement limits and protection hooks.
-- **Towering:** crowded zombies form real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps are ignored. The default smart limit follows the target's block Y level plus one, then moves riders one at a time to collision-free floor positions when the target stays reachable on the ground. No blocks are changed.
+- **Towering:** crowded zombies form real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps are ignored. The default smart limit follows the target's block Y level plus one, then moves riders one at a time to collision-free floor positions when the target stays reachable on the ground. No blocks are changed. Tower zombies ride each other and are drawn sitting by default; `/za towering pose stand` makes them stand on each other's heads instead. Standing towers can look slightly wobbly while they move.
 
 Each feature has a start day, live commands, conservative defaults, and protection checks. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. `on` keeps your settings and waits for the start day; `dayone` turns the feature on and starts it today.
 
@@ -343,9 +344,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.8.0 |
-| NeoForge | 1.20.1 | 1.11.0 |
-| Forge | 1.20.1 | 1.11.0 |
+| NeoForge | 1.21.1 | 2.9.0 |
+| NeoForge | 1.20.1 | 1.12.0 |
+| Forge | 1.20.1 | 1.12.0 |
 
 Build all targets on Windows with:
 
