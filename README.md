@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.9.0 | `zombieapocalypseaddon-2.9.0.jar` |
-| 1.20.1 | NeoForge | 1.12.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.12.0.jar` |
-| 1.20.1 | Forge | 1.12.0 | `zombieapocalypseaddon-forge-1.20.1-1.12.0.jar` |
+| 1.21.1 | NeoForge | 2.10.0 | `zombieapocalypseaddon-2.10.0.jar` |
+| 1.20.1 | NeoForge | 1.13.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.13.0.jar` |
+| 1.20.1 | Forge | 1.13.0 | `zombieapocalypseaddon-forge-1.20.1-1.13.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -38,6 +38,23 @@ Install only the file for your exact Minecraft version and loader. Forge and Neo
 5. Use `/za help` whenever you need a short command topic.
 
 That is enough for a normal server. You do not need to edit advanced attributes or compatibility settings.
+
+## Pick a Setup
+
+Step-by-step guides with the exact commands, matching config values, and what to expect:
+
+| Setup | Guide |
+|---|---|
+| Casual co-op with friends | [Casual Co-op](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Casual-Coop) |
+| Hardest survival | [Hardcore Apocalypse](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Hardcore-Apocalypse) |
+| Safe days, dangerous nights | [Night-Only Zombies](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Night-Only) |
+| Quiet days with big event nights | [Event Nights](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Event-Nights) |
+| Zombies that break into bases | [Siege and Base Defense](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Siege-Server) |
+| Months-long progression | [Slow-Burn Long-Term World](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Slow-Burn) |
+| Many players online | [Big Server Performance](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Big-Server) |
+| Other zombie mods in the pack | [Modpacks and Other Zombie Mods](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Modpacks) |
+
+All guides are listed on the [setup guides page](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Guides).
 
 ## Common Tweaks
 
@@ -52,6 +69,9 @@ Most questions are one command away:
 | Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` (strength rises on days 11, 21, 31...) |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` (up to 4 extra zombies per wave at full strength, hordes included) |
+| Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
+| Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
+| No random blood moons before a certain day | `/za bloodmoon startday 10` |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, then set a high `startday` for when they may do it all the time. See [Siege Nights](#siege-nights). |
 | Remove baby zombies | `/za spawn babychance 0` |
 | Make it easier overall | `/za preset casual` or `/za spawn chance 0.25` |
@@ -80,14 +100,14 @@ Presets replace the main spawning, event, and basic scaling settings in one step
 | | Casual | Standard (fresh install) | Hardcore |
 |---|---|---|---|
 | Wave checks | every 9 s, 25% chance | every 6 s, 50% chance | every 4 s, 75% chance |
-| Zombies per wave / cap near each player | 1 / 30 | 2 / 50 | 3 / 80 |
+| Zombies per wave / cap near each player (day and night) | 1 / 30 | 2 / 50 | 3 / 80 |
 | Daytime waves start on | day 10 | day 1 | day 0 |
 | Lit areas | any light blocks waves | any light blocks waves | light is ignored |
 | Night spawn chance | x1.25 | x1.5 | x2.0 |
 | Baby zombies | 0% | 5% | 8% |
 | Hordes (at dusk) | every 7 days, 25% chance, 6 min | every 5 days, 50% chance, 10 min | every 3 days, 75% chance, 12 min |
 | Horde strength | x2.0 chance, 3 per wave | x3.0 chance, 5 per wave | x4.0 chance, 8 per wave |
-| Blood moons | 5% of nights, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
+| Blood moons | 5% of nights from day 7, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
 | Difficulty scaling | day 10 to 75 | day 3 to 50 | day 1 to 40 |
 | Full-strength bonuses | +10% speed, +6 health, 15% armor, 10% weapon | +20% speed, +10 health, 30% armor, 20% weapon | +30% speed, +16 health, 45% armor, 35% weapon |
 
@@ -161,7 +181,7 @@ The [complete command reference](https://github.com/Riqqqque/ZombieApocalypseAdd
 
 The mod performs bounded spawn checks around living survival players. Administrators can control wave chance, timing, size, nearby cap, distance, position attempts, permanent daytime enablement, a temporary daylight start day, open-sky rules, and block-light protection. Turning off the open-sky rule also searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves, blood moons, and dusk hordes (the default) continue; `/za events start` must be used at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period.
+Use `/za spawn daytime off` for permanent night-only custom spawning. Normal night waves, blood moons, and dusk hordes (the default) continue; `/za events start` must be used at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions remain controlled by their own dimension toggles. Use `/za spawn daylightstart <day>` only when daytime waves should begin after a temporary grace period. That grace period also holds back scheduled hordes until the same day, even in night-only mode.
 
 Use `/za spawn status all` only when you need every related toggle. The normal `/za spawn` output stays short.
 
@@ -203,7 +223,7 @@ Hordes can act as siege nights that make the world harder each time. This setup 
 
 ### Difficulty Progression
 
-Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` now exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. Strength climbs a little every day by default; `/za scaling steps <days>` makes it rise in jumps instead, on the morning after every step day. `/za scaling extrazombies <count>` adds up to that many zombies to every custom wave, including horde and blood moon waves, as strength rises. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
+Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. Strength climbs a little every day by default; `/za scaling steps <days>` makes it rise in jumps instead, on the morning after every step day. `/za scaling extrazombies <count>` adds up to that many zombies to every custom wave, including horde and blood moon waves, as strength rises. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
 
 Most servers should use a preset or the basic `[scaling]` section and leave `[attributes]` unchanged.
 
@@ -237,12 +257,6 @@ All three systems are disabled by default:
 
 Each feature has a start day, live commands, conservative defaults, and protection checks. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. `on` keeps your settings and waits for the start day; `dayone` turns the feature on and starts it today.
 
-### Optional Animal Hunting
-
-Disabled by default. Enable it with `/za hunt on` or `enableAnimalHunting` in `[animalhunting]`. Zombies hunt animals for food, then seek dropped meat from the `zombieapocalypseaddon:zombie_food` item tag to heal. Surplus nutrition becomes permanent bonus max health up to a configurable cap (higher on Hard). Fed zombies can persist, drop extra loot rolls scaled by the health they gained, and promote to leaders that call reinforcements and break doors.
-
-Hunts are limited by a per-zombie cooldown and per-zombie and per-dimension daily kill caps. `alwaysHunting` removes the hunger motivation; `berserkerHunting` also ignores cooldowns and caps. Horses killed by zombies can rise as zombie horses keeping their name, owner, saddle, and gear (always on Hard, 50% on Normal), and idle zombies can seek out and ride zombie horses. Tamed horses are spared unless `zombifyTamedHorses` is on. Pack makers can force-include or exclude targets with the `zombie_hunt_target` and `never_zombie_hunt_target` entity tags or the `additionalHuntTargets`/`excludedHuntTargets` config lists.
-
 Useful tower controls:
 
 | Command | Purpose |
@@ -253,10 +267,16 @@ Useful tower controls:
 | `/za towering dynamic <on/off>` | Make the height limit follow the target's current block Y level. |
 | `/za towering offset <blocks>` | Set extra block levels above the target in dynamic mode. Default is `1`. |
 | `/za towering smartdismount <on/off>` | Gradually move riders to safe ground when the target remains reachable. |
-| `/za towering jumping <on/off>` | Enable optional top-zombie jump attacks. This is off in the normal preset. |
+| `/za towering jumping <on/off>` | Enable optional top-zombie jump attacks. Off by default. |
 | `/za towering pace <ticks>` | Set the delay between tower growth, safe dismounts, and jump attacks. |
 
-The normal `/za towering on` preset has no fixed zombie-count cap because dynamic height already stops the stack at the useful level. Every rider position is checked using the correct Minecraft-version attachment rules before joining, and unsafe dismount spots are rejected instead of placing zombies inside blocks. `/za towering stacksize 0` removes only the count cap; `/za towering unlimited` also removes the height cap and smart collapse. Extremely tall passenger chains can hurt performance and should be enabled deliberately. The older `/za towering jumpcooldown` name remains an alias for `pace`.
+The default towering settings have no fixed zombie-count cap because dynamic height already stops the stack at the useful level. Every rider position is checked using the correct Minecraft-version attachment rules before joining, and unsafe dismount spots are rejected instead of placing zombies inside blocks. `/za towering stacksize 0` removes only the count cap; `/za towering unlimited` also removes the height cap and smart collapse. Extremely tall passenger chains can hurt performance and should be enabled deliberately. The older `/za towering jumpcooldown` name remains an alias for `pace`.
+
+### Optional Animal Hunting
+
+Disabled by default. Enable it with `/za hunt on` or `enableAnimalHunting` in `[animalhunting]`. Zombies hunt animals for food, then seek dropped meat from the `zombieapocalypseaddon:zombie_food` item tag to heal. Surplus nutrition becomes permanent bonus max health up to a configurable cap (higher on Hard). Fed zombies can persist, drop extra loot rolls scaled by the health they gained, and promote to leaders that call reinforcements and break doors.
+
+Hunts are limited by a per-zombie cooldown and per-zombie and per-dimension daily kill caps. `alwaysHunting` removes the hunger motivation; `berserkerHunting` also ignores cooldowns and caps. Horses killed by zombies can rise as zombie horses keeping their name, owner, saddle, and gear (always on Hard, 50% on Normal), and idle zombies can seek out and ride zombie horses. Tamed horses are spared unless `zombifyTamedHorses` is on. Pack makers can force-include or exclude targets with the `zombie_hunt_target` and `never_zombie_hunt_target` entity tags or the `additionalHuntTargets`/`excludedHuntTargets` config lists.
 
 ### Variants, Biomes, and Dimensions
 
@@ -268,7 +288,7 @@ The mod tracks zombie kills and awards milestones at 250, 1,000, and 3,000 kills
 
 ## Mod Compatibility
 
-Modded `Zombie` subclasses are recognized automatically. Generic entity tags and exact include/exclude lists support unusual infected mobs without hard dependencies.
+Modded `Zombie` subclasses are recognized automatically. The `zombieapocalypseaddon:zombie_class`, `externally_managed_ai`, and `externally_managed_difficulty` entity tags, plus exact include/exclude lists, support unusual infected mobs without hard dependencies ([datapack tags](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Compatibility#datapack-tags)).
 
 Compatibility safeguards can:
 
@@ -344,9 +364,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.9.0 |
-| NeoForge | 1.20.1 | 1.12.0 |
-| Forge | 1.20.1 | 1.12.0 |
+| NeoForge | 1.21.1 | 2.10.0 |
+| NeoForge | 1.20.1 | 1.13.0 |
+| Forge | 1.20.1 | 1.13.0 |
 
 Build all targets on Windows with:
 
@@ -363,8 +383,11 @@ Maintainers should use the [release checklist](RELEASE_CHECKLIST.md) for every p
 ## More Help
 
 - [Wiki home](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki)
+- [Setup guides](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Guides)
+- [FAQ](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/FAQ)
 - [Commands](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands)
 - [Config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide)
+- [Config reference](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Reference)
 - [Troubleshooting](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Troubleshooting)
 - [Mod compatibility](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Compatibility)
 - [Safe uninstall](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Safe-Uninstall)

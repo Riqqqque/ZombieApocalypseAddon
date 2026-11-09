@@ -80,6 +80,13 @@ public final class DaySpawnCommands {
                         value -> Config.set(Config.COMMON.maxDayZombiesPerPlayer, value),
                         value -> "Max nearby zombies per player: " + value,
                         25, 50, 100, 200, 500))
+                .then(CommandUtil.intSetting("nightmax", "zombies", 0, 500,
+                        Config.COMMON.maxNightZombiesPerPlayer::get,
+                        value -> Config.set(Config.COMMON.maxNightZombiesPerPlayer, value),
+                        value -> value <= 0
+                                ? "Nights use the normal nearby cap (" + Config.COMMON.maxDayZombiesPerPlayer.get() + ")."
+                                : "Max nearby zombies per player at night: " + value,
+                        0, 10, 20, 30, 50, 100))
                 .then(CommandUtil.intSetting("range", "blocks", 16, 128,
                         Config.COMMON.spawnRange::get,
                         value -> Config.set(Config.COMMON.spawnRange, value),
@@ -108,21 +115,27 @@ public final class DaySpawnCommands {
                         DaySpawnCommands::setVariantsEnabled, "Zombie variants"))
                 .then(CommandUtil.featureToggle("nightboost", Config.COMMON.enableNightBoost::get,
                         DaySpawnCommands::setNightBoostEnabled, "Night boost"))
-                .then(CommandUtil.featureToggle("horde", Config.COMMON.enableHordeEvents::get,
-                        DaySpawnCommands::setHordesEnabled, "Scheduled hordes"))
+                .then(CommandUtil.doubleSetting("nightmultiplier", "multiplier", 1.0, 10.0,
+                        Config.COMMON.nightSpawnMultiplier::get,
+                        value -> Config.set(Config.COMMON.nightSpawnMultiplier, value),
+                        value -> "Night spawn chance multiplier: " + CommandUtil.multiplier(value)
+                                + (Config.COMMON.enableNightBoost.get() ? "" : " (night boost is off; /za spawn nightboost on)"),
+                        1.0, 1.25, 1.5, 2.0, 3.0, 5.0, 10.0))
+                .then(CommandUtil.switchSetting("horde", Config.COMMON.enableHordeEvents::get,
+                        HordeCommands::setHordesEnabled, "Scheduled hordes"))
                 .then(CommandUtil.toggleSetting("daycounter", Config.COMMON.enableDayCounterAnnouncements::get,
                         value -> Config.set(Config.COMMON.enableDayCounterAnnouncements, value), "Morning day counter"))
                 .then(CommandUtil.doubleSetting("hordechance", "chance", 0.0, 1.0,
                         Config.COMMON.hordeStartChance::get,
                         value -> Config.set(Config.COMMON.hordeStartChance, value),
-                        value -> "Horde start chance: " + CommandUtil.percent(value),
-                        0.0, 0.25, 0.5, 0.75, 1.0))
-                .then(CommandUtil.featureToggle("bloodmoon", Config.COMMON.enableBloodMoon::get,
-                        DaySpawnCommands::setBloodMoonsEnabled, "Random blood moons"))
-                .then(CommandUtil.featureToggle("scaling", Config.COMMON.enableDifficultyScaling::get,
-                        DaySpawnCommands::setScalingEnabled, "Difficulty scaling"))
-                .then(CommandUtil.featureToggle("attributes", Config.COMMON.enableAttributeModifiers::get,
-                        DaySpawnCommands::setAttributesEnabled, "Attribute modifiers"))
+                        value -> "Scheduled horde chance: " + CommandUtil.percent(value),
+                        0.0, 0.1, 0.25, 0.5, 0.75, 1.0))
+                .then(CommandUtil.switchSetting("bloodmoon", Config.COMMON.enableBloodMoon::get,
+                        HordeCommands::setBloodMoonsEnabled, "Random blood moons"))
+                .then(CommandUtil.switchSetting("scaling", Config.COMMON.enableDifficultyScaling::get,
+                        ScalingCommands::setEnabled, "Difficulty scaling"))
+                .then(CommandUtil.switchSetting("attributes", Config.COMMON.enableAttributeModifiers::get,
+                        AttributeCommands::setEnabled, "Attribute modifiers"))
                 .then(CommandUtil.featureToggle("attributescaling", Config.COMMON.scaleAttributesWithDifficulty::get,
                         DaySpawnCommands::setAttributeScalingEnabled, "Attribute scaling with difficulty"))
                 .then(CommandUtil.featureToggle("variantprofiles", Config.COMMON.enableVariantAttributeProfiles::get,
@@ -200,40 +213,6 @@ public final class DaySpawnCommands {
         return List.of();
     }
 
-    private static List<String> setHordesEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            return FeaturePresets.enableHordes();
-        }
-        Config.set(Config.COMMON.enableHordeEvents, false);
-        HordeManager.stopHorde(source.getLevel());
-        return List.of();
-    }
-
-    private static List<String> setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            return FeaturePresets.enableBloodMoons();
-        }
-        Config.set(Config.COMMON.enableBloodMoon, false);
-        HordeManager.stopBloodMoon(source.getLevel());
-        return List.of();
-    }
-
-    private static List<String> setScalingEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            return FeaturePresets.enableScaling();
-        }
-        Config.set(Config.COMMON.enableDifficultyScaling, false);
-        return List.of();
-    }
-
-    private static List<String> setAttributesEnabled(CommandSourceStack source, boolean enabled) {
-        if (enabled) {
-            return FeaturePresets.enableAttributes();
-        }
-        Config.set(Config.COMMON.enableAttributeModifiers, false);
-        return List.of();
-    }
-
     private static List<String> setAttributeScalingEnabled(CommandSourceStack source, boolean enabled) {
         if (enabled) {
             return FeaturePresets.enableAttributeOption(() -> Config.set(Config.COMMON.scaleAttributesWithDifficulty, true));
@@ -294,8 +273,8 @@ public final class DaySpawnCommands {
         status.append("Wave: ").append(CommandUtil.percent(Config.COMMON.daySpawnChance.get()))
                 .append(" every ").append(CommandUtil.ticks(Config.COMMON.daySpawnInterval.get()))
                 .append(" | ").append(CommandUtil.count(Config.COMMON.zombiesPerSpawn.get(), "zombie")).append('\n');
-        status.append("Nearby cap: ").append(Config.COMMON.maxDayZombiesPerPlayer.get())
-                .append(" per player | Spawn distance: ")
+        status.append("Nearby cap: ").append(formatNearbyCap())
+                .append(" | Spawn distance: ")
                 .append(Config.COMMON.minSpawnDistance.get()).append('-')
                 .append(Config.COMMON.spawnRange.get()).append(" blocks\n");
         status.append("Daytime spawning: ").append(formatDaytimeSpawning())
@@ -312,6 +291,17 @@ public final class DaySpawnCommands {
         return status.toString();
     }
 
+    static String formatNearbyCap() {
+        int nightCap = Config.COMMON.maxNightZombiesPerPlayer.get();
+        return Config.COMMON.maxDayZombiesPerPlayer.get() + " per player"
+                + (nightCap > 0 ? " (" + nightCap + " at night)" : "");
+    }
+
+    private static String formatNightCap() {
+        int nightCap = Config.COMMON.maxNightZombiesPerPlayer.get();
+        return nightCap > 0 ? String.valueOf(nightCap) : "same as day";
+    }
+
     private static String buildDetailedStatusMessage() {
         StringBuilder status = new StringBuilder();
         status.append("All spawn-related settings:\n");
@@ -320,6 +310,7 @@ public final class DaySpawnCommands {
         status.append("Interval: ").append(CommandUtil.ticks(Config.COMMON.daySpawnInterval.get())).append('\n');
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.daySpawnChance.get())).append('\n');
         status.append("Max zombies/player: ").append(Config.COMMON.maxDayZombiesPerPlayer.get()).append('\n');
+        status.append("Max zombies/player at night: ").append(formatNightCap()).append('\n');
         status.append("Per spawn: ").append(Config.COMMON.zombiesPerSpawn.get()).append('\n');
         status.append("Attempts per zombie: ").append(Config.COMMON.spawnAttemptsPerZombie.get()).append('\n');
         status.append("Range: ").append(Config.COMMON.spawnRange.get()).append(" blocks\n");

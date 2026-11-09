@@ -63,14 +63,18 @@ public final class HelpCommands {
     private static int showSpawningHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Spawning commands:\n"
-                        + "/za spawn - show the important spawn settings\n"
+                        + "/za spawn - show the important spawn settings; /za spawn status all lists every spawn toggle\n"
                         + "/za spawn on|off - enable or pause custom waves\n"
                         + "/za spawn daytime on|off - off makes custom spawning night-only\n"
                         + "/za spawn chance <0.0-1.0> - wave chance; 0.25 means 25%\n"
                         + "/za spawn interval <ticks> - time between checks; 20 ticks = 1 second\n"
                         + "/za spawn amount <1-50> - zombies attempted per wave\n"
                         + "/za spawn max <1-500> - nearby cap per player\n"
+                        + "/za spawn nightmax <0-500> - nearby cap at night; 0 uses the normal cap\n"
                         + "/za spawn daylightstart <day> - temporary daytime grace period\n"
+                        + "/za spawn range|mindist <blocks> - how far from players waves appear\n"
+                        + "/za spawn sky on|off - require open sky for overworld waves\n"
+                        + "/za spawn nightboost on|off, nightmultiplier <x> - extra wave chance at night\n"
                         + "/za spawn maxlight <-1-15> - 0 protects lit bases (default); -1 ignores lights\n"
                         + "/za spawn babychance <0.0-1.0> - use 0 to disable baby zombies\n"
                         + "Run a setting without a value to see its current value. Tab suggests useful values.",
@@ -81,18 +85,17 @@ public final class HelpCommands {
     private static int showEventHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Event commands:\n"
-                        + "/za events - show horde and blood moon status\n"
+                        + "/za events - show horde and blood moon status; /za bloodmoon shows the same\n"
                         + "/za events on|off - turn scheduled hordes on or off (your horde settings are kept)\n"
                         + "/za events start|stop - control a horde\n"
-                        + "/za events interval|chance|duration - tune the schedule\n"
+                        + "/za events interval <days>|chance|duration <minutes> - tune the schedule\n"
                         + "/za events dusk on|off - start scheduled hordes at dusk instead of dawn\n"
                         + "/za events multiplier|amount|spawninterval - tune event pressure\n"
+                        + "/za events notifications on|off - event title messages\n"
                         + "/za bloodmoon on|off - turn random blood moons on or off (your settings are kept)\n"
                         + "/za bloodmoon start - start one now or queue it for tonight\n"
                         + "/za bloodmoon chance|multiplier|amount - tune blood moons\n"
-                        + "/za spawn horde on|off - enable scheduled hordes\n"
-                        + "/za spawn hordechance <0.0-1.0> - scheduled horde chance\n"
-                        + "/za spawn bloodmoon on|off - enable random blood moons\n"
+                        + "/za bloodmoon startday <day> - no random blood moons before this day\n"
                         + "/za spawn daycounter on|off - toggle morning day titles\n"
                         + "Hordes and blood moons need custom waves to be on. Night-only mode pauses scheduled dawn hordes.",
                 false);
@@ -105,13 +108,13 @@ public final class HelpCommands {
                         + "/za scaling - show current day-based scaling\n"
                         + "/za day - show the apocalypse day\n"
                         + "/za day set <day> - change the apocalypse day safely\n"
-                        + "/za spawn scaling on|off - toggle day-based scaling\n"
+                        + "/za scaling on|off - toggle day-based scaling\n"
                         + "/za scaling startday|maxday - set the progression window\n"
                         + "/za scaling steps <days> - raise strength in jumps every few days; 0 climbs daily\n"
                         + "/za scaling extrazombies <count> - bigger waves as strength rises, events included\n"
                         + "/za scaling speed|health|armorchance|weaponchance - tune full-strength bonuses\n"
                         + "/za gear - choose which armor and weapons zombies get, including modded items\n"
-                        + "/za spawn attributes on|off - toggle advanced attribute tuning\n"
+                        + "/za attributes on|off - toggle advanced attribute tuning\n"
                         + "Use /za help gear for gear setup or /za help advanced for exact stat profiles.",
                 false);
         return 1;
@@ -140,7 +143,8 @@ public final class HelpCommands {
                         + "/za breaking [on|off|status] - let zombies damage allowed blocks\n"
                         + "/za placing [on|off|status] - let zombies build limited steps and bridges\n"
                         + "/za towering [on|off|status] - let zombie crowds form smart moving stacks\n"
-                        + "/za towering unlimited - remove the count and height caps (use carefully)\n"
+                        + "/za towering unlimited - remove the count and height caps and turn off smart dismount and jumping (use carefully)\n"
+                        + "/za towering pose sit|stand - tower zombies sit on each other (default) or stand on heads\n"
                         + "/za towering stacksize <count> - zombie cap; 0 is unlimited\n"
                         + "/za towering maxperplayer <count> - tower cap per target; 0 is unlimited\n"
                         + "/za towering dynamic on|off - follow the target's block height\n"
@@ -148,6 +152,7 @@ public final class HelpCommands {
                         + "/za towering smartdismount on|off - safely collapse towers on reachable ground\n"
                         + "/za towering jumping on|off - control whether top zombies leap to attack\n"
                         + "/za towering pace <ticks> - delay between tower growth, dismounts, and jumps\n"
+                        + "/za placing block <id> - block zombies build with; /za placing resetcounts refills their budget\n"
                         + "Each on command keeps your settings and only fixes a value that would stop the feature from working.\n"
                         + "Use <command> startday <day> to delay a feature.\n"
                         + "Each feature waits for its start day. Use <command> dayone to start it today.\n"
@@ -180,11 +185,14 @@ public final class HelpCommands {
                 "Stats and maintenance commands:\n"
                         + "/za stats [player|all] - view kill totals\n"
                         + "/za stats clear - admin-only reset for stats, cooldowns, and milestones\n"
+                        + "/za stats on|off - turn kill tracking on or off\n"
                         + "/za kill - remove loaded zombie-class mobs\n"
                         + "/za cleanup - remove loaded zombies and reset event state\n"
                         + "/za cleanup uninstall - disable gameplay systems before removing the mod\n"
-                        + "/za burn [on|off] - view or change daylight burning\n"
-                        + "/za compatibility - show mod compatibility safeguards",
+                        + "/za burn [on|off|status] - view or change daylight burning\n"
+                        + "/za compatibility - show mod compatibility safeguards\n"
+                        + "/za config - where the config file is; /za config reset <section|all> restores defaults\n"
+                        + "/za status - everything that is active right now",
                 false);
         return 1;
     }
@@ -206,6 +214,9 @@ public final class HelpCommands {
     static int showAllHelp(CommandSourceStack source) {
         CommandUtil.feedback(source,
                 "Command families:\n"
+                        + "/za status - what is active right now\n"
+                        + "/za preset casual|standard|hardcore - apply a tested balance\n"
+                        + "/za config - config file location and section resets\n"
                         + "/za spawn - spawning and main feature toggles\n"
                         + "/za events, /za bloodmoon - event controls\n"
                         + "/za day, /za scaling - day counter and difficulty\n"

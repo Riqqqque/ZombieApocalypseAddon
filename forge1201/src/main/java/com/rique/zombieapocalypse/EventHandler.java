@@ -102,7 +102,10 @@ public final class EventHandler {
                     variantsEnabled,
                     Config.COMMON.enableBiomeModifiers.get(),
                     Config.COMMON.mushroomSafeZone.get(),
-                    Config.COMMON.maxDayZombiesPerPlayer.get(),
+                    nearbyZombieCap(
+                            Config.COMMON.maxDayZombiesPerPlayer.get(),
+                            Config.COMMON.maxNightZombiesPerPlayer.get(),
+                            !level.dimensionType().hasFixedTime() && !level.isDay()),
                     Math.max(1, Config.COMMON.spawnRange.get()),
                     Math.max(0, Config.COMMON.minSpawnDistance.get()),
                     Math.max(1, Config.COMMON.spawnAttemptsPerZombie.get()),
@@ -240,10 +243,8 @@ public final class EventHandler {
         }
     }
 
-    private static void finishSunBurnTick(Zombie zombie) {
-        if (!SUN_BURN_CANDIDATES.remove(zombie.getUUID(), zombie)
-                || !Config.COMMON.preventSunBurn.get()
-                || !zombie.isOnFire()) {
+    private static void clearSunIgnition(Zombie zombie) {
+        if (!Config.COMMON.preventSunBurn.get() || !zombie.isOnFire()) {
             return;
         }
 
@@ -358,9 +359,14 @@ public final class EventHandler {
             return;
         }
         if (event.phase == TickEvent.Phase.END) {
-            for (Zombie zombie : SUN_BURN_CANDIDATES.values().toArray(Zombie[]::new)) {
-                if (zombie.level() == level) {
-                    finishSunBurnTick(zombie);
+            if (!SUN_BURN_CANDIDATES.isEmpty()) {
+                java.util.Iterator<Zombie> candidates = SUN_BURN_CANDIDATES.values().iterator();
+                while (candidates.hasNext()) {
+                    Zombie zombie = candidates.next();
+                    if (zombie.level() == level) {
+                        candidates.remove();
+                        clearSunIgnition(zombie);
+                    }
                 }
             }
             ZombieTowering.positionStandingTowers(level);
@@ -392,7 +398,16 @@ public final class EventHandler {
 
         boolean eventActive = eventState.hordeActive() || eventState.bloodMoonActive();
         int interval = ConfigValidator.spawnIntervalTicks(eventActive);
-        if (gameTime % interval != 0L) {
+        // Each player gets their own offset inside the interval, so a full server does not run
+        // every player's wave on the same tick.
+        boolean anyPlayerDue = false;
+        for (ServerPlayer player : level.players()) {
+            if (isPlayerSpawnTick(gameTime, player.getId(), interval)) {
+                anyPlayerDue = true;
+                break;
+            }
+        }
+        if (!anyPlayerDue) {
             return;
         }
 
@@ -424,7 +439,8 @@ public final class EventHandler {
 
         StatisticsManager stats = settings.deathCooldownEnabled() ? StatisticsManager.get(level) : null;
         for (ServerPlayer player : level.players()) {
-            if (isEligibleSpawnPlayer(player.isAlive(), player.isSpectator(), player.isCreative())) {
+            if (isPlayerSpawnTick(gameTime, player.getId(), interval)
+                    && isEligibleSpawnPlayer(player.isAlive(), player.isSpectator(), player.isCreative())) {
                 attemptSpawnZombie(level, player, effectiveChance, eventState, stats, settings, gameTime);
             }
         }
@@ -733,6 +749,16 @@ public final class EventHandler {
 
     static boolean isBiomeSpawnAllowed(boolean mushroomSafeZone, boolean mushroomFieldsBiome) {
         return !mushroomSafeZone || !mushroomFieldsBiome;
+    }
+
+    /** The nearby cap for custom waves: the night cap at night when one is set, otherwise the day cap. */
+    static int nearbyZombieCap(int dayCap, int nightCap, boolean night) {
+        return night && nightCap > 0 ? nightCap : dayCap;
+    }
+
+    /** True on the one tick per spawn interval that belongs to this player. */
+    static boolean isPlayerSpawnTick(long gameTime, int playerId, int interval) {
+        return interval <= 1 || Math.floorMod(gameTime + playerId, (long) interval) == 0L;
     }
 
     static boolean shouldApplyNightBoost(boolean hasDayNightCycle, boolean day, boolean enabled) {

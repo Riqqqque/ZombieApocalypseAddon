@@ -5,8 +5,8 @@ Server-side-only Minecraft mod shipped for three loader targets:
 | Target | Module | Version var | Java |
 |---|---|---|---|
 | NeoForge 1.21.1 | root | `mod_version` (2.x) | 21 |
-| Forge 1.20.1 | `forge1201/` | `forge_mod_version` (1.5.x) | 17 |
-| NeoForge 1.20.1 | `neoforge1201/` | `forge_mod_version` (1.5.x) | 17 |
+| Forge 1.20.1 | `forge1201/` | `forge1201_release_version` (1.x) | 17 |
+| NeoForge 1.20.1 | `neoforge1201/` | `neoforge1201_release_version` (1.x) | 17 |
 
 `neoforge1201` reuses `forge1201` sources via `neoforge1201/build.gradle` sourceSets.
 Adapter copies live in `forge1201/src/main/java`; everything else is shared.
@@ -43,8 +43,9 @@ CI (`.github/workflows/build.yml`) runs `./gradlew build` plus
   read-only nodes stay public.
 - `Config.set(...)` writes through to the config file; batch changes inside
   `Config.edit(() -> ...)`.
-- Feature toggles (`/za <feature> on`) must load working defaults via
-  `FeaturePresets` — never just flip the enable flag.
+- Feature toggles (`/za <feature> on`) go through `FeaturePresets`: flip the
+  switch, enable required dependencies, and repair only values that would
+  leave the feature doing nothing. Never overwrite tuned settings.
 
 ## Verified invariants (do not regress)
 

@@ -71,6 +71,30 @@ class EventHandlerTest {
     }
 
     @Test
+    void eachPlayerGetsOneSpawnTickPerInterval() {
+        for (int playerId : new int[] {0, 7, 120, -3}) {
+            int due = 0;
+            for (long tick = 1000; tick < 1120; tick++) {
+                if (EventHandler.isPlayerSpawnTick(tick, playerId, 120)) {
+                    due++;
+                }
+            }
+            assertEquals(1, due, "player " + playerId);
+        }
+        assertFalse(EventHandler.isPlayerSpawnTick(1000, 1, 120) && EventHandler.isPlayerSpawnTick(1000, 2, 120));
+        assertTrue(EventHandler.isPlayerSpawnTick(12345, 99, 1));
+    }
+
+    @Test
+    void nightsUseTheirOwnCapOnlyWhenOneIsSet() {
+        assertEquals(50, EventHandler.nearbyZombieCap(50, 0, true));
+        assertEquals(20, EventHandler.nearbyZombieCap(50, 20, true));
+        assertEquals(50, EventHandler.nearbyZombieCap(50, 20, false));
+        // A night cap can also be higher than the day cap.
+        assertEquals(100, EventHandler.nearbyZombieCap(50, 100, true));
+    }
+
+    @Test
     void disabledSiegeFeaturesUseTheFastPath() {
         assertFalse(EventHandler.hasEnabledSiegeFeature(false, false, false));
         assertTrue(EventHandler.hasEnabledSiegeFeature(true, false, false));

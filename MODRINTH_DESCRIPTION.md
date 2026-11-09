@@ -38,14 +38,14 @@ For a fast setup, choose one gameplay preset:
 | | Casual | Standard (fresh install) | Hardcore |
 |---|---|---|---|
 | Wave checks | every 9 s, 25% chance | every 6 s, 50% chance | every 4 s, 75% chance |
-| Zombies per wave / cap near each player | 1 / 30 | 2 / 50 | 3 / 80 |
+| Zombies per wave / cap near each player (day and night) | 1 / 30 | 2 / 50 | 3 / 80 |
 | Daytime waves start on | day 10 | day 1 | day 0 |
 | Lit areas | any light blocks waves | any light blocks waves | light is ignored |
 | Night spawn chance | x1.25 | x1.5 | x2.0 |
 | Baby zombies | 0% | 5% | 8% |
 | Hordes (at dusk) | every 7 days, 25% chance, 6 min | every 5 days, 50% chance, 10 min | every 3 days, 75% chance, 12 min |
 | Horde strength | x2.0 chance, 3 per wave | x3.0 chance, 5 per wave | x4.0 chance, 8 per wave |
-| Blood moons | 5% of nights, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
+| Blood moons | 5% of nights from day 7, x3.0, 2 per wave | 15% of nights, x5.0, 4 per wave | 25% of nights, x6.0, 6 per wave |
 | Difficulty scaling | day 10 to 75 | day 3 to 50 | day 1 to 40 |
 | Full-strength bonuses | +10% speed, +6 health, 15% armor, 10% weapon | +20% speed, +10 health, 30% armor, 20% weapon | +30% speed, +16 health, 45% armor, 35% weapon |
 
@@ -66,6 +66,9 @@ Most things players ask for are one command away:
 | Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` |
+| Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
+| Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
+| No random blood moons before a certain day | `/za bloodmoon startday 10` |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, plus a high `startday` (see Siege Nights below) |
 | Remove baby zombies | `/za spawn babychance 0` |
 | Make it easier or harder overall | `/za preset casual` or `/za preset hardcore` |
@@ -188,7 +191,7 @@ Administrators can control:
 
 Spawn checks are bounded, staggered where appropriate, and avoid unloaded chunks. With open-sky spawning disabled, the mod searches near the player's height for valid caves and covered spaces instead of only choosing the surface.
 
-For night-only custom spawning, run `/za spawn daytime off`. Normal night waves, blood moons, and dusk hordes (the default) continue, and manual hordes can be started at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later.
+For night-only custom spawning, run `/za spawn daytime off`. Normal night waves, blood moons, and dusk hordes (the default) continue, and manual hordes can be started at night. If you switched hordes to dawn with `/za events dusk off`, night-only mode pauses them. The Nether, End, and other fixed-time dimensions keep using their own dimension toggles. `daylightstart` remains available as a separate temporary grace period for servers that want daytime waves to begin later. It also holds back scheduled hordes until the same day, even in night-only mode.
 
 ## Events and Progression
 
@@ -226,7 +229,7 @@ Block breaking, block placing, and towering are independent and disabled by defa
 
 - Block breaking has day gating, hardness limits, protected block categories, target rules, drops, and `mobGriefing` support.
 - Block placing uses a configurable solid block, per-zombie limits, loaded-chunk checks, protection events, and separate step/bridge controls.
-- Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. The normal preset grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken. Tower zombies ride each other and are drawn sitting by default; `/za towering pose stand` makes them stand on each other's heads instead. Standing towers can look slightly wobbly while they move.
+- Towering forms real moving passenger stacks when a raised target or genuinely blocked route makes climbing useful. Ordinary ground combat and normal player jumps do not trigger it. By default it grows only through the target's block Y level plus one, then moves one top rider at a time to a collision-free floor position after the target stays reachable on the ground. Optional jump attacks never inherit hit or knockback velocity. No blocks are placed or broken. Tower zombies ride each other and are drawn sitting by default; `/za towering pose stand` makes them stand on each other's heads instead. Standing towers can look slightly wobbly while they move.
 
 Administrators can use `on` to turn a feature on with their own settings (it waits for the feature's start day), `dayone` to also start it today, and `off` at any time. `events on` (for example `/za breaking events on`) also lets a feature run during hordes and blood moons before its start day. The older `dayone` aliases remain supported.
 
@@ -295,6 +298,7 @@ Then stop the server and remove the jar. The command removes loaded zombie-class
 ## Help and Documentation
 
 - [Wiki home](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki)
+- [Setup guides](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Guides)
 - [Commands](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Commands)
 - [Config guide](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Config-Guide)
 - [Troubleshooting](https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Troubleshooting)

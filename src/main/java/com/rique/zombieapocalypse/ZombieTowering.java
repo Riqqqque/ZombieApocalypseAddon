@@ -84,7 +84,7 @@ public final class ZombieTowering {
     private static final String STACK_RIDER_TAG = "zombieapocalypse.tower_rider";
     private static final long TARGET_LOSS_GRACE_TICKS = 100L;
     private static final long REACHABLE_GROUND_STABILITY_TICKS = 10L;
-    private static final int GROUND_REACHABILITY_CHECK_INTERVAL_TICKS = 5;
+    private static final int GROUND_REACHABILITY_CHECK_INTERVAL_TICKS = 10;
     private static final int TOWER_LIMIT_CHECK_INTERVAL_TICKS = 20;
     private static final long MEMORY_PRUNE_INTERVAL_TICKS = 1200L;
     private static final double MIN_TOWER_VERTICAL_GAP = 1.5;
@@ -153,14 +153,36 @@ public final class ZombieTowering {
             return false;
         }
 
+        // Cheapest checks first: a raycast and a collision probe, then the crowd search, and
+        // pathfinding last, only when the cheap checks could not already rule towering out.
         Vec3 direction = horizontalDirection(zombie, target);
         boolean hasLineOfSight = zombie.hasLineOfSight(target);
         boolean hasForwardBarrier = hasForwardBarrier(level, zombie, direction);
-        boolean normalPathReachable = hasNormalGroundRoute(
+        boolean openGroundRoute = hasOpenGroundRoute(zombie, target, hasForwardBarrier, hasLineOfSight);
+        // A reachable route only ever argues against towering, so if towering is ruled out even
+        // when the path search would fail, the search is not needed.
+        if (!shouldAttemptTower(
+                settings.requireObstacle(),
+                target.onGround(),
+                zombie.getY(),
+                target.getY(),
+                hasForwardBarrier,
+                hasLineOfSight,
+                openGroundRoute)) {
+            return false;
+        }
+
+        CrowdState crowd = inspectCrowd(level, zombie, target, settings);
+        if (!hasRequiredCrowd(crowd.nearbyZombies(), settings.minNearbyZombies())
+                || crowd.support() == null) {
+            return false;
+        }
+
+        boolean normalPathReachable = openGroundRoute || (settings.requireObstacle() && hasNormalGroundRoute(
                 zombie,
                 target,
                 hasForwardBarrier,
-                hasLineOfSight);
+                hasLineOfSight));
         if (!shouldAttemptTower(
                 settings.requireObstacle(),
                 target.onGround(),
@@ -172,14 +194,22 @@ public final class ZombieTowering {
             return false;
         }
 
-        CrowdState crowd = inspectCrowd(level, zombie, target, settings);
-        if (!hasRequiredCrowd(crowd.nearbyZombies(), settings.minNearbyZombies())
-                || crowd.support() == null) {
-            return false;
-        }
-
         Zombie support = crowd.support();
         Zombie root = towerRoot(support);
+        if (settings.requireObstacle()
+                && settings.smartDismountEnabled()
+                && shouldSmartDismount(
+                        true,
+                        target.onGround(),
+                        root.getY(),
+                        target.getY(),
+                        false,
+                        hasForwardBarrier(level, root, horizontalDirection(root, target)),
+                        root.hasLineOfSight(target))) {
+            // The tower's base already has open ground to the target, so smart dismount would
+            // take this tower apart again a moment later.
+            return false;
+        }
         TowerMemory memory = TOWER_MEMORIES.get(root.getUUID());
         if (memory != null
                 && !canPerformTowerAction(gameTime, memory.lastActionTick(), settings.jumpCooldownTicks())) {
@@ -493,10 +523,10 @@ public final class ZombieTowering {
             return false;
         }
 
-        Settings settings = Settings.capture();
         if (directAddonRider(zombie) != null) {
             return true;
         }
+        Settings settings = Settings.capture();
         Zombie root = towerRoot(zombie);
         if (!isLinearTowerMember(root, zombie)) {
             releaseStackRider(zombie);
@@ -568,7 +598,8 @@ public final class ZombieTowering {
             return true;
         }
 
-        if (settings.smartDismountEnabled()
+        boolean reachableGroundCheck = settings.smartDismountEnabled() && settings.requireObstacle();
+        if (reachableGroundCheck
                 && target.onGround()
                 && actionReady
                 && ZombieBlockBreaker.isScheduledTick(
@@ -599,8 +630,12 @@ public final class ZombieTowering {
                 releaseTopSafely(root, target, gameTime, settings, "reachable ground");
                 return true;
             }
-        } else {
+        } else if (!reachableGroundCheck || !target.onGround() || !actionReady) {
             updateReachableGround(root, target, gameTime, false);
+        } else {
+            // Between scheduled checks: keep the running "reachable since" time, so two good
+            // checks in a row can collapse the tower.
+            keepReachableGround(root, target, gameTime);
         }
 
         if (!settings.jumpingEnabled() || !actionReady) {
@@ -1008,7 +1043,9 @@ public final class ZombieTowering {
         long lastActionTick = current == null ? -1L : current.lastActionTick();
         boolean sameTarget = current != null && target.getUUID().equals(current.targetId());
         long reachableSince = reachableGround
-                ? sameTarget && current.reachableGroundSinceTick() >= 0L
+                ? sameTarget
+                        && current.reachableGroundSinceTick() >= 0L
+                        && gameTime - current.reachableGroundSinceTick() <= GROUND_REACHABILITY_CHECK_INTERVAL_TICKS
                         ? current.reachableGroundSinceTick()
                         : gameTime
                 : -1L;
@@ -1017,6 +1054,16 @@ public final class ZombieTowering {
                 gameTime,
                 lastActionTick,
                 reachableSince));
+    }
+
+    private static void keepReachableGround(Zombie root, LivingEntity target, long gameTime) {
+        TowerMemory current = TOWER_MEMORIES.get(root.getUUID());
+        boolean sameTarget = current != null && target.getUUID().equals(current.targetId());
+        TOWER_MEMORIES.put(root.getUUID(), new TowerMemory(
+                target.getUUID(),
+                gameTime,
+                current == null ? -1L : current.lastActionTick(),
+                sameTarget ? current.reachableGroundSinceTick() : -1L));
     }
 
     private static boolean isTowerTargetCompatible(Zombie root, LivingEntity target) {
@@ -1240,6 +1287,18 @@ public final class ZombieTowering {
         }
         Path path = zombie.getNavigation().createPath(target, 0);
         return path != null && (path.canReach() || path.getDistToTarget() <= 1.5F);
+    }
+
+    /** The cheap half of hasNormalGroundRoute: open ground in plain sight, no path search. */
+    private static boolean hasOpenGroundRoute(
+            Zombie zombie,
+            LivingEntity target,
+            boolean hasForwardBarrier,
+            boolean hasLineOfSight) {
+        return target.onGround()
+                && target.getY() <= zombie.getY() + 1.0
+                && !hasForwardBarrier
+                && hasLineOfSight;
     }
 
     private static boolean hasNormalGroundRoute(

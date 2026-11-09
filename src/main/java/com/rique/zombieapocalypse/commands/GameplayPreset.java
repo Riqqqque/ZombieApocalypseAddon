@@ -14,7 +14,7 @@ public enum GameplayPreset {
             "A slower start, fewer zombies, no baby zombies, and torch-protected bases.",
             180, 0.25, 1, 30, 10, 0, 0.0,
             7, 0.25, 6, 2.0, 3, 30,
-            0.05, 3.0, 2,
+            0.05, 3.0, 2, 7,
             10, 75, 0.10, 6, 0.15, 0.10,
             1.25),
 
@@ -23,7 +23,7 @@ public enum GameplayPreset {
             "The recommended balance for most survival servers. A fresh install starts here.",
             120, 0.50, 2, 50, 1, 0, 0.05,
             5, 0.50, 10, 3.0, 5, 20,
-            0.15, 5.0, 4,
+            0.15, 5.0, 4, 0,
             3, 50, 0.20, 10, 0.30, 0.20,
             1.50),
 
@@ -32,7 +32,7 @@ public enum GameplayPreset {
             "More frequent waves, stronger events, and faster difficulty growth.",
             80, 0.75, 3, 80, 0, -1, 0.08,
             3, 0.75, 12, 4.0, 8, 15,
-            0.25, 6.0, 6,
+            0.25, 6.0, 6, 0,
             1, 40, 0.30, 16, 0.45, 0.35,
             2.00);
 
@@ -58,6 +58,7 @@ public enum GameplayPreset {
     private final double bloodMoonChance;
     private final double bloodMoonMultiplier;
     private final int bloodMoonWaveSize;
+    private final int bloodMoonStartDay;
     private final int scalingStartDay;
     private final int maxScalingDay;
     private final double maxSpeedBoost;
@@ -85,6 +86,7 @@ public enum GameplayPreset {
             double bloodMoonChance,
             double bloodMoonMultiplier,
             int bloodMoonWaveSize,
+            int bloodMoonStartDay,
             int scalingStartDay,
             int maxScalingDay,
             double maxSpeedBoost,
@@ -110,6 +112,7 @@ public enum GameplayPreset {
         this.bloodMoonChance = bloodMoonChance;
         this.bloodMoonMultiplier = bloodMoonMultiplier;
         this.bloodMoonWaveSize = bloodMoonWaveSize;
+        this.bloodMoonStartDay = bloodMoonStartDay;
         this.scalingStartDay = scalingStartDay;
         this.maxScalingDay = maxScalingDay;
         this.maxSpeedBoost = maxSpeedBoost;
@@ -143,6 +146,7 @@ public enum GameplayPreset {
         values.put(config.daySpawnChance.getPath(), spawnChance);
         values.put(config.zombiesPerSpawn.getPath(), waveSize);
         values.put(config.maxDayZombiesPerPlayer.getPath(), nearbyCap);
+        values.put(config.maxNightZombiesPerPlayer.getPath(), 0);
         values.put(config.spawnRange.getPath(), SAFE_SPAWN_RANGE);
         values.put(config.minSpawnDistance.getPath(), SAFE_MIN_SPAWN_DISTANCE);
         values.put(config.spawnAttemptsPerZombie.getPath(), SAFE_SPAWN_ATTEMPTS);
@@ -162,6 +166,7 @@ public enum GameplayPreset {
         values.put(config.bloodMoonChance.getPath(), bloodMoonChance);
         values.put(config.bloodMoonSpawnMultiplier.getPath(), bloodMoonMultiplier);
         values.put(config.bloodMoonZombiesPerSpawn.getPath(), bloodMoonWaveSize);
+        values.put(config.bloodMoonStartDay.getPath(), bloodMoonStartDay);
 
         values.put(config.scalingStartDay.getPath(), scalingStartDay);
         values.put(config.maxScalingDay.getPath(), maxScalingDay);

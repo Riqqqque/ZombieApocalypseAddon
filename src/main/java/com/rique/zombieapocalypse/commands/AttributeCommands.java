@@ -97,9 +97,8 @@ public final class AttributeCommands {
                                                     double value = DoubleArgumentType.getDouble(context, "value");
                                                     NumericSetting setting = NUMERIC_SETTINGS.get(key);
                                                     if (setting == null) {
-                                                        CommandUtil.feedback(context.getSource(),
-                                                                "Unknown numeric key: " + key,
-                                                                false);
+                                                        CommandUtil.failure(context.getSource(),
+                                                                "Unknown numeric key: " + key);
                                                         return 0;
                                                     }
 
@@ -126,9 +125,8 @@ public final class AttributeCommands {
                                                                 true);
                                                         return 1;
                                                     } catch (RuntimeException ex) {
-                                                        CommandUtil.feedback(context.getSource(),
-                                                                "Failed to set " + key + ": " + ex.getMessage(),
-                                                                false);
+                                                        CommandUtil.failure(context.getSource(),
+                                                                "Failed to set " + key + ": " + ex.getMessage());
                                                         return 0;
                                                     }
                                                 })))))
@@ -141,9 +139,8 @@ public final class AttributeCommands {
                                                     boolean enabled = CommandUtil.getToggle(context, "state");
                                                     ModConfigSpec.BooleanValue setting = BOOLEAN_SETTINGS.get(key);
                                                     if (setting == null) {
-                                                        CommandUtil.feedback(context.getSource(),
-                                                                "Unknown toggle key: " + key,
-                                                                false);
+                                                        CommandUtil.failure(context.getSource(),
+                                                                "Unknown toggle key: " + key);
                                                         return 0;
                                                     }
                                                     setBooleanSetting(key, setting, enabled);
@@ -154,7 +151,7 @@ public final class AttributeCommands {
                                                 }))))));
     }
 
-    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+    static int setEnabled(CommandSourceStack source, boolean enabled) {
         if (!enabled) {
             return CommandUtil.turnOff(source, "Advanced attributes",
                     () -> Config.set(Config.COMMON.enableAttributeModifiers, false), null);

@@ -33,6 +33,15 @@ public final class StatsCommands {
                     }
                     return 1;
                 })
+                .then(Commands.literal("status")
+                        .executes(context -> {
+                            if (context.getSource().getEntity() instanceof ServerPlayer player) {
+                                showPlayerStats(context.getSource(), player);
+                            } else {
+                                showServerStats(context.getSource());
+                            }
+                            return 1;
+                        }))
                 .then(CommandUtil.admin(Commands.literal("on")
                         .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.admin(Commands.literal("off")
@@ -76,7 +85,9 @@ public final class StatsCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        Config.set(Config.COMMON.enableStatistics, enabled);
+        if (!CommandUtil.applied(source, () -> Config.set(Config.COMMON.enableStatistics, enabled))) {
+            return 0;
+        }
         CommandUtil.feedback(source,
                 "Kill statistics: " + CommandUtil.onOff(enabled)
                         + "\nMilestone advancements keep their own progress and are not changed by this switch.",

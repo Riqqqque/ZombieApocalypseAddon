@@ -212,7 +212,8 @@ public final class HordeManager {
         if (state.isForcedBloodMoonPending()) {
             activateBloodMoon = true;
             state.setForcedBloodMoonPending(false);
-        } else if (Config.COMMON.enableBloodMoon.get()) {
+        } else if (Config.COMMON.enableBloodMoon.get()
+                && isBloodMoonDay(currentDay, Config.COMMON.bloodMoonStartDay.get())) {
             double chance = ConfigValidator.probability(Config.COMMON.bloodMoonChance.get());
             activateBloodMoon = level.getRandom().nextDouble() < chance;
         }
@@ -226,6 +227,11 @@ public final class HordeManager {
             LOGGER.info("[ZombieApocalypse] Blood moon started for night {}", currentDay);
         }
         return BloodMoonTransition.STARTED;
+    }
+
+    /** Random blood moons can only roll from the start day on. Forced blood moons ignore this. */
+    static boolean isBloodMoonDay(long currentDay, int startDay) {
+        return currentDay >= Math.max(0, startDay);
     }
 
     static void stopSpawnEvents(ApocalypseWorldData state, long currentDay, long dayTime, boolean duskMode) {

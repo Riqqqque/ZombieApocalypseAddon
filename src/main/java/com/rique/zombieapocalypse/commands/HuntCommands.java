@@ -24,8 +24,8 @@ public final class HuntCommands {
                         .executes(context -> setEnabled(context.getSource(), true))))
                 .then(CommandUtil.admin(Commands.literal("off")
                         .executes(context -> setEnabled(context.getSource(), false))))
-                .then(CommandUtil.toggleSetting("enabled", Config.COMMON.enableAnimalHunting::get,
-                        value -> Config.set(Config.COMMON.enableAnimalHunting, value), "Animal hunting"))
+                .then(CommandUtil.switchSetting("enabled", Config.COMMON.enableAnimalHunting::get,
+                        HuntCommands::setEnabled, "Animal hunting"))
                 .then(CommandUtil.toggleSetting("babies", Config.COMMON.huntBabies::get,
                         value -> Config.set(Config.COMMON.huntBabies, value), "Hunt baby animals"))
                 .then(CommandUtil.toggleSetting("always", Config.COMMON.alwaysHunting::get,
@@ -125,13 +125,18 @@ public final class HuntCommands {
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
-        Config.set(Config.COMMON.enableAnimalHunting, enabled);
-        CommandUtil.feedback(source,
-                enabled
-                        ? "Animal hunting: ON. Zombies will hunt animals, eat dropped meat, and grow stronger."
-                        : "Animal hunting: OFF. Existing hunting goals go idle; bonuses already gained persist.",
-                true);
-        return 1;
+        if (!enabled) {
+            return CommandUtil.turnOff(source, "Animal hunting",
+                    () -> Config.set(Config.COMMON.enableAnimalHunting, false),
+                    "Hunting goals go idle; bonuses zombies already gained are kept.");
+        }
+        return CommandUtil.turnOn(source, "Animal hunting", "animalhunting",
+                () -> {
+                    Config.set(Config.COMMON.enableAnimalHunting, true);
+                    return java.util.List.of("Zombies hunt animals, eat dropped meat, and grow stronger.");
+                },
+                () -> CommandUtil.startLine(DifficultyManager.getCurrentDay(source.getLevel()),
+                        Config.COMMON.huntStartDay.get(), "/za hunt startday 0"));
     }
 
     private static int showStatus(CommandSourceStack source) {

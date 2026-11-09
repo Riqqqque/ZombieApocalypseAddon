@@ -31,6 +31,14 @@ class HordeManagerTest {
     }
 
     @Test
+    void randomBloodMoonsWaitForTheirStartDay() {
+        assertTrue(HordeManager.isBloodMoonDay(0, 0));
+        assertFalse(HordeManager.isBloodMoonDay(9, 10));
+        assertTrue(HordeManager.isBloodMoonDay(10, 10));
+        assertTrue(HordeManager.isBloodMoonDay(11, 10));
+    }
+
+    @Test
     void duskHordesIgnoreNightOnlyModeButKeepGracePeriod() {
         assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 0, true));
         assertFalse(HordeManager.isScheduledHordeBlocked(false, 10, 10, true));

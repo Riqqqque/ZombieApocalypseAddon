@@ -20,7 +20,8 @@ Use this for every public release.
 ## Documentation
 
 - Update README versions, commands, installation notes, and current behavior.
-- Update the wiki home, command reference, config guide, troubleshooting, and release notes when affected.
+- Update the wiki home, FAQ, setup guides, command reference, config guide, troubleshooting, and release notes when affected.
+- Run the tests to regenerate `build/docs`, copy `build/docs/Config-Reference.md` to the wiki, and compare `build/docs/command-tree.txt` with the wiki Commands page.
 - Update the Modrinth and CurseForge descriptions when behavior or support information changes.
 - Write a short release changelog containing only features, fixes, and important compatibility notes.
 

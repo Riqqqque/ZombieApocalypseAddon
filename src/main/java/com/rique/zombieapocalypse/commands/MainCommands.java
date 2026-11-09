@@ -66,7 +66,8 @@ public final class MainCommands {
 
         addRedirect(root, dispatcher, "spawn", "zdayspawn");
         addRedirect(root, dispatcher, "events", "zhorde");
-        addRedirect(root, dispatcher, "bloodmoon", "zbloodmoon");
+        // Bare /zbloodmoon starts one (kept for old scripts); bare /za bloodmoon shows status like every other /za topic.
+        addRedirect(root, dispatcher, "bloodmoon", "zbloodmoon", context -> HordeCommands.showStatus(context.getSource()));
         addRedirect(root, dispatcher, "day", "zday");
         addRedirect(root, dispatcher, "scaling", "zscaling");
         addRedirect(root, dispatcher, "gear", "zgear");
@@ -88,6 +89,15 @@ public final class MainCommands {
             CommandDispatcher<CommandSourceStack> dispatcher,
             String alias,
             String targetName) {
+        addRedirect(root, dispatcher, alias, targetName, null);
+    }
+
+    private static void addRedirect(
+            LiteralArgumentBuilder<CommandSourceStack> root,
+            CommandDispatcher<CommandSourceStack> dispatcher,
+            String alias,
+            String targetName,
+            com.mojang.brigadier.Command<CommandSourceStack> bareCommand) {
         CommandNode<CommandSourceStack> target = dispatcher.getRoot().getChild(targetName);
         if (target == null) {
             throw new IllegalStateException("Command target was not registered: " + targetName);
@@ -95,7 +105,7 @@ public final class MainCommands {
         // A redirect alone leaves the bare alias incomplete, so the alias also runs the target's own command.
         root.then(Commands.literal(alias)
                 .requires(target.getRequirement())
-                .executes(target.getCommand())
+                .executes(bareCommand != null ? bareCommand : target.getCommand())
                 .redirect(target));
     }
 
@@ -221,8 +231,8 @@ public final class MainCommands {
                 .append(" every ").append(CommandUtil.ticks(Config.COMMON.daySpawnInterval.get()))
                 .append(" | ").append(CommandUtil.count(Config.COMMON.zombiesPerSpawn.get(), "zombie"))
                 .append(" per wave\n");
-        status.append("Nearby cap: ").append(Config.COMMON.maxDayZombiesPerPlayer.get())
-                .append(" per player | Daytime: ").append(daylight).append('\n');
+        status.append("Nearby cap: ").append(DaySpawnCommands.formatNearbyCap())
+                .append(" | Daytime: ").append(daylight).append('\n');
         status.append("Base light protection: ").append(lightProtection).append('\n');
         status.append("Events: horde ").append(eventState(
                 Config.COMMON.enableHordeEvents.get(), HordeManager.isHordeActive(level),

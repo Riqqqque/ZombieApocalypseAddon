@@ -315,6 +315,7 @@ public final class Config {
         // Blood moon
         public final ModConfigSpec.BooleanValue enableBloodMoon;
         public final ModConfigSpec.DoubleValue bloodMoonChance;
+        public final ModConfigSpec.IntValue bloodMoonStartDay;
         public final ModConfigSpec.DoubleValue bloodMoonSpawnMultiplier;
         public final ModConfigSpec.IntValue bloodMoonZombiesPerSpawn;
 
@@ -445,6 +446,7 @@ public final class Config {
         // Night boost
         public final ModConfigSpec.BooleanValue enableNightBoost;
         public final ModConfigSpec.DoubleValue nightSpawnMultiplier;
+        public final ModConfigSpec.IntValue maxNightZombiesPerPlayer;
 
         // Biome and dimension controls
         public final ModConfigSpec.BooleanValue enableBiomeModifiers;
@@ -636,9 +638,9 @@ public final class Config {
                             "Controls custom waves during daytime in dimensions with a normal day/night cycle.",
                             "true = custom waves can spawn during both day and night.",
                             "false = night-only mode. Night waves, blood moons, and dusk hordes still work.",
-                            "Daytime horde waves are blocked, dawn hordes (hordeStartsAtDusk = false) are paused, and /zhorde start is rejected during the day.",
+                            "Daytime horde waves are blocked, dawn hordes (hordeStartsAtDusk = false) are paused, and /za events start is rejected during the day.",
                             "The Nether, End, and other fixed-time dimensions still use their own dimension toggles.",
-                            "daylightSpawnStartDay is only used while this setting is true.",
+                            "While this is false, daylightSpawnStartDay only delays scheduled hordes.",
                             "Applying a gameplay preset turns daytime custom spawning back on.")
                     .define("enableDaytimeSpawning", true);
 
@@ -659,7 +661,8 @@ public final class Config {
 
             maxDayZombiesPerPlayer = builder
                     .comment(
-                            "Maximum nearby zombie-class mobs allowed around each player before new custom spawns are skipped.",
+                            "Maximum zombie-class mobs (from any source, vanilla included) within spawnRange of each player before new custom waves are skipped.",
+                            "Applies day and night, including hordes and blood moons, unless maxNightZombiesPerPlayer sets a separate night cap.",
                             "This helps stop overcrowding and keeps performance under control.",
                             "Beginner: 30-60 is usually sane. Raising this above 100 is for stronger servers.")
                     .defineInRange("maxDayZombiesPerPlayer", 50, 1, 500);
@@ -715,11 +718,11 @@ public final class Config {
 
             daylightSpawnStartDay = builder
                     .comment(
-                            "Temporary grace period: blocks daytime custom spawning until the world reaches this day number.",
-                            "Default 1 = the first day (day 0) is safe in daylight so players can gather gear; nights are not.",
-                            "0 = daytime spawning starts immediately.",
-                            "Nighttime custom spawning still works before this day.",
-                            "This value is kept but ignored while enableDaytimeSpawning is false.",
+                            "Grace period: no custom waves in daylight, and no scheduled hordes, until the day counter (/za day) reaches this number.",
+                            "Default 1 = the first day (day 0) is safe in daylight so players can gather gear; the first night is not.",
+                            "0 = no grace period.",
+                            "Night waves and blood moons still happen before this day. /za events start ignores it.",
+                            "The horde delay still applies while enableDaytimeSpawning is false.",
                             "Use enableDaytimeSpawning = false for permanent night-only spawning.")
                     .defineInRange("daylightSpawnStartDay", 1, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
             builder.pop();
@@ -728,7 +731,8 @@ public final class Config {
                     "ZOMBIE VARIANTS",
                     "Controls which zombie-type mobs can appear in custom waves.",
                     "Safe beginner setup: defaults add variety without making every spawn a special mob.",
-                    "If the numbers add up high, the mod normalizes them so the total chance stays safe."))
+                    "If the numbers add up high, the mod normalizes them so the total chance stays safe.",
+                    "In game: /za spawn variants on|off."))
                     .push("variants");
             enableZombieVariants = builder
                     .comment(
@@ -782,7 +786,7 @@ public final class Config {
             zombieBlockBreakingStartDay = builder
                     .comment(
                             "Apocalypse day when block breaking is allowed to start after the feature is enabled.",
-                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "0 = active from the first day.",
                             "10 = zombies cannot break blocks until the day counter reaches 10.")
                     .defineInRange("zombieBlockBreakingStartDay", 10, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
@@ -887,7 +891,7 @@ public final class Config {
             zombieBlockPlacingStartDay = builder
                     .comment(
                             "Apocalypse day when block placing is allowed to start after the feature is enabled.",
-                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "0 = active from the first day.",
                             "15 = zombies cannot place blocks until the day counter reaches 15.")
                     .defineInRange("zombieBlockPlacingStartDay", 15, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
@@ -1002,7 +1006,7 @@ public final class Config {
             zombieToweringStartDay = builder
                     .comment(
                             "Apocalypse day when towering is allowed to start after the feature is enabled.",
-                            "0 = active immediately on day 0/day 1 style worlds.",
+                            "0 = active from the first day.",
                             "20 = zombies cannot tower until the day counter reaches 20.")
                     .defineInRange("zombieToweringStartDay", 20, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
@@ -1093,7 +1097,8 @@ public final class Config {
                             "When a target stays on reachable ground, riders move one at a time to nearby safe floor positions.",
                             "The short stability delay prevents a single jump or pathfinding hiccup from collapsing the tower.",
                             "Blocked or unsafe dismount positions are rejected instead of putting zombies inside the floor.",
-                            "Disable this only for intentionally permanent or unlimited towers.")
+                            "Disable this only for intentionally permanent or unlimited towers.",
+                            "While zombieToweringRequireObstacle is false, towers may form on open ground, so they are not taken apart for it.")
                     .define("zombieToweringSmartDismountEnabled", true);
 
             zombieToweringJumpingEnabled = builder
@@ -1114,18 +1119,21 @@ public final class Config {
             zombieToweringDismountDistance = builder
                     .comment(
                             "Horizontal distance from the target where a high-enough stacked zombie jumps off to attack.",
+                            "Only used when zombieToweringJumpingEnabled is true.",
                             "Default 2.75 blocks lets the upper zombie clear a wall edge without launching from far away.")
                     .defineInRange("zombieToweringDismountDistance", 2.75, 1.0, 8.0);
 
             zombieToweringVerticalBoost = builder
                     .comment(
                             "Upward velocity used when the upper zombie jumps off its stack toward the target.",
+                            "Only used when zombieToweringJumpingEnabled is true.",
                             "Default 0.48 clears a normal block edge without acting like flight.")
                     .defineInRange("zombieToweringVerticalBoost", 0.48, 0.1, 1.0);
 
             zombieToweringForwardBoost = builder
                     .comment(
                             "Horizontal velocity toward the target when a stacked zombie jumps off.",
+                            "Only used when zombieToweringJumpingEnabled is true.",
                             "The result is capped so repeated attempts cannot create runaway horizontal speed.")
                     .defineInRange("zombieToweringForwardBoost", 0.18, 0.0, 0.6);
 
@@ -1178,7 +1186,7 @@ public final class Config {
                             "true (default) = scheduled hordes roll their start chance at dusk (around 18:00 in-game),",
                             "so the horde hits just as night begins. false = they roll at dawn instead.",
                             "This also allows scheduled hordes while enableDaytimeSpawning is false, since the",
-                            "horde begins at nightfall rather than during the day.",
+                            "horde begins at nightfall rather than during the day. daylightSpawnStartDay still delays scheduled hordes.",
                             "Manual horde commands are unaffected and still follow the normal daytime rules.")
                     .define("hordeStartsAtDusk", true);
 
@@ -1207,7 +1215,8 @@ public final class Config {
                     .comment(
                             "Spawn check interval used during hordes and blood moons.",
                             "Lower values mean more frequent checks. 20 ticks = 1 second.",
-                            "Performance warning: this runs for every eligible player during events.")
+                            "Performance warning: this runs for every eligible player during events.",
+                            "Keep this at or below daySpawnInterval, or events check for waves less often than normal play.")
                     .defineInRange("eventSpawnInterval", 20, 1, 200);
 
             enableEventNotifications = builder
@@ -1228,20 +1237,29 @@ public final class Config {
                     "Random night events that raise zombie pressure until dawn.",
                     "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
                     "Safe beginner setup: keep chance low and avoid huge multipliers.",
-                    "In game: /za bloodmoon on turns random blood moons on and keeps every value below as you set it."))
+                    "In game: /za bloodmoon on turns random blood moons on and keeps every value below as you set it.",
+                    "/za bloodmoon startday <day> keeps early nights free of random blood moons."))
                     .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
-                            "Enables random blood moon nights.",
+                            "Enables random blood moon nights from bloodMoonStartDay on.",
                             "Admins can still force a blood moon with the command even if this is off.",
                             "Blood moons require the main custom spawning switch because they strengthen custom waves.")
                     .define("enableBloodMoon", true);
 
             bloodMoonChance = builder
                     .comment(
-                            "Chance each night becomes a blood moon.",
+                            "Chance each night (from bloodMoonStartDay on) becomes a blood moon.",
                             "0.0 = never, 1.0 = every night.")
                     .defineInRange("bloodMoonChance", 0.15, 0.0, 1.0);
+
+            bloodMoonStartDay = builder
+                    .comment(
+                            "First day (the day counter, /za day) that can roll a random blood moon.",
+                            "0 = blood moons can happen from the first night.",
+                            "Example: 10 keeps the first ten nights free of random blood moons.",
+                            "/za bloodmoon start still works on any day.")
+                    .defineInRange("bloodMoonStartDay", 0, 0, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             bloodMoonSpawnMultiplier = builder
                     .comment(
@@ -1295,7 +1313,7 @@ public final class Config {
                     .comment(
                             "Extra zombies added to every custom wave at 100% scaling, including horde and blood moon waves.",
                             "It grows with the scaling strength, so 4 means +2 at 50% and +4 at full strength.",
-                            "0 = scaling never changes wave size. maxDayZombiesPerPlayer still caps the total around each player.")
+                            "0 = scaling never changes wave size. maxDayZombiesPerPlayer (or maxNightZombiesPerPlayer at night) still caps the total around each player.")
                     .defineInRange("maxExtraZombiesPerWave", 0, 0, 50);
 
             maxSpeedBoost = builder
@@ -1898,13 +1916,16 @@ public final class Config {
             builder.comment(sectionComment(
                     "NIGHT SPAWN BOOST",
                     "Raises custom spawn chance at night. This does not directly change zombie speed or health.",
+                    "maxNightZombiesPerPlayer can give nights their own nearby zombie cap.",
+                    "In game: /za spawn nightboost on|off, /za spawn nightmultiplier <1.0-10.0>, /za spawn nightmax <0-500>.",
                     "Safe beginner setup: 1.5 keeps nights scarier without making every check guaranteed."))
                     .push("nightspawning");
             enableNightBoost = builder
                     .comment(
                             "Adds an extra spawn chance boost at night.",
                             "This stacks on top of normal spawn settings in dimensions with a real day/night cycle.",
-                            "Nether, End, and other fixed-time dimensions do not receive a permanent night boost.")
+                            "Nether, End, and other fixed-time dimensions do not receive a permanent night boost.",
+                            "Night here follows vanilla mob spawning, so a daytime thunderstorm also counts as night.")
                     .define("enableNightBoost", true);
 
             nightSpawnMultiplier = builder
@@ -1912,13 +1933,25 @@ public final class Config {
                             "Extra spawn chance multiplier used at night.",
                             "1.0 = no extra boost, 1.5 = 50% more chance at night.")
                     .defineInRange("nightSpawnMultiplier", 1.5, 1.0, 10.0);
+
+            maxNightZombiesPerPlayer = builder
+                    .comment(
+                            "Separate nearby zombie cap for night. It can be higher or lower than maxDayZombiesPerPlayer.",
+                            "0 = nights use maxDayZombiesPerPlayer.",
+                            "Example: 20 keeps nights calmer; 80 lets nights get much busier than days.",
+                            "It counts the same way as the day cap and also holds during hordes and blood moons at night.",
+                            "Only custom waves stop at the cap. Vanilla spawning is not affected.",
+                            "Night here follows vanilla mob spawning, so a daytime thunderstorm also counts as night.",
+                            "Works even when enableNightBoost is false. Fixed-time dimensions such as the Nether always use the day cap.")
+                    .defineInRange("maxNightZombiesPerPlayer", 0, 0, 500);
             builder.pop();
 
             builder.comment(sectionComment(
                     "BIOME SPAWN RULES",
                     "Controls biome-based variant chances and dimension custom spawning.",
                     "Safe beginner setup: leave Nether and End spawning off unless the pack is designed around it.",
-                    "Performance warning: enabling extra dimensions means more places can run custom spawn checks."))
+                    "Performance warning: enabling extra dimensions means more places can run custom spawn checks.",
+                    "In game: /za spawn biomes on|off, /za spawn nether on|off, /za spawn end on|off."))
                     .push("biomes");
             enableBiomeModifiers = builder
                     .comment(
@@ -1962,7 +1995,8 @@ public final class Config {
             builder.comment(sectionComment(
                     "DEATH COOLDOWN",
                     "A mercy system that reduces custom spawn pressure after a player dies.",
-                    "Recommended for public servers so players do not get spawn-camped by fresh waves."))
+                    "Recommended for public servers so players do not get spawn-camped by fresh waves.",
+                    "In game: /za spawn cooldown on|off."))
                     .push("deathcooldown");
             enableDeathCooldown = builder
                     .comment(
@@ -1986,7 +2020,8 @@ public final class Config {
             builder.comment(sectionComment(
                     "SPAWN FEEDBACK EFFECTS",
                     "Cosmetic sound and particle feedback when custom waves spawn.",
-                    "Safe to disable if players find it noisy or if you want slightly less client-side clutter."))
+                    "Safe to disable if players find it noisy or if you want slightly less client-side clutter.",
+                    "In game: /za spawn effects on|off."))
                     .push("effects");
             enableSpawnEffects = builder
                     .comment(
@@ -2010,13 +2045,13 @@ public final class Config {
 
             builder.comment(sectionComment(
                     "STATISTICS",
-                    "Controls kill totals shown by /zstats.",
+                    "Controls kill totals shown by /za stats.",
                     "Milestone advancements use their own progress so achievements can still work if this is disabled.",
                     "Quick control: /za stats on or /za stats off."))
                     .push("statistics");
             enableStatistics = builder
                     .comment(
-                            "Tracks zombie kill totals shown by /zstats.",
+                            "Tracks zombie kill totals shown by /za stats.",
                             "Milestone advancements keep their own progress so achievements can still work if this is off.")
                     .define("enableStatistics", true);
             builder.pop();
@@ -2065,7 +2100,7 @@ public final class Config {
                     "Everything in this section stays OFF until enableAnimalHunting is set to true.",
                     "Zombies hunt animals whose drops include zombie_food tag items, plus any forced targets.",
                     "Food items come from the zombieapocalypseaddon:zombie_food item tag (vanilla meats and rotten flesh).",
-                    "Manage it in game with /zhunt or /za hunting."))
+                    "Manage it in game with /za hunt."))
                     .push("animalhunting");
 
             enableAnimalHunting = builder
@@ -2107,7 +2142,7 @@ public final class Config {
             huntCapPerZombiePerDay = builder
                     .comment(
                             "Maximum successful animal hunts per zombie within one Minecraft day.",
-                            "0 = zombies can hunt but kills never count against a daily cap.",
+                            "0 = no daily cap.",
                             "Only used when berserkerHunting is false.")
                     .defineInRange("huntCapPerZombiePerDay", 10, 0, 100000);
 
@@ -2121,7 +2156,8 @@ public final class Config {
             huntFollowDistanceFactor = builder
                     .comment(
                             "Multiplier applied to a zombie's follow range while searching for animals.",
-                            "1.0 = normal follow range, 2.0 = double it.")
+                            "1.0 = normal follow range, 2.0 = double it.",
+                            "0 stops zombies finding prey. Above 3 widens every zombie's search and can lag busy servers.")
                     .defineInRange("huntFollowDistanceFactor", 1.0, 0.0, 64.0);
 
             eatDroppedFood = builder

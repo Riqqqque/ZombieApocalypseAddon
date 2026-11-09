@@ -34,7 +34,7 @@ class DocsGeneratorTest {
             if (root.getRedirect() != null && !root.getName().equals("zombieapocalypse")) {
                 continue;
             }
-            walk(root, "/" + root.getName(), lines, 0);
+            walk(root, "/" + root.getName(), lines, 0, false);
         }
         Path out = Path.of("build", "docs");
         Files.createDirectories(out);
@@ -151,11 +151,17 @@ class DocsGeneratorTest {
         return String.join(" ", parts);
     }
 
-    private static void walk(CommandNode<CommandSourceStack> node, String path, List<String> lines, int depth) {
+    private static void walk(
+            CommandNode<CommandSourceStack> node,
+            String path,
+            List<String> lines,
+            int depth,
+            boolean parentAdmin) {
         if (depth > 12) {
             return;
         }
-        boolean admin = !node.getRequirement().test(null);
+        // A command is admin-only when it or any parent on its path needs permission level 2.
+        boolean admin = parentAdmin || !node.getRequirement().test(null);
         String marker = (node.getCommand() != null ? "RUN " : "    ") + (admin ? "OP " : "   ");
         if (node.getRedirect() != null) {
             lines.add(marker + path + "  -> /" + node.getRedirect().getName());
@@ -166,7 +172,7 @@ class DocsGeneratorTest {
             String part = child instanceof ArgumentCommandNode<?, ?> argument
                     ? "<" + argument.getName() + ":" + argument.getType().getClass().getSimpleName().replace("ArgumentType", "") + ">"
                     : child.getName();
-            walk(child, path + " " + part, lines, depth + 1);
+            walk(child, path + " " + part, lines, depth + 1, admin);
         }
     }
 }

@@ -3,6 +3,9 @@ contact_links:
   - name: Wiki and setup guide
     url: https://github.com/Riqqqque/ZombieApocalypseAddon/wiki
     about: Start here for installation, commands, config examples, compatibility, and troubleshooting.
+  - name: Setup guides
+    url: https://github.com/Riqqqque/ZombieApocalypseAddon/wiki/Setup-Guides
+    about: Step-by-step setups for casual, hardcore, night-only, event-night, siege, long-term, big-server, and modpack worlds.
   - name: Private security report
     url: https://github.com/Riqqqque/ZombieApocalypseAddon/security/advisories/new
     about: Report exploitable security problems privately.

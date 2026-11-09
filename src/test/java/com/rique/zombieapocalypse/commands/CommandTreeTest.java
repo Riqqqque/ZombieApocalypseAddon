@@ -3,6 +3,7 @@ package com.rique.zombieapocalypse.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -84,6 +85,13 @@ class CommandTreeTest {
         for (Map.Entry<String, String> entry : ZA_REDIRECTS.entrySet()) {
             CommandNode<CommandSourceStack> target = required(dispatcher.getRoot(), entry.getValue());
             assertNotNull(target.getCommand(), "/" + entry.getValue());
+            if (entry.getKey().equals("bloodmoon")) {
+                // Bare /zbloodmoon starts a blood moon for old scripts; /za bloodmoon only shows status.
+                assertNotNull(required(za, entry.getKey()).getCommand());
+                assertNotSame(target.getCommand(), required(za, entry.getKey()).getCommand());
+                assertTrue(required(za, entry.getKey()).getRequirement().test(null));
+                continue;
+            }
             assertSame(target.getCommand(), required(za, entry.getKey()).getCommand(), "/za " + entry.getKey());
 
             if (target.getRequirement().test(null)) {
@@ -127,6 +135,10 @@ class CommandTreeTest {
         assertAdmin("zbloodmoon", "start");
         assertAdmin("zbloodmoon", "on");
         assertAdmin("zbloodmoon", "off");
+        assertAdmin("zbloodmoon", "startday", "day");
+        assertPublic("zbloodmoon", "startday");
+        assertAdmin("zdayspawn", "nightmax", "zombies");
+        assertPublic("zdayspawn", "nightmax");
         assertAdmin("zdayspawn", "on");
         assertAdmin("zdayspawn", "off");
         assertAdmin("zdayspawn", "daytime", "state");

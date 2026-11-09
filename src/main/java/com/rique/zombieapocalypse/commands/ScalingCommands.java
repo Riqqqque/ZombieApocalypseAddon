@@ -55,12 +55,12 @@ public final class ScalingCommands {
                 .then(CommandUtil.doubleSetting("speed", "boost", 0.0, 1.0,
                         Config.COMMON.maxSpeedBoost::get,
                         value -> Config.set(Config.COMMON.maxSpeedBoost, value),
-                        value -> "Maximum legacy speed boost: " + CommandUtil.percent(value),
+                        value -> "Full-strength speed boost: " + CommandUtil.percent(value),
                         0.0, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0))
                 .then(CommandUtil.intSetting("health", "points", 0, 40,
                         Config.COMMON.maxHealthBoost::get,
                         value -> Config.set(Config.COMMON.maxHealthBoost, value),
-                        value -> "Maximum legacy health bonus: " + value + " health points",
+                        value -> "Full-strength health bonus: " + value + " health points",
                         0, 2, 4, 10, 20, 30, 40))
                 .then(CommandUtil.doubleSetting("armorchance", "chance", 0.0, 1.0,
                         Config.COMMON.maxArmorChance::get,
@@ -74,7 +74,7 @@ public final class ScalingCommands {
                         0.0, 0.1, 0.2, 0.25, 0.5, 0.75, 1.0)));
     }
 
-    private static int setEnabled(CommandSourceStack source, boolean enabled) {
+    static int setEnabled(CommandSourceStack source, boolean enabled) {
         if (!enabled) {
             return CommandUtil.turnOff(source, "Difficulty scaling",
                     () -> Config.set(Config.COMMON.enableDifficultyScaling, false), null);

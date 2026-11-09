@@ -97,6 +97,13 @@ public final class HordeCommands {
                         value -> Config.set(Config.COMMON.bloodMoonChance, value),
                         value -> "Nightly blood moon chance: " + CommandUtil.percent(value),
                         0.0, 0.05, 0.1, 0.15, 0.25, 0.5, 0.75, 1.0))
+                .then(CommandUtil.intSetting("startday", "day", 0, ConfigLimits.MAX_APOCALYPSE_DAY,
+                        Config.COMMON.bloodMoonStartDay::get,
+                        value -> Config.set(Config.COMMON.bloodMoonStartDay, value),
+                        value -> value <= 0
+                                ? "Random blood moons can happen from the first night."
+                                : "Random blood moons can happen from day " + value + '.',
+                        0, 5, 10, 20, 30, 50, 100))
                 .then(CommandUtil.doubleSetting("multiplier", "multiplier", 1.0, 50.0,
                         Config.COMMON.bloodMoonSpawnMultiplier::get,
                         value -> Config.set(Config.COMMON.bloodMoonSpawnMultiplier, value),
@@ -156,7 +163,7 @@ public final class HordeCommands {
         return startBloodMoon(source);
     }
 
-    private static int setHordesEnabled(CommandSourceStack source, boolean enabled) {
+    static int setHordesEnabled(CommandSourceStack source, boolean enabled) {
         if (!enabled) {
             return CommandUtil.turnOff(source, "Scheduled hordes", () -> {
                 Config.set(Config.COMMON.enableHordeEvents, false);
@@ -170,7 +177,7 @@ public final class HordeCommands {
                         + (Config.COMMON.hordeStartsAtDusk.get() ? "at dusk." : "at dawn."));
     }
 
-    private static int setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
+    static int setBloodMoonsEnabled(CommandSourceStack source, boolean enabled) {
         if (!enabled) {
             return CommandUtil.turnOff(source, "Random blood moons", () -> {
                 Config.set(Config.COMMON.enableBloodMoon, false);
@@ -179,10 +186,15 @@ public final class HordeCommands {
         }
         return CommandUtil.turnOn(source, "Random blood moons", "bloodmoon",
                 FeaturePresets::enableBloodMoons,
-                () -> "Nightly chance: " + CommandUtil.percent(Config.COMMON.bloodMoonChance.get()) + '.');
+                () -> "Nightly chance: " + CommandUtil.percent(Config.COMMON.bloodMoonChance.get())
+                        + (Config.COMMON.bloodMoonStartDay.get() > 0
+                                ? " from day " + Config.COMMON.bloodMoonStartDay.get()
+                                        + " (/za bloodmoon startday 0 removes the wait)"
+                                : "")
+                        + '.');
     }
 
-    private static int showStatus(CommandSourceStack source) {
+    static int showStatus(CommandSourceStack source) {
         ServerLevel level = source.getLevel();
         boolean horde = HordeManager.isHordeActive(level);
         boolean bloodMoon = HordeManager.isBloodMoonActive(level);
@@ -226,7 +238,11 @@ public final class HordeCommands {
                 .append(" zombies per wave at ")
                 .append(CommandUtil.multiplier(Config.COMMON.hordeSpawnMultiplier.get()));
         status.append("\nBlood moon setup: ").append(CommandUtil.percent(Config.COMMON.bloodMoonChance.get()))
-                .append(" nightly chance, ").append(Config.COMMON.bloodMoonZombiesPerSpawn.get())
+                .append(" nightly chance")
+                .append(Config.COMMON.bloodMoonStartDay.get() > 0
+                        ? " from day " + Config.COMMON.bloodMoonStartDay.get()
+                        : "")
+                .append(", ").append(Config.COMMON.bloodMoonZombiesPerSpawn.get())
                 .append(" zombies per wave at ")
                 .append(CommandUtil.multiplier(Config.COMMON.bloodMoonSpawnMultiplier.get()));
         status.append("\nEvent interval: ").append(CommandUtil.ticks(Config.COMMON.eventSpawnInterval.get()))
