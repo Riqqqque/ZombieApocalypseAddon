@@ -52,6 +52,16 @@ public final class ScalingCommands {
                                 ? "Difficulty scaling no longer changes wave size."
                                 : "Every custom wave gets up to " + value + " extra zombies at full strength.",
                         0, 1, 2, 3, 5, 10))
+                .then(CommandUtil.doubleSetting("endless", "percent", 0.0, 100.0,
+                        Config.COMMON.endlessScalingPercentPerDay::get,
+                        value -> Config.set(Config.COMMON.endlessScalingPercentPerDay, value),
+                        value -> value <= 0.0
+                                ? "Endless scaling is off: strength stops at 100% on day "
+                                        + Config.COMMON.maxScalingDay.get() + '.'
+                                : "Endless scaling: after day " + Config.COMMON.maxScalingDay.get()
+                                        + ", strength keeps rising " + DifficultyManager.formatPercentNumber(value)
+                                        + " per day, with no end.",
+                        0.0, 0.5, 1.0, 2.0, 5.0))
                 .then(CommandUtil.doubleSetting("speed", "boost", 0.0, 1.0,
                         Config.COMMON.maxSpeedBoost::get,
                         value -> Config.set(Config.COMMON.maxSpeedBoost, value),
@@ -82,7 +92,12 @@ public final class ScalingCommands {
         return CommandUtil.turnOn(source, "Difficulty scaling", "scaling",
                 FeaturePresets::enableScaling,
                 () -> "Progression: day " + Config.COMMON.scalingStartDay.get() + " to day "
-                        + Config.COMMON.maxScalingDay.get() + " (today is day "
+                        + Config.COMMON.maxScalingDay.get()
+                        + (Config.COMMON.endlessScalingPercentPerDay.get() > 0.0
+                                ? ", then endless (+" + DifficultyManager.formatPercentNumber(
+                                        Config.COMMON.endlessScalingPercentPerDay.get()) + " per day)"
+                                : "")
+                        + " (today is day "
                         + DifficultyManager.getCurrentDay(source.getLevel()) + ").");
     }
 

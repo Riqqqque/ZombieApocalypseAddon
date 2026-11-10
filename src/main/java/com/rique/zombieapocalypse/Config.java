@@ -326,6 +326,7 @@ public final class Config {
         public final ModConfigSpec.IntValue maxScalingDay;
         public final ModConfigSpec.IntValue scalingStepDays;
         public final ModConfigSpec.IntValue maxExtraZombiesPerWave;
+        public final ModConfigSpec.DoubleValue endlessScalingPercentPerDay;
         public final ModConfigSpec.DoubleValue maxSpeedBoost;
         public final ModConfigSpec.IntValue maxHealthBoost;
         public final ModConfigSpec.DoubleValue maxArmorChance;
@@ -1291,6 +1292,7 @@ public final class Config {
                     "Makes the apocalypse get harder as the world day counter rises.",
                     "Safe beginner setup: keep scalingStartDay above 0 so new worlds get a short grace period.",
                     "In game: /za scaling on turns scaling on and keeps every value below as you set it.",
+                    "/za scaling endless <percent> keeps strength rising slowly after maxScalingDay, with no end.",
                     "Hardcore setup: lower scalingStartDay or maxScalingDay, but test before combining with strong hordes."))
                     .push("scaling");
             enableDifficultyScaling = builder
@@ -1308,7 +1310,7 @@ public final class Config {
             maxScalingDay = builder
                     .comment(
                             "The day where scaling reaches full strength.",
-                            "After this day, the legacy scaling factor stays at 100%.")
+                            "After this day, strength stays at 100% unless endlessScalingPercentPerDay is above 0.")
                     .defineInRange("maxScalingDay", 50, 1, ConfigLimits.MAX_APOCALYPSE_DAY);
 
             scalingStepDays = builder
@@ -1323,8 +1325,19 @@ public final class Config {
                     .comment(
                             "Extra zombies added to every custom wave at 100% scaling, including horde and blood moon waves.",
                             "It grows with the scaling strength, so 4 means +2 at 50% and +4 at full strength.",
+                            "With endless scaling it keeps growing past full strength (+8 at 200%), up to +100.",
                             "0 = scaling never changes wave size. The nearby zombie cap (day, night, or blood moon) still caps the total around each player.")
                     .defineInRange("maxExtraZombiesPerWave", 0, 0, 50);
+
+            endlessScalingPercentPerDay = builder
+                    .comment(
+                            "Endless scaling: after maxScalingDay, strength keeps rising by this percent every day, forever.",
+                            "0 = strength stops at 100% on maxScalingDay (default).",
+                            "Example: 1.0 with maxScalingDay 100 gives 150% on day 150 and 200% on day 200.",
+                            "Above 100%, health, speed, the attribute scale settings, and maxExtraZombiesPerWave keep growing.",
+                            "Armor and weapon chances and gear tiers stay at their full-strength values.",
+                            "Speed rises too, so keep this low; 0.5 to 2 is a slow, steady climb. scalingStepDays still applies.")
+                    .defineInRange("endlessScalingPercentPerDay", 0.0, 0.0, 100.0);
 
             maxSpeedBoost = builder
                     .comment(

@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.11.0 | `zombieapocalypseaddon-2.11.0.jar` |
-| 1.20.1 | NeoForge | 1.14.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.14.0.jar` |
-| 1.20.1 | Forge | 1.14.0 | `zombieapocalypseaddon-forge-1.20.1-1.14.0.jar` |
+| 1.21.1 | NeoForge | 2.12.0 | `zombieapocalypseaddon-2.12.0.jar` |
+| 1.20.1 | NeoForge | 1.15.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.15.0.jar` |
+| 1.20.1 | Forge | 1.15.0 | `zombieapocalypseaddon-forge-1.20.1-1.15.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -69,6 +69,7 @@ Most questions are one command away:
 | Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` (strength rises on days 11, 21, 31...) |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` (up to 4 extra zombies per wave at full strength, hordes included) |
+| Keep zombies getting stronger after the last scaling day | `/za scaling endless 1` (+1% strength per day, forever; `0` is off) |
 | Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
 | Give blood moons their own zombie cap | `/za spawn bloodmoonmax 100` (`0` uses the night cap) |
 | Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
@@ -224,7 +225,7 @@ Hordes can act as siege nights that make the world harder each time. This setup 
 
 ### Difficulty Progression
 
-Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. Strength climbs a little every day by default; `/za scaling steps <days>` makes it rise in jumps instead, on the morning after every step day. `/za scaling extrazombies <count>` adds up to that many zombies to every custom wave, including horde and blood moon waves, as strength rises. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
+Basic scaling can increase health, speed, armor, and weapon chances as the world gets older. `/za scaling` exposes the start day, full-strength day, and each basic maximum with range-aware tab completion. Strength climbs a little every day by default; `/za scaling steps <days>` makes it rise in jumps instead, on the morning after every step day. `/za scaling extrazombies <count>` adds up to that many zombies to every custom wave, including horde and blood moon waves, as strength rises. `/za scaling endless <percent>` keeps strength rising slowly after the full-strength day, with no end. The advanced attribute system can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance; `/za attributes get <key>` reports the exact allowed range for that key.
 
 Most servers should use a preset or the basic `[scaling]` section and leave `[attributes]` unchanged.
 
@@ -365,9 +366,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.11.0 |
-| NeoForge | 1.20.1 | 1.14.0 |
-| Forge | 1.20.1 | 1.14.0 |
+| NeoForge | 1.21.1 | 2.12.0 |
+| NeoForge | 1.20.1 | 1.15.0 |
+| Forge | 1.20.1 | 1.15.0 |
 
 Build all targets on Windows with:
 

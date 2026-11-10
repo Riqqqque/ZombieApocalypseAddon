@@ -44,12 +44,28 @@ class SpawnMathTest {
     }
 
     @Test
+    void endlessScaleRisesSlowlyAfterFullStrength() {
+        assertEquals(0.0, SpawnMath.endlessScale(150, 100, 0.0));
+        assertEquals(0.0, SpawnMath.endlessScale(100, 100, 1.0));
+        assertEquals(0.0, SpawnMath.endlessScale(40, 100, 1.0));
+        assertEquals(0.5, SpawnMath.endlessScale(150, 100, 1.0), 1e-9);
+        assertEquals(1.0, SpawnMath.endlessScale(200, 100, 1.0), 1e-9);
+        assertEquals(0.25, SpawnMath.endlessScale(150, 100, 0.5), 1e-9);
+        assertEquals(SpawnMath.MAX_ENDLESS_SCALE, SpawnMath.endlessScale(Long.MAX_VALUE / 4, 100, 100.0));
+        assertEquals(0.0, SpawnMath.endlessScale(150, 100, Double.NaN));
+    }
+
+    @Test
     void scaledExtraZombiesFollowsScalingStrength() {
         assertEquals(0, SpawnMath.scaledExtraZombies(0, 1.0));
         assertEquals(0, SpawnMath.scaledExtraZombies(4, 0.0));
         assertEquals(2, SpawnMath.scaledExtraZombies(4, 0.5));
         assertEquals(4, SpawnMath.scaledExtraZombies(4, 1.0));
-        assertEquals(4, SpawnMath.scaledExtraZombies(4, 3.0));
+        // Endless scaling can push strength past 100%, so waves keep growing, up to the hard limit.
+        assertEquals(12, SpawnMath.scaledExtraZombies(4, 3.0));
+        assertEquals(SpawnMath.MAX_SCALED_EXTRA_ZOMBIES, SpawnMath.scaledExtraZombies(50, 90.0));
+        assertEquals(0, SpawnMath.scaledExtraZombies(4, -1.0));
+        assertEquals(0, SpawnMath.scaledExtraZombies(4, Double.POSITIVE_INFINITY));
         assertEquals(0, SpawnMath.scaledExtraZombies(4, Double.NaN));
     }
 

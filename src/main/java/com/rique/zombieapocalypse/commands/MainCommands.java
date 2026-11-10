@@ -242,7 +242,7 @@ public final class MainCommands {
                         Config.COMMON.enableBloodMoon.get(), HordeManager.isBloodMoonActive(level),
                         spawningEnabled, hordeWavesNow)).append('\n');
         status.append("Difficulty scaling: ").append(CommandUtil.onOff(Config.COMMON.enableDifficultyScaling.get()))
-                .append(" (").append(CommandUtil.percent(DifficultyManager.getScalingFactor(level))).append(")\n");
+                .append(" (").append(CommandUtil.percent(DifficultyManager.getStrengthFactor(level))).append(")\n");
         status.append("World pressure: breaking ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockBreaking.get()))
                 .append(" | placing ").append(CommandUtil.onOff(Config.COMMON.enableZombieBlockPlacing.get()))
                 .append(" | towering ").append(CommandUtil.onOff(Config.COMMON.enableZombieTowering.get()))

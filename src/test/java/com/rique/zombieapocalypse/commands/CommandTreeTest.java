@@ -155,6 +155,8 @@ class CommandTreeTest {
         assertAdmin("zscaling", "maxday", "day");
         assertAdmin("zscaling", "steps", "days");
         assertAdmin("zscaling", "extrazombies", "count");
+        assertAdmin("zscaling", "endless", "percent");
+        assertPublic("zscaling", "endless");
         assertAdmin("zblockbreak", "events", "state");
         assertAdmin("zblockplace", "events", "state");
         assertAdmin("ztower", "events", "state");

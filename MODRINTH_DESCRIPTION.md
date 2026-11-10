@@ -66,6 +66,7 @@ Most things players ask for are one command away:
 | Skip time without resetting the apocalypse day | `/time add 12000`, or `/za day set <day>`. Vanilla `/time set` resets the day counter to 0. |
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` |
+| Keep zombies getting stronger after the last scaling day | `/za scaling endless 1` (+1% strength per day, forever; `0` is off) |
 | Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
 | Give blood moons their own zombie cap | `/za spawn bloodmoonmax 100` (`0` uses the night cap) |
 | Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
@@ -198,7 +199,7 @@ For night-only custom spawning, run `/za spawn daytime off`. Normal night waves,
 
 Hordes temporarily raise wave pressure on scheduled days. Blood moons create stronger night pressure. Both have separate chance, size, duration, interval, and multiplier settings available through `/za events` and `/za bloodmoon`, and both can be triggered manually. Scheduled hordes arrive at dusk by default and last about the night, or roll at dawn with `/za events dusk off`. They require custom waves; turning custom waves off cancels active or queued spawn pressure. Night-only mode pauses scheduled dawn hordes and daytime horde waves without disabling night waves or blood moons; dusk-start hordes still run in night-only mode. If both events overlap, their multipliers stack and the larger configured event wave size wins.
 
-Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. `/za scaling steps <days>` makes strength rise in jumps on the morning after every step day instead of a little each day, and `/za scaling extrazombies <count>` adds zombies to every wave as strength rises. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
+Basic day scaling is enough for most servers. `/za scaling` exposes the progression days and basic full-strength bonuses. `/za scaling steps <days>` makes strength rise in jumps on the morning after every step day instead of a little each day, and `/za scaling extrazombies <count>` adds zombies to every wave as strength rises. `/za scaling endless <percent>` keeps strength rising slowly after the full-strength day, forever. Advanced profiles can separately tune health, attack damage, movement speed, armor, follow range, and knockback resistance for each variant and environment, with exact per-key ranges shown by `/za attributes get <key>`.
 
 Scaled zombies draw armor and weapons from four tiers. Tier 1 is most common early and later days favor tiers 3 and 4. The tiers start with vanilla gear, and items from any mod can be added: hold an item and run `/za gear add <tier>`, or list item IDs in `tier1Gear` to `tier4Gear`. Slots are detected automatically, shields are never used, and `/za gear preview <tier>` spawns a zombie wearing a tier. `gearDropChance` controls how often that gear drops.
 

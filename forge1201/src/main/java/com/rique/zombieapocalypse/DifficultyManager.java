@@ -54,15 +54,26 @@ public final class DifficultyManager {
         return level.getServer().overworld().getDayTime() / 24000L;
     }
 
+    /** Scaling progress from 0 to 1. Gear chances and tiers use this, so they stop at full strength. */
     public static double getScalingFactor(ServerLevel level) {
+        return Math.min(1.0, getStrengthFactor(level));
+    }
+
+    /**
+     * Scaling strength: 0 to 1 up to maxScalingDay, then above 1 when endless scaling is on.
+     * Attribute bonuses and extra wave zombies use this.
+     */
+    public static double getStrengthFactor(ServerLevel level) {
         if (!Config.COMMON.enableDifficultyScaling.get()) {
             return 0.0;
         }
 
-        return SpawnMath.computeLinearScale(
-                SpawnMath.steppedScalingDay(getCurrentDay(level), Config.COMMON.scalingStepDays.get()),
-                Config.COMMON.scalingStartDay.get(),
-                Config.COMMON.maxScalingDay.get());
+        long scalingDay = SpawnMath.steppedScalingDay(getCurrentDay(level), Config.COMMON.scalingStepDays.get());
+        int startDay = Config.COMMON.scalingStartDay.get();
+        int maxDay = Config.COMMON.maxScalingDay.get();
+        return SpawnMath.computeLinearScale(scalingDay, startDay, maxDay)
+                + SpawnMath.endlessScale(scalingDay, Math.max(startDay, maxDay),
+                        Config.COMMON.endlessScalingPercentPerDay.get());
     }
 
     public static void applyScaling(Mob zombie, ServerLevel level) {
@@ -76,8 +87,9 @@ public final class DifficultyManager {
 
         zombie.addTag(SCALING_APPLIED_TAG);
 
-        double factor = getScalingFactor(level);
-        applyConfiguredAttributes(zombie, level, spawnPos, factor);
+        double strength = getStrengthFactor(level);
+        double factor = Math.min(1.0, strength);
+        applyConfiguredAttributes(zombie, level, spawnPos, strength);
 
         if (!Config.COMMON.enableDifficultyScaling.get() || factor <= 0.0) {
             return;
@@ -524,7 +536,7 @@ public final class DifficultyManager {
         if (!Double.isFinite(value)) {
             return 0.0;
         }
-        return Math.max(0.0, Math.min(1.0, value));
+        return Math.max(0.0, Math.min(1.0 + SpawnMath.MAX_ENDLESS_SCALE, value));
     }
 
     private static double safeMultiplier(double value) {
@@ -543,7 +555,7 @@ public final class DifficultyManager {
 
     public static String getScalingStatus(ServerLevel level) {
         long currentDay = getCurrentDay(level);
-        double factor = getScalingFactor(level);
+        double factor = getStrengthFactor(level);
         int percentage = (int) Math.round(factor * 100.0);
         int healthBonus = (int) Math.round(Config.COMMON.maxHealthBoost.get() * factor);
         int speedBonusPercent = (int) Math.round(Config.COMMON.maxSpeedBoost.get() * factor * 100.0);
@@ -557,12 +569,17 @@ public final class DifficultyManager {
                 ? "daily"
                 : "every " + stepDays + " days, next rise on day " + SpawnMath.nextScalingStepDay(currentDay, stepDays);
         int maxExtra = Config.COMMON.maxExtraZombiesPerWave.get();
+        double endless = Config.COMMON.endlessScalingPercentPerDay.get();
+        String afterFull = endless > 0.0
+                ? "keeps rising " + formatPercentNumber(endless) + " per day (endless)"
+                : "stays at 100%";
 
         return String.format(
                 "Difficulty scaling status:\n"
                         + "Enabled: %s | Current day: %d | Current strength: %d%%\n"
                         + "Progression: starts day %d, full strength day %d | Rises: %s\n"
-                        + "Extra zombies per wave: +%d now, +%d at full strength\n"
+                        + "After full strength: %s\n"
+                        + "Extra zombies per wave: +%d now, +%d at 100%% strength\n"
                         + "Current legacy bonuses: speed +%d%%, health +%d\n"
                         + "Full-strength gear chances: armor %.0f%%, weapon %.0f%% | drop %s per item\n"
                         + "Advanced attributes: %s | Day scaling: %s | Variant profiles: %s | Context profiles: %s\n"
@@ -574,6 +591,7 @@ public final class DifficultyManager {
                 Config.COMMON.scalingStartDay.get(),
                 Config.COMMON.maxScalingDay.get(),
                 steps,
+                afterFull,
                 SpawnMath.scaledExtraZombies(maxExtra, factor),
                 maxExtra,
                 speedBonusPercent,
@@ -588,5 +606,12 @@ public final class DifficultyManager {
                 Config.COMMON.baseHealthMultiplier.get(),
                 Config.COMMON.baseAttackMultiplier.get(),
                 Config.COMMON.baseSpeedMultiplier.get());
+    }
+
+    /** 1.0 -> "1%", 0.5 -> "0.5%". */
+    public static String formatPercentNumber(double percent) {
+        return (percent == Math.rint(percent)
+                ? String.valueOf((long) percent)
+                : String.format(java.util.Locale.ROOT, "%.2f", percent).replaceAll("\\.?0+$", "")) + "%";
     }
 }

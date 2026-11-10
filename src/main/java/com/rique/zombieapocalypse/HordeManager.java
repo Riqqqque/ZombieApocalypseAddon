@@ -88,7 +88,7 @@ public final class HordeManager {
         if (maxExtra <= 0) {
             return 0;
         }
-        return SpawnMath.scaledExtraZombies(maxExtra, DifficultyManager.getScalingFactor(level));
+        return SpawnMath.scaledExtraZombies(maxExtra, DifficultyManager.getStrengthFactor(level));
     }
 
     public static void tick(ServerLevel overworldLevel) {

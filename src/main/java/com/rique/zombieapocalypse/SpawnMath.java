@@ -63,11 +63,27 @@ public final class SpawnMath {
         return steppedScalingDay(Math.max(0L, currentDay), stepDays) + stepDays + 1L;
     }
 
+    /** Highest strength endless scaling can add on top of full strength (100.0 = +10000%). */
+    public static final double MAX_ENDLESS_SCALE = 100.0;
+    /** Highest number of extra zombies scaling can add to one wave. */
+    public static final int MAX_SCALED_EXTRA_ZOMBIES = 100;
+
+    /**
+     * Strength added after full strength: {@code percentPerDay} percent for each scaling day past
+     * {@code fullStrengthDay}. 0 when endless scaling is off or full strength is not reached yet.
+     */
+    public static double endlessScale(long scalingDay, int fullStrengthDay, double percentPerDay) {
+        if (!(percentPerDay > 0.0) || !Double.isFinite(percentPerDay) || scalingDay <= fullStrengthDay) {
+            return 0.0;
+        }
+        return Math.min(MAX_ENDLESS_SCALE, (scalingDay - fullStrengthDay) * percentPerDay / 100.0);
+    }
+
     public static int scaledExtraZombies(int maxExtra, double scalingFactor) {
-        if (maxExtra <= 0) {
+        if (maxExtra <= 0 || !(scalingFactor > 0.0) || !Double.isFinite(scalingFactor)) {
             return 0;
         }
-        return (int) Math.round(maxExtra * clampProbability(scalingFactor));
+        return (int) Math.min(MAX_SCALED_EXTRA_ZOMBIES, Math.round(maxExtra * scalingFactor));
     }
 
     public static VariantWeights normalizeVariantWeights(double villagerChance, double huskChance, double drownedChance) {

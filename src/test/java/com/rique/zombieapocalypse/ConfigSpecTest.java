@@ -151,10 +151,15 @@ class ConfigSpecTest {
         assertEquals(0, defaultValue(Config.COMMON.maxBloodMoonZombiesPerPlayer));
         assertEquals(0, defaultValue(Config.COMMON.bloodMoonStartDay));
         assertEquals(0, defaultValue(Config.COMMON.scalingStepDays));
+        assertEquals(0.0, defaultValue(Config.COMMON.endlessScalingPercentPerDay));
         assertEquals(0, defaultValue(Config.COMMON.maxExtraZombiesPerWave));
 
         assertAccepts(Config.COMMON.scalingStepDays, 0);
         assertRejects(Config.COMMON.scalingStepDays, -1);
+        assertAccepts(Config.COMMON.endlessScalingPercentPerDay, 0.0);
+        assertAccepts(Config.COMMON.endlessScalingPercentPerDay, 100.0);
+        assertRejects(Config.COMMON.endlessScalingPercentPerDay, 100.5);
+        assertRejects(Config.COMMON.endlessScalingPercentPerDay, -0.5);
         assertAccepts(Config.COMMON.maxExtraZombiesPerWave, 50);
         assertRejects(Config.COMMON.maxExtraZombiesPerWave, 51);
         assertRejects(Config.COMMON.maxExtraZombiesPerWave, -1);

@@ -113,6 +113,7 @@ public final class HelpCommands {
                         + "/za scaling startday|maxday - set the progression window\n"
                         + "/za scaling steps <days> - raise strength in jumps every few days; 0 climbs daily\n"
                         + "/za scaling extrazombies <count> - bigger waves as strength rises, events included\n"
+                        + "/za scaling endless <percent> - keep getting stronger every day after maxday; 0 is off\n"
                         + "/za scaling speed|health|armorchance|weaponchance - tune full-strength bonuses\n"
                         + "/za gear - choose which armor and weapons zombies get, including modded items\n"
                         + "/za attributes on|off - toggle advanced attribute tuning\n"
