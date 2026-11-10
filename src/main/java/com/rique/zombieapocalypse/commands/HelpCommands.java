@@ -71,6 +71,7 @@ public final class HelpCommands {
                         + "/za spawn amount <1-50> - zombies attempted per wave\n"
                         + "/za spawn max <1-500> - nearby cap per player\n"
                         + "/za spawn nightmax <0-500> - nearby cap at night; 0 uses the normal cap\n"
+                        + "/za spawn bloodmoonmax <0-500> - nearby cap in blood moons; 0 uses the night cap\n"
                         + "/za spawn daylightstart <day> - temporary daytime grace period\n"
                         + "/za spawn range|mindist <blocks> - how far from players waves appear\n"
                         + "/za spawn sky on|off - require open sky for overworld waves\n"

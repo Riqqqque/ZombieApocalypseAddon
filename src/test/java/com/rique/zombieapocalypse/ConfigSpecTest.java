@@ -148,6 +148,7 @@ class ConfigSpecTest {
         assertEquals(false, defaultValue(Config.COMMON.zombieToweringDuringEvents));
         assertEquals(false, defaultValue(Config.COMMON.zombieToweringStanding));
         assertEquals(0, defaultValue(Config.COMMON.maxNightZombiesPerPlayer));
+        assertEquals(0, defaultValue(Config.COMMON.maxBloodMoonZombiesPerPlayer));
         assertEquals(0, defaultValue(Config.COMMON.bloodMoonStartDay));
         assertEquals(0, defaultValue(Config.COMMON.scalingStepDays));
         assertEquals(0, defaultValue(Config.COMMON.maxExtraZombiesPerWave));
@@ -161,6 +162,10 @@ class ConfigSpecTest {
         assertAccepts(Config.COMMON.maxNightZombiesPerPlayer, 500);
         assertRejects(Config.COMMON.maxNightZombiesPerPlayer, 501);
         assertRejects(Config.COMMON.maxNightZombiesPerPlayer, -1);
+        assertAccepts(Config.COMMON.maxBloodMoonZombiesPerPlayer, 0);
+        assertAccepts(Config.COMMON.maxBloodMoonZombiesPerPlayer, 500);
+        assertRejects(Config.COMMON.maxBloodMoonZombiesPerPlayer, 501);
+        assertRejects(Config.COMMON.maxBloodMoonZombiesPerPlayer, -1);
         assertAccepts(Config.COMMON.bloodMoonStartDay, 0);
         assertRejects(Config.COMMON.bloodMoonStartDay, -1);
     }

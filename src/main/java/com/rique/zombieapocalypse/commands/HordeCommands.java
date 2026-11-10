@@ -244,7 +244,10 @@ public final class HordeCommands {
                         : "")
                 .append(", ").append(Config.COMMON.bloodMoonZombiesPerSpawn.get())
                 .append(" zombies per wave at ")
-                .append(CommandUtil.multiplier(Config.COMMON.bloodMoonSpawnMultiplier.get()));
+                .append(CommandUtil.multiplier(Config.COMMON.bloodMoonSpawnMultiplier.get()))
+                .append(Config.COMMON.maxBloodMoonZombiesPerPlayer.get() > 0
+                        ? ", up to " + Config.COMMON.maxBloodMoonZombiesPerPlayer.get() + " nearby per player"
+                        : "");
         status.append("\nEvent interval: ").append(CommandUtil.ticks(Config.COMMON.eventSpawnInterval.get()))
                 .append(" | Titles: ").append(CommandUtil.onOff(Config.COMMON.enableEventNotifications.get()));
 

@@ -83,7 +83,7 @@ public final class EventHandler {
             double waterDrownedBonus,
             SpawnMath.VariantWeights baseVariantWeights) {
 
-        static SpawnRuntimeSettings capture(ServerLevel level) {
+        static SpawnRuntimeSettings capture(ServerLevel level, boolean bloodMoonActive) {
             boolean variantsEnabled = Config.COMMON.enableZombieVariants.get();
             SpawnMath.VariantWeights baseVariantWeights = variantsEnabled
                     ? SpawnMath.normalizeVariantWeights(
@@ -105,7 +105,9 @@ public final class EventHandler {
                     nearbyZombieCap(
                             Config.COMMON.maxDayZombiesPerPlayer.get(),
                             Config.COMMON.maxNightZombiesPerPlayer.get(),
-                            !level.dimensionType().hasFixedTime() && !level.isDay()),
+                            Config.COMMON.maxBloodMoonZombiesPerPlayer.get(),
+                            !level.dimensionType().hasFixedTime() && !level.isDay(),
+                            bloodMoonActive),
                     Math.max(1, Config.COMMON.spawnRange.get()),
                     Math.max(0, Config.COMMON.minSpawnDistance.get()),
                     Math.max(1, Config.COMMON.spawnAttemptsPerZombie.get()),
@@ -435,7 +437,7 @@ public final class EventHandler {
             return;
         }
 
-        SpawnRuntimeSettings settings = SpawnRuntimeSettings.capture(level);
+        SpawnRuntimeSettings settings = SpawnRuntimeSettings.capture(level, eventState.bloodMoonActive());
         if (settings.hasImpossibleDistanceConfig()) {
             warnImpossibleSpawnDistance(settings.minDistance(), settings.horizontalRange());
             return;
@@ -756,8 +758,14 @@ public final class EventHandler {
         return !mushroomSafeZone || !mushroomFieldsBiome;
     }
 
-    /** The nearby cap for custom waves: the night cap at night when one is set, otherwise the day cap. */
-    static int nearbyZombieCap(int dayCap, int nightCap, boolean night) {
+    /**
+     * The nearby cap for custom waves: the blood moon cap during a blood moon, the night cap at
+     * night, otherwise the day cap. A cap of 0 falls through to the next one.
+     */
+    static int nearbyZombieCap(int dayCap, int nightCap, int bloodMoonCap, boolean night, boolean bloodMoon) {
+        if (bloodMoon && bloodMoonCap > 0) {
+            return bloodMoonCap;
+        }
         return night && nightCap > 0 ? nightCap : dayCap;
     }
 

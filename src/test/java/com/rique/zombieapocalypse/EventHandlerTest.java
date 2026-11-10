@@ -87,11 +87,24 @@ class EventHandlerTest {
 
     @Test
     void nightsUseTheirOwnCapOnlyWhenOneIsSet() {
-        assertEquals(50, EventHandler.nearbyZombieCap(50, 0, true));
-        assertEquals(20, EventHandler.nearbyZombieCap(50, 20, true));
-        assertEquals(50, EventHandler.nearbyZombieCap(50, 20, false));
+        assertEquals(50, EventHandler.nearbyZombieCap(50, 0, 0, true, false));
+        assertEquals(20, EventHandler.nearbyZombieCap(50, 20, 0, true, false));
+        assertEquals(50, EventHandler.nearbyZombieCap(50, 20, 0, false, false));
         // A night cap can also be higher than the day cap.
-        assertEquals(100, EventHandler.nearbyZombieCap(50, 100, true));
+        assertEquals(100, EventHandler.nearbyZombieCap(50, 100, 0, true, false));
+    }
+
+    @Test
+    void bloodMoonsUseTheirOwnCapOnlyWhenOneIsSet() {
+        assertEquals(150, EventHandler.nearbyZombieCap(50, 20, 150, true, true));
+        assertEquals(10, EventHandler.nearbyZombieCap(50, 20, 10, true, true));
+        // A forced blood moon in daylight still uses the blood moon cap.
+        assertEquals(150, EventHandler.nearbyZombieCap(50, 20, 150, false, true));
+        // 0 falls back to the night cap, then the day cap.
+        assertEquals(20, EventHandler.nearbyZombieCap(50, 20, 0, true, true));
+        assertEquals(50, EventHandler.nearbyZombieCap(50, 0, 0, true, true));
+        // The blood moon cap does nothing outside a blood moon.
+        assertEquals(20, EventHandler.nearbyZombieCap(50, 20, 150, true, false));
     }
 
     @Test

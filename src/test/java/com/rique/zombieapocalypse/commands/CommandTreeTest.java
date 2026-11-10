@@ -139,6 +139,8 @@ class CommandTreeTest {
         assertPublic("zbloodmoon", "startday");
         assertAdmin("zdayspawn", "nightmax", "zombies");
         assertPublic("zdayspawn", "nightmax");
+        assertAdmin("zdayspawn", "bloodmoonmax", "zombies");
+        assertPublic("zdayspawn", "bloodmoonmax");
         assertAdmin("zdayspawn", "on");
         assertAdmin("zdayspawn", "off");
         assertAdmin("zdayspawn", "daytime", "state");

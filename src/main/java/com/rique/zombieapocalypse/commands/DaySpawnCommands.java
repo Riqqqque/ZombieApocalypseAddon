@@ -87,6 +87,13 @@ public final class DaySpawnCommands {
                                 ? "Nights use the normal nearby cap (" + Config.COMMON.maxDayZombiesPerPlayer.get() + ")."
                                 : "Max nearby zombies per player at night: " + value,
                         0, 10, 20, 30, 50, 100))
+                .then(CommandUtil.intSetting("bloodmoonmax", "zombies", 0, 500,
+                        Config.COMMON.maxBloodMoonZombiesPerPlayer::get,
+                        value -> Config.set(Config.COMMON.maxBloodMoonZombiesPerPlayer, value),
+                        value -> value <= 0
+                                ? "Blood moons use the night cap (" + formatNightCap() + ")."
+                                : "Max nearby zombies per player during a blood moon: " + value,
+                        0, 50, 80, 100, 150, 200))
                 .then(CommandUtil.intSetting("range", "blocks", 16, 128,
                         Config.COMMON.spawnRange::get,
                         value -> Config.set(Config.COMMON.spawnRange, value),
@@ -293,13 +300,26 @@ public final class DaySpawnCommands {
 
     static String formatNearbyCap() {
         int nightCap = Config.COMMON.maxNightZombiesPerPlayer.get();
+        int bloodMoonCap = Config.COMMON.maxBloodMoonZombiesPerPlayer.get();
+        StringBuilder extra = new StringBuilder();
+        if (nightCap > 0) {
+            extra.append(nightCap).append(" at night");
+        }
+        if (bloodMoonCap > 0) {
+            extra.append(extra.isEmpty() ? "" : ", ").append(bloodMoonCap).append(" in blood moons");
+        }
         return Config.COMMON.maxDayZombiesPerPlayer.get() + " per player"
-                + (nightCap > 0 ? " (" + nightCap + " at night)" : "");
+                + (extra.isEmpty() ? "" : " (" + extra + ")");
     }
 
     private static String formatNightCap() {
         int nightCap = Config.COMMON.maxNightZombiesPerPlayer.get();
         return nightCap > 0 ? String.valueOf(nightCap) : "same as day";
+    }
+
+    private static String formatBloodMoonCap() {
+        int bloodMoonCap = Config.COMMON.maxBloodMoonZombiesPerPlayer.get();
+        return bloodMoonCap > 0 ? String.valueOf(bloodMoonCap) : "same as night";
     }
 
     private static String buildDetailedStatusMessage() {
@@ -311,6 +331,7 @@ public final class DaySpawnCommands {
         status.append("Chance: ").append(CommandUtil.percent(Config.COMMON.daySpawnChance.get())).append('\n');
         status.append("Max zombies/player: ").append(Config.COMMON.maxDayZombiesPerPlayer.get()).append('\n');
         status.append("Max zombies/player at night: ").append(formatNightCap()).append('\n');
+        status.append("Max zombies/player in blood moons: ").append(formatBloodMoonCap()).append('\n');
         status.append("Per spawn: ").append(Config.COMMON.zombiesPerSpawn.get()).append('\n');
         status.append("Attempts per zombie: ").append(Config.COMMON.spawnAttemptsPerZombie.get()).append('\n');
         status.append("Range: ").append(Config.COMMON.spawnRange.get()).append(" blocks\n");

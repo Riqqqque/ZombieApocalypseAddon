@@ -23,9 +23,9 @@ The mod adds custom zombie waves, hordes, blood moons, day-based difficulty, opt
 
 | Minecraft | Loader | Mod version | File name |
 |---|---|---:|---|
-| 1.21.1 | NeoForge | 2.10.0 | `zombieapocalypseaddon-2.10.0.jar` |
-| 1.20.1 | NeoForge | 1.13.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.13.0.jar` |
-| 1.20.1 | Forge | 1.13.0 | `zombieapocalypseaddon-forge-1.20.1-1.13.0.jar` |
+| 1.21.1 | NeoForge | 2.11.0 | `zombieapocalypseaddon-2.11.0.jar` |
+| 1.20.1 | NeoForge | 1.14.0 | `zombieapocalypseaddon-neoforge-1.20.1-1.14.0.jar` |
+| 1.20.1 | Forge | 1.14.0 | `zombieapocalypseaddon-forge-1.20.1-1.14.0.jar` |
 
 Install only the file for your exact Minecraft version and loader. Forge and NeoForge files are not interchangeable.
 
@@ -70,6 +70,7 @@ Most questions are one command away:
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` (strength rises on days 11, 21, 31...) |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` (up to 4 extra zombies per wave at full strength, hordes included) |
 | Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
+| Give blood moons their own zombie cap | `/za spawn bloodmoonmax 100` (`0` uses the night cap) |
 | Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
 | No random blood moons before a certain day | `/za bloodmoon startday 10` |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, then set a high `startday` for when they may do it all the time. See [Siege Nights](#siege-nights). |
@@ -364,9 +365,9 @@ Do not paste server addresses, access tokens, private player information, or oth
 
 | Loader | Minecraft | Version |
 |---|---:|---:|
-| NeoForge | 1.21.1 | 2.10.0 |
-| NeoForge | 1.20.1 | 1.13.0 |
-| Forge | 1.20.1 | 1.13.0 |
+| NeoForge | 1.21.1 | 2.11.0 |
+| NeoForge | 1.20.1 | 1.14.0 |
+| Forge | 1.20.1 | 1.14.0 |
 
 Build all targets on Windows with:
 

@@ -518,6 +518,7 @@ public final class Config {
         public final ForgeConfigSpec.IntValue bloodMoonStartDay;
         public final ForgeConfigSpec.DoubleValue bloodMoonSpawnMultiplier;
         public final ForgeConfigSpec.IntValue bloodMoonZombiesPerSpawn;
+        public final ForgeConfigSpec.IntValue maxBloodMoonZombiesPerPlayer;
 
         // Difficulty scaling
         public final ForgeConfigSpec.BooleanValue enableDifficultyScaling;
@@ -862,7 +863,7 @@ public final class Config {
             maxDayZombiesPerPlayer = builder
                     .comment(
                             "Maximum zombie-class mobs (from any source, vanilla included) within spawnRange of each player before new custom waves are skipped.",
-                            "Applies day and night, including hordes and blood moons, unless maxNightZombiesPerPlayer sets a separate night cap.",
+                            "Applies day and night, including hordes and blood moons, unless maxNightZombiesPerPlayer or maxBloodMoonZombiesPerPlayer sets a separate cap.",
                             "This helps stop overcrowding and keeps performance under control.",
                             "Beginner: 30-60 is usually sane. Raising this above 100 is for stronger servers.")
                     .defineInRange("maxDayZombiesPerPlayer", 50, 1, 500);
@@ -1438,7 +1439,8 @@ public final class Config {
                     "Blood moon settings stack with other spawn systems, so small changes can hit hard.",
                     "Safe beginner setup: keep chance low and avoid huge multipliers.",
                     "In game: /za bloodmoon on turns random blood moons on and keeps every value below as you set it.",
-                    "/za bloodmoon startday <day> keeps early nights free of random blood moons."))
+                    "/za bloodmoon startday <day> keeps early nights free of random blood moons.",
+                    "/za spawn bloodmoonmax <0-500> gives blood moons their own nearby zombie cap."))
                     .push("bloodmoon");
             enableBloodMoon = builder
                     .comment(
@@ -1474,6 +1476,14 @@ public final class Config {
                             "This overrides the normal wave size while the blood moon is active.",
                             "Raise slowly if you want harder nights without runaway mob counts.")
                     .defineInRange("bloodMoonZombiesPerSpawn", 4, 1, 100);
+
+            maxBloodMoonZombiesPerPlayer = builder
+                    .comment(
+                            "Separate nearby zombie cap while a blood moon is active. It can be higher or lower than the other caps.",
+                            "0 = blood moons use the night cap (maxNightZombiesPerPlayer), or maxDayZombiesPerPlayer when no night cap is set.",
+                            "Example: 100 lets blood moons get much busier than normal nights.",
+                            "It counts the same way as the day cap. Only custom waves stop at the cap; vanilla spawning is not affected.")
+                    .defineInRange("maxBloodMoonZombiesPerPlayer", 0, 0, 500);
             builder.pop();
 
             builder.comment(sectionComment(
@@ -1513,7 +1523,7 @@ public final class Config {
                     .comment(
                             "Extra zombies added to every custom wave at 100% scaling, including horde and blood moon waves.",
                             "It grows with the scaling strength, so 4 means +2 at 50% and +4 at full strength.",
-                            "0 = scaling never changes wave size. maxDayZombiesPerPlayer (or maxNightZombiesPerPlayer at night) still caps the total around each player.")
+                            "0 = scaling never changes wave size. The nearby zombie cap (day, night, or blood moon) still caps the total around each player.")
                     .defineInRange("maxExtraZombiesPerWave", 0, 0, 50);
 
             maxSpeedBoost = builder
@@ -2139,7 +2149,7 @@ public final class Config {
                             "Separate nearby zombie cap for night. It can be higher or lower than maxDayZombiesPerPlayer.",
                             "0 = nights use maxDayZombiesPerPlayer.",
                             "Example: 20 keeps nights calmer; 80 lets nights get much busier than days.",
-                            "It counts the same way as the day cap and also holds during hordes and blood moons at night.",
+                            "It counts the same way as the day cap and also holds during hordes at night, and during blood moons unless maxBloodMoonZombiesPerPlayer is set.",
                             "Only custom waves stop at the cap. Vanilla spawning is not affected.",
                             "Night here follows vanilla mob spawning, so a daytime thunderstorm also counts as night.",
                             "Works even when enableNightBoost is false. Fixed-time dimensions such as the Nether always use the day cap.")

@@ -147,6 +147,7 @@ public enum GameplayPreset {
         values.put(config.zombiesPerSpawn.getPath(), waveSize);
         values.put(config.maxDayZombiesPerPlayer.getPath(), nearbyCap);
         values.put(config.maxNightZombiesPerPlayer.getPath(), 0);
+        values.put(config.maxBloodMoonZombiesPerPlayer.getPath(), 0);
         values.put(config.spawnRange.getPath(), SAFE_SPAWN_RANGE);
         values.put(config.minSpawnDistance.getPath(), SAFE_MIN_SPAWN_DISTANCE);
         values.put(config.spawnAttemptsPerZombie.getPath(), SAFE_SPAWN_ATTEMPTS);

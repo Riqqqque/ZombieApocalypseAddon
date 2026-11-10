@@ -67,6 +67,7 @@ Most things players ask for are one command away:
 | Make zombies jump in strength after every horde | `/za scaling steps 10` with `/za events interval 10` |
 | Get bigger waves as the days go on | `/za scaling extrazombies 4` |
 | Give nights their own zombie cap (lower or higher) | `/za spawn nightmax 20` (`0` uses the normal cap) |
+| Give blood moons their own zombie cap | `/za spawn bloodmoonmax 100` (`0` uses the night cap) |
 | Make nights more dangerous | `/za spawn nightmultiplier 2.0` (default `1.5`) |
 | No random blood moons before a certain day | `/za bloodmoon startday 10` |
 | Let zombies break or build only during hordes and blood moons | `/za breaking events on` or `/za placing events on`, plus a high `startday` (see Siege Nights below) |
